@@ -1,0 +1,166 @@
+<!-- Navigation Bar -->
+<nav class="nav">
+  <div class="container nav-content">
+    <div>
+      <h1 class="nav-brand">CardGame</h1>
+    </div>
+    <div class="nav-actions">
+      <button 
+        (click)="goBack()"
+        class="btn"
+        style="background: #6b7280; color: white; padding: 8px 16px; font-size: 14px;">
+        ← Back
+      </button>
+      <button 
+        (click)="logout()"
+        style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500;">
+        Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<div class="main-content">
+  <div class="container">
+    
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center" style="padding: 48px 0;">
+      <div style="font-size: 18px; color: #6b7280;">Loading profile...</div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="text-center" style="padding: 48px 0;">
+      <div style="color: #dc2626; font-size: 18px; margin-bottom: 16px;">{{ error }}</div>
+      <button (click)="loadProfile()" class="btn btn-primary">Retry</button>
+    </div>
+
+    <!-- Profile Content -->
+    <div *ngIf="profile && !isLoading" style="max-width: 800px; margin: 0 auto;">
+      
+      <!-- Profile Header -->
+      <div class="card mb-8">
+        <div class="profile-header">
+          <!-- Profile Picture or Avatar -->
+          <div class="profile-picture-container">
+            <img 
+              *ngIf="profile.profilePicture" 
+              [src]="profile.profilePicture" 
+              [alt]="getDisplayName() + ' profile picture'"
+              class="profile-picture"
+              (error)="onImageError($event)">
+            <div 
+              *ngIf="!profile.profilePicture" 
+              class="profile-initials">
+              {{ getUserInitials() }}
+            </div>
+          </div>
+          <div class="profile-info">
+            <h2 class="profile-name">{{ getDisplayName() }}</h2>
+            <p class="profile-email">{{ profile.email }}</p>
+            <p class="profile-member-since">Member since {{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</p>
+          </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value points">
+              {{ profile.points || 0 }}
+            </div>
+            <div class="stat-label">TOTAL POINTS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value rank">
+              #{{ profile.rank || 'N/A' }}
+            </div>
+            <div class="stat-label">GLOBAL RANK</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Edit Profile Section -->
+      <div class="card">
+        <h3 class="section-title">Edit Profile</h3>
+        
+        <form (ngSubmit)="updateProfile()" class="profile-form">
+          
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input 
+              [(ngModel)]="updateForm.name"
+              name="name"
+              type="text"
+              placeholder="Enter your full name"
+              class="form-input">
+          </div>
+
+          <!-- Profile Picture URL -->
+          <div class="form-group">
+            <label class="form-label">Profile Picture URL</label>
+            <input 
+              [(ngModel)]="updateForm.profilePicture"
+              name="profilePicture"
+              type="url"
+              placeholder="https://example.com/your-photo.jpg"
+              class="form-input">
+          </div>
+
+          <!-- Success/Error Messages -->
+          <div *ngIf="updateMessage" 
+               class="message"
+               [class.message-success]="updateSuccess"
+               [class.message-error]="!updateSuccess">
+            {{ updateMessage }}
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-actions">
+            <button 
+              type="button"
+              (click)="resetForm()"
+              class="btn btn-secondary">
+              Reset
+            </button>
+            <button 
+              type="submit"
+              [disabled]="isUpdating"
+              class="btn btn-primary">
+              {{ isUpdating ? 'Updating...' : 'Update Profile' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Account Information -->
+      <div class="card account-info">
+        <h3 class="section-title">Account Information</h3>
+        
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Full Name:</span>
+            <span class="info-value">{{ getDisplayName() }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Username:</span>
+            <span class="info-value">{{ profile.username }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Email:</span>
+            <span class="info-value">{{ profile.email }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Account Created:</span>
+            <span class="info-value">{{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</span>
+          </div>
+          <div class="info-item no-border">
+            <span class="info-label">Last Updated:</span>
+            <span class="info-value">{{ profile.updatedAt ? formatDate(profile.updatedAt) : 'Recently' }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

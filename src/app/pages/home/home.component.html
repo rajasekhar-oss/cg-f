@@ -1,0 +1,6 @@
+<div class="min-h-screen">
+  <app-home-logged-in *ngIf="(auth.user$ | async) as user; else notLoggedIn"></app-home-logged-in>
+  <ng-template #notLoggedIn>
+    <app-home-not-logged-in></app-home-not-logged-in>
+  </ng-template>
+</div>

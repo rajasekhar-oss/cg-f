@@ -1,0 +1,168 @@
+:host {
+  display: block;
+}
+
+/* User Stats Styles */
+.user-stats-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.profile-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-initials {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0; /* Allow text to truncate */
+}
+
+.welcome-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-subtitle {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+.stats-container {
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.stat-item {
+  text-align: center;
+  min-width: 60px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.points-value {
+  color: #3b82f6;
+}
+
+.rank-value {
+  color: #10b981;
+}
+
+.stat-label {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: block !important;
+  }
+  
+  .user-stats-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .user-info {
+    width: 100%;
+  }
+  
+  .stats-container {
+    align-self: flex-end;
+    gap: 16px;
+  }
+  
+  .welcome-title {
+    font-size: 16px;
+  }
+  
+  .stat-value {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .profile-initials {
+    font-size: 14px;
+  }
+  
+  .welcome-title {
+    font-size: 14px;
+  }
+  
+  .user-subtitle {
+    font-size: 12px;
+  }
+  
+  .stat-value {
+    font-size: 16px;
+  }
+  
+  .stat-label {
+    font-size: 10px;
+  }
+}

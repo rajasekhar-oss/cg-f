@@ -1,0 +1,6 @@
+<div>
+  <h3>My Cards</h3>
+  <button (click)="arrange()">Arrange</button>
+  <div *ngIf="cards?.length==0">No cards</div>
+  <ul><li *ngFor="let c of cards">{{c.id}} — {{c.totalFilms}} (order: {{c.orderIndex}})</li></ul>
+</div>

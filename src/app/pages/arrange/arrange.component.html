@@ -1,0 +1,7 @@
+<h3>Arrange Cards</h3>
+<div cdkDropList (cdkDropListDropped)="drop($event)">
+  <div *ngFor="let c of cards" cdkDrag style="padding:8px;border:1px solid #ddd;margin:4px">
+    #{{c.orderIndex}} — {{c.totalFilms}}
+  </div>
+</div>
+<button (click)="save()">Set Order</button>

@@ -1,0 +1,8 @@
+<div>
+  <h3>Enter OTP</h3>
+  <p *ngIf="email">OTP sent to: {{email}}</p>
+  <input [(ngModel)]="emailInput" placeholder="Email" *ngIf="!email"/>
+  <input [(ngModel)]="otp" placeholder="123456"/>
+  <button (click)="verify()">Verify</button>
+  <div *ngIf="err" style="color:red">{{err}}</div>
+</div>

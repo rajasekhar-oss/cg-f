@@ -1,0 +1,8 @@
+<div>
+  <h3>Register</h3>
+  <p *ngIf="email">Email: {{email}}</p>
+  <input [(ngModel)]="username" placeholder="Username" />
+  <input [(ngModel)]="password" placeholder="Password" type="password"/>
+  <button (click)="register()">Register</button>
+  <div *ngIf="msg" [style.color]="isError ? 'red' : 'green'">{{msg}}</div>
+</div>
