@@ -5,3 +5,10 @@
   </div>
 </div>
 <button (click)="save()">Set Order</button>
+
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [getIconForRoute]="getIconForRoute.bind(this)"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>

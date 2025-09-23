@@ -1,7 +1,8 @@
-<div>
-  <h3>Login</h3>
-  <input [(ngModel)]="username" placeholder="Email or Username" /><br/>
-  <input [(ngModel)]="password" placeholder="Password" type="password"/><br/>
-  <button (click)="login()">Login</button>
-  <div *ngIf="err">{{err}}</div>
+
+<div class="login-container">
+  <h3 class="login-title">Login</h3>
+  <input [(ngModel)]="username" placeholder="Email or Username" class="login-input" />
+  <input [(ngModel)]="password" placeholder="Password" type="password" class="login-input" />
+  <button (click)="login()" class="login-btn">Login</button>
+  <div *ngIf="err" class="login-error">{{err}}</div>
 </div>

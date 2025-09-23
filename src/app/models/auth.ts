@@ -15,7 +15,7 @@ export interface UserDto {
   name?: string;          // ← Added for full name from backend
   firstName?: string;
   lastName?: string;
-  profilePicture?: string;
+  imageUrl?: string;      // <-- Add imageUrl from backend
   points: number;
   rank: number;
   createdAt?: string;
@@ -24,7 +24,7 @@ export interface UserDto {
 
 export interface UpdateProfileRequest {
   name?: string;
-  profilePicture?: string;
+  imageUrl?: string;
 }
 
 export interface ProfileDto {

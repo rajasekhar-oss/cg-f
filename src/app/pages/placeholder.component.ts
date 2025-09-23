@@ -1,9 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+  import { BottomNavComponent } from '../shared/bottom-nav.component';
+
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, BottomNavComponent],
   selector: 'app-placeholder',
   template: `
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -17,6 +19,12 @@ import { CommonModule } from '@angular/common';
         </button>
       </div>
     </div>
+    <app-bottom-nav
+      [bottomNavItems]="bottomNavItems"
+      [getIconForRoute]="getIconForRoute.bind(this)"
+      [isActiveRoute]="isActiveRoute.bind(this)"
+      [navigate]="navigate.bind(this)">
+    </app-bottom-nav>
   `
 })
 export class PlaceholderComponent {
@@ -43,5 +51,30 @@ export class PlaceholderComponent {
 
   goBack() {
     window.history.back();
+  }
+
+  // Bottom nav logic
+  bottomNavItems = [
+    { label: 'Home', route: '/' },
+    { label: 'Cards', route: '/cards' },
+    { label: 'Star', route: '/leaderboard' },
+    { label: 'Person', route: '/friends' },
+    { label: 'Profile', route: '/profile' }
+  ];
+  getIconForRoute(route: string): string {
+    const icons: { [key: string]: string } = {
+      '/': '🏠',
+      '/cards': '🃏',
+      '/leaderboard': '⭐',
+      '/friends': '👥',
+      '/profile': '👤'
+    };
+    return icons[route] || '📄';
+  }
+  isActiveRoute(route: string): boolean {
+    return window.location.pathname === route;
+  }
+  navigate(route: string) {
+    window.location.href = route;
   }
 }

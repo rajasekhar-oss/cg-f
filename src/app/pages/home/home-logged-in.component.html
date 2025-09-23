@@ -30,14 +30,13 @@
 <!-- Main Content -->
 <div style="padding: 20px; padding-bottom: 80px;">
   <div style="max-width: 1200px; margin: 0 auto;">
-    
-    <!-- Loading State -->
-    <div *ngIf="isLoading" style="text-align: center; padding: 48px 0;">
-      <div style="font-size: 18px; color: #6b7280;">Loading user data...</div>
+    <!-- Admin Buttons (visible for admin users only) -->
+    <div *ngIf="isAdmin" style="margin-bottom: 32px; text-align: center;">
+      <button (click)="navigate('/admin')" style="margin: 0 12px 12px 0; padding: 12px 32px; font-size: 16px; border-radius: 8px; background: #3b82f6; color: white; border: none; cursor: pointer;">Admin Dashboard</button>
     </div>
 
-    <!-- Game Mode Cards -->
-    <div *ngIf="!isLoading" class="grid grid-cols-4">
+    <!-- Game Mode Cards: always show after loading spinner -->
+    <div *ngIf="!isLoading || true" class="grid grid-cols-4">
       <div 
         *ngFor="let mode of gameModes" 
         (click)="navigate(mode.route)"
@@ -57,15 +56,9 @@
 </div>
 
 <!-- Bottom Navigation Bar (Mobile) -->
-<div class="bottom-nav">
-  <div style="display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0;">
-    <button 
-      *ngFor="let item of bottomNavItems"
-      (click)="navigate(item.route)"
-      style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 500;"
-      [style.color]="isActiveRoute(item.route) ? '#3b82f6' : '#6b7280'">
-      <span style="font-size: 20px; margin-bottom: 4px;">{{ getIconForRoute(item.route) }}</span>
-      {{ item.label }}
-    </button>
-  </div>
-</div>
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [getIconForRoute]="getIconForRoute.bind(this)"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>

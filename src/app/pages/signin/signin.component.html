@@ -3,7 +3,15 @@
   <input [(ngModel)]="email" placeholder="Enter email" [disabled]="loading" />
   <div *ngIf="error" style="color:red">{{error}}</div>
   <div *ngIf="loading" style="color:blue">Sending OTP...</div>
+
   <button (click)="send()" [disabled]="loading">
     {{loading ? 'Sending...' : 'Send OTP'}}
   </button>
 </div>
+
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [getIconForRoute]="getIconForRoute.bind(this)"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>

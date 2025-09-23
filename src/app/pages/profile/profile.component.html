@@ -1,5 +1,6 @@
+          <!-- Remove duplicate file upload input -->
 <!-- Navigation Bar -->
-<nav class="nav">
+<nav class="nav fixed-nav">
   <div class="container nav-content">
     <div>
       <h1 class="nav-brand">CardGame</h1>
@@ -7,13 +8,12 @@
     <div class="nav-actions">
       <button 
         (click)="goBack()"
-        class="btn"
-        style="background: #6b7280; color: white; padding: 8px 16px; font-size: 14px;">
+        class="btn btn-secondary nav-btn">
         ← Back
       </button>
       <button 
         (click)="logout()"
-        style="background: none; border: none; color: #6b7280; cursor: pointer; font-size: 14px; font-weight: 500;">
+        class="btn btn-primary nav-btn logout-btn">
         Logout
       </button>
     </div>
@@ -41,16 +41,15 @@
       <!-- Profile Header -->
       <div class="card mb-8">
         <div class="profile-header">
-          <!-- Profile Picture or Avatar -->
           <div class="profile-picture-container">
             <img 
-              *ngIf="profile.profilePicture" 
-              [src]="profile.profilePicture" 
+              *ngIf="profile.imageUrl" 
+              [src]="profile.imageUrl" 
               [alt]="getDisplayName() + ' profile picture'"
               class="profile-picture"
               (error)="onImageError($event)">
             <div 
-              *ngIf="!profile.profilePicture" 
+              *ngIf="!profile.imageUrl" 
               class="profile-initials">
               {{ getUserInitials() }}
             </div>
@@ -72,50 +71,40 @@
           </div>
           <div class="stat-card">
             <div class="stat-value rank">
-              #{{ profile.rank || 'N/A' }}
+              <ng-container *ngIf="userRank !== null; else rankLoading">
+                #{{ userRank }}
+              </ng-container>
+              <ng-template #rankLoading>
+                <span *ngIf="rankError; else loading">N/A</span>
+                <ng-template #loading>Loading...</ng-template>
+              </ng-template>
             </div>
             <div class="stat-label">GLOBAL RANK</div>
           </div>
         </div>
       </div>
+      <!-- Bottom Navigation Bar (Mobile) -->
+      <app-bottom-nav
+        [bottomNavItems]="bottomNavItems"
+        [getIconForRoute]="getIconForRoute.bind(this)"
+        [isActiveRoute]="isActiveRoute.bind(this)"
+        [navigate]="navigate.bind(this)">
+      </app-bottom-nav>
 
       <!-- Edit Profile Section -->
       <div class="card">
-        <h3 class="section-title">Edit Profile</h3>
-        
+        <h3 class="section-title">Edit Profile Image</h3>
         <form (ngSubmit)="updateProfile()" class="profile-form">
-          
-          <!-- Name -->
           <div class="form-group">
-            <label class="form-label">Full Name</label>
-            <input 
-              [(ngModel)]="updateForm.name"
-              name="name"
-              type="text"
-              placeholder="Enter your full name"
-              class="form-input">
+            <label class="form-label">Upload Profile Image</label>
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input" />
           </div>
-
-          <!-- Profile Picture URL -->
-          <div class="form-group">
-            <label class="form-label">Profile Picture URL</label>
-            <input 
-              [(ngModel)]="updateForm.profilePicture"
-              name="profilePicture"
-              type="url"
-              placeholder="https://example.com/your-photo.jpg"
-              class="form-input">
-          </div>
-
-          <!-- Success/Error Messages -->
           <div *ngIf="updateMessage" 
                class="message"
                [class.message-success]="updateSuccess"
                [class.message-error]="!updateSuccess">
             {{ updateMessage }}
           </div>
-
-          <!-- Submit Button -->
           <div class="form-actions">
             <button 
               type="button"
@@ -127,40 +116,56 @@
               type="submit"
               [disabled]="isUpdating"
               class="btn btn-primary">
-              {{ isUpdating ? 'Updating...' : 'Update Profile' }}
+              {{ isUpdating ? 'Updating...' : 'Update Image' }}
             </button>
           </div>
         </form>
       </div>
 
-      <!-- Account Information -->
-      <div class="card account-info">
-        <h3 class="section-title">Account Information</h3>
-        
-        <div class="info-list">
-          <div class="info-item">
-            <span class="info-label">Full Name:</span>
-            <span class="info-value">{{ getDisplayName() }}</span>
+      <!-- Username Update Section -->
+      <div class="card" style="margin-top: 24px;">
+        <h3 class="section-title">Change Username</h3>
+        <form (ngSubmit)="updateUsername()" #usernameForm="ngForm" class="profile-form">
+          <div class="form-group">
+            <label class="form-label">New Username</label>
+            <input type="text" name="newUsername" [(ngModel)]="newUsername" required class="form-input" />
           </div>
-          <div class="info-item">
-            <span class="info-label">Username:</span>
-            <span class="info-value">{{ profile.username }}</span>
+          <div *ngIf="usernameMessage" 
+               class="message"
+               [class.message-success]="usernameSuccess"
+               [class.message-error]="!usernameSuccess">
+            {{ usernameMessage }}
           </div>
-          <div class="info-item">
-            <span class="info-label">Email:</span>
-            <span class="info-value">{{ profile.email }}</span>
+          <div class="form-actions">
+            <button type="submit" [disabled]="isUpdatingUsername" class="btn btn-primary">
+              {{ isUpdatingUsername ? 'Updating...' : 'Update Username' }}
+            </button>
           </div>
-          <div class="info-item">
-            <span class="info-label">Account Created:</span>
-            <span class="info-value">{{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</span>
-          </div>
-          <div class="info-item no-border">
-            <span class="info-label">Last Updated:</span>
-            <span class="info-value">{{ profile.updatedAt ? formatDate(profile.updatedAt) : 'Recently' }}</span>
-          </div>
-        </div>
+        </form>
       </div>
 
-    </div>
-  </div>
-</div>
+      <!-- Password Update Section -->
+      <div class="card" style="margin-top: 24px;">
+        <h3 class="section-title">Change Password</h3>
+        <form (ngSubmit)="updatePassword()" #passwordForm="ngForm" class="profile-form">
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="oldPassword" [(ngModel)]="oldPassword" required class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input type="password" name="newPassword" [(ngModel)]="newPassword" required class="form-input" />
+          </div>
+          <div *ngIf="passwordMessage" 
+               class="message"
+               [class.message-success]="passwordSuccess"
+               [class.message-error]="!passwordSuccess">
+            {{ passwordMessage }}
+          </div>
+          <div class="form-actions">
+            <button type="submit" [disabled]="isUpdatingPassword" class="btn btn-primary">
+              {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
+            </button>
+          </div>
+        </form>
+      </div>

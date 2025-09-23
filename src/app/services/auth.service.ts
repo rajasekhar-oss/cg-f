@@ -2,9 +2,22 @@ import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
 import { BehaviorSubject } from 'rxjs';
 import { tap, throwError } from 'rxjs';
+import { decodeJwt } from '../utils/jwt-decode';
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
+  getUserRole(): string | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    const payload = decodeJwt(token);
+    console.log('Decoded JWT payload:', payload);
+    console.log(payload)
+    if (payload && payload.roles && Array.isArray(payload.roles)) {
+      // Return 'ADMIN' if present in roles array
+      return payload.roles.includes('ADMIN') ? 'ADMIN' : null;
+    }
+    return null;
+  }
   private accessTokenKey = 'accessToken';
   private refreshTokenKey = 'refreshToken';
   public user$ = new BehaviorSubject<any>(null);
@@ -65,7 +78,10 @@ export class AuthService {
 
   refreshToken() {
     const refreshToken = this.getRefreshToken();
-    if (!refreshToken) return throwError(() => new Error('No refresh token'));
+    if (!refreshToken) {
+      console.error('No refresh token found in localStorage.');
+      return throwError(() => new Error('No refresh token'));
+    }
     return this.api.post('/auth/refresh', { refreshToken }).pipe(
       tap((res: any) => {
         if (res.accessToken) this.setAccessToken(res.accessToken);

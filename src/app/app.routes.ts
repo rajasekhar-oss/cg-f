@@ -10,6 +10,8 @@ import { ArrangeComponent } from './pages/arrange/arrange.component';
 import { WaitingRoomComponent } from './pages/waiting-room/waiting-room.component';
 import { GameComponent } from './pages/game/game.component';
 import { PlaceholderComponent } from './pages/placeholder.component';
+import { adminRoutes } from './pages/admin/admin.routes';
+import { userTodoRoutes } from './pages/user-todo/user-todo.routes';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -22,7 +24,6 @@ export const routes: Routes = [
   { path: 'cards/arrange', component: ArrangeComponent },
   { path: 'room/:code', component: WaitingRoomComponent },
   { path: 'game/:id', component: GameComponent },
-  
   // New routes for game modes and features
   { path: 'notifications', component: PlaceholderComponent },
   { path: 'gang-play', component: PlaceholderComponent },
@@ -31,6 +32,7 @@ export const routes: Routes = [
   { path: 'play-code', component: PlaceholderComponent },
   { path: 'leaderboard', component: PlaceholderComponent },
   { path: 'friends', component: PlaceholderComponent },
-  
+  ...adminRoutes,
+  ...userTodoRoutes,
   { path: '**', redirectTo: '' }
 ];

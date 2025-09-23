@@ -1,13 +1,15 @@
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { UserDto, ProfileDto } from '../../models/auth';
+import { BottomNavComponent } from '../../shared/bottom-nav.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, BottomNavComponent],
   selector: 'app-home-logged-in',
   templateUrl: './home-logged-in.component.html',
   styleUrls: ['./home-logged-in.component.css']
@@ -16,6 +18,7 @@ export class HomePageLoggedInComponent implements OnInit {
   // User data from API
   profile: UserDto | null = null;
   isLoading = true;
+  isAdmin = false;
   
   // Computed properties based on real data
   username = 'Player';
@@ -70,16 +73,17 @@ export class HomePageLoggedInComponent implements OnInit {
 
   private loadUserData() {
     this.isLoading = true;
-    
     // Load user profile data from the correct endpoint
     this.api.get('/users/me').subscribe({
       next: (userData: any) => {
         console.log('User data received:', userData);
         this.profile = userData as UserDto;
         this.updateUserInfo();
-        
-        // Load profile picture from separate profile endpoint
-        this.loadProfilePicture();
+        const role = this.auth.getUserRole();
+        this.isAdmin = role === 'ADMIN';
+        console.log(role);
+        console.log('Console userData:', userData);
+        // All profile data is loaded from /users/me
       },
       error: (error) => {
         console.error('Failed to load user data:', error);
@@ -88,6 +92,9 @@ export class HomePageLoggedInComponent implements OnInit {
           if (user) {
             this.username = user.username || 'Player';
             this.userInitials = this.getInitials(this.username);
+            const role = this.auth.getUserRole();
+            this.isAdmin = role === 'ADMIN';
+            console.log('Console userData (auth fallback):', user);
           }
         });
         this.isLoading = false;
@@ -95,62 +102,12 @@ export class HomePageLoggedInComponent implements OnInit {
     });
   }
 
-  private loadProfilePicture() {
-    // Load profile picture from /users/profile endpoint (optional - don't fail the whole component)
-    console.log('Attempting to load profile picture from /users/profile');
-    
-    this.api.get('/users/profile').subscribe({
-      next: (profileData: any) => {
-        console.log('Profile data received from /users/profile:', profileData);
-        console.log('Profile picture URL:', profileData.profilePicture);
-        
-        if (this.profile && profileData.profilePicture) {
-          // Update the profile with the profile picture
-          this.profile.profilePicture = profileData.profilePicture;
-          console.log('Updated profile with picture:', this.profile.profilePicture);
-        }
-        
-        if (profileData.name && this.profile) {
-          // Also update name if provided in profile
-          this.profile.name = profileData.name;
-          this.updateUserInfo();
-        }
-        
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Failed to load profile picture (non-critical error):', error);
-        console.error('Error details:', {
-          status: error.status,
-          statusText: error.statusText,
-          message: error.message,
-          url: error.url,
-          error: error.error
-        });
-        
-        // Don't fail the whole component - just continue without profile picture
-        this.isLoading = false;
-        
-        // Provide specific error messages
-        if (error.status === 401) {
-          console.error('❌ Authentication failed for /users/profile endpoint');
-          console.error('🔍 Check if JWT token is being sent correctly');
-        } else if (error.status === 500) {
-          console.error('❌ Server error - possible causes:');
-          console.error('   • User profile record does not exist in database');
-          console.error('   • Backend userService.getProfileByUserId() is failing');
-          console.error('   • Database connection issue');
-        } else if (error.status === 404) {
-          console.error('❌ Profile endpoint not found - check backend routing');
-        }
-      }
-    });
-  }
+  // Removed loadProfilePicture() - all profile data comes from /users/me
 
   private updateUserInfo() {
     if (this.profile) {
       console.log('Profile data in home component:', this.profile);
-      console.log('Profile picture URL:', this.profile.profilePicture);
+  console.log('Profile picture URL:', this.profile.imageUrl);
       
       // Update username with priority: name > firstName+lastName > username
       if (this.profile.name) {

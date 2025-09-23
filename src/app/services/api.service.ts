@@ -9,6 +9,6 @@ export class ApiService {
 
   post(path: string, body: any) { return this.http.post(`${this.base}${path}`, body); }
   get(path: string, opts?: any) { return this.http.get(`${this.base}${path}`, opts); }
-  put(path: string, body: any) { return this.http.put(`${this.base}${path}`, body); }
+  put(path: string, body: any, options?: any) { return this.http.put(`${this.base}${path}`, body, options); }
   delete(path: string) { return this.http.delete(`${this.base}${path}`); }
 }

@@ -1,3 +1,48 @@
+/* Fixed Nav Bar Styles */
+.fixed-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 100;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.main-content {
+  margin-top: 80px;
+}
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  min-height: 64px;
+}
+.nav-brand {
+  font-size: 28px;
+  font-weight: bold;
+  color: #2563eb;
+  margin: 0;
+}
+.nav-actions {
+  display: flex;
+  gap: 12px;
+}
+.nav-btn {
+  min-width: 90px;
+  font-size: 15px;
+  padding: 8px 18px;
+}
+.logout-btn {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background: #dc2626;
+}
 /* Profile Header Styles */
 .profile-header {
   display: flex;

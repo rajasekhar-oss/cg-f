@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { BottomNavComponent } from '../../shared/bottom-nav.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BottomNavComponent],
   selector: 'app-verify-otp',
   templateUrl: './verify-otp.component.html'
 })
@@ -43,5 +44,29 @@ export class VerifyOtpComponent {
         this.err = 'Invalid OTP';
       }
     });
+  }
+  // Bottom nav logic
+  bottomNavItems = [
+    { label: 'Home', route: '/' },
+    { label: 'Cards', route: '/cards' },
+    { label: 'Star', route: '/leaderboard' },
+    { label: 'Person', route: '/friends' },
+    { label: 'Profile', route: '/profile' }
+  ];
+  getIconForRoute(route: string): string {
+    const icons: { [key: string]: string } = {
+      '/': '🏠',
+      '/cards': '🃏',
+      '/leaderboard': '⭐',
+      '/friends': '👥',
+      '/profile': '👤'
+    };
+    return icons[route] || '📄';
+  }
+  isActiveRoute(route: string): boolean {
+    return this.router.url === route;
+  }
+  navigate(route: string) {
+    this.router.navigate([route]);
   }
 }

@@ -1,0 +1,21 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  display: none;
+  z-index: 100;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+}
+@media (max-width: 1024px) {
+  .bottom-nav {
+    display: block !important;
+  }
+}
+@media (min-width: 1025px) {
+  .bottom-nav {
+    display: none !important;
+  }
+}

@@ -4,3 +4,10 @@
   <div *ngIf="cards?.length==0">No cards</div>
   <ul><li *ngFor="let c of cards">{{c.id}} — {{c.totalFilms}} (order: {{c.orderIndex}})</li></ul>
 </div>
+
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [getIconForRoute]="getIconForRoute.bind(this)"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>
