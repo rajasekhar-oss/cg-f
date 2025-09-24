@@ -1,8 +1,28 @@
-<div>
-  <h3>My Cards</h3>
-  <button (click)="arrange()">Arrange</button>
-  <div *ngIf="cards?.length==0">No cards</div>
-  <ul><li *ngFor="let c of cards">{{c.id}} — {{c.totalFilms}} (order: {{c.orderIndex}})</li></ul>
+
+<div class="cards-page-container">
+  <div class="cards-header">
+    <div class="cards-header-main">
+      <div class="cards-total">
+        <div class="cards-total-label">Total Cards</div>
+        <div class="cards-total-value">{{ cards.length || 0 }}</div>
+      </div>
+      <div class="cards-points">
+        <div class="cards-points-label">Total Points</div>
+        <div class="cards-points-value">{{ totalPoints || 0 }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="cards-actions">
+    <button class="cards-action-btn arrange" (click)="arrange()">Arrange</button>
+    <button class="cards-action-btn add" (click)="add()">Add</button>
+    <button class="cards-action-btn stored" (click)="stored()">Stored</button>
+  </div>
+  <div *ngIf="cards?.length === 0" class="cards-empty">No cards</div>
+  <div class="cards-grid">
+    <div *ngFor="let c of cards" class="card-tile">
+      <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+    </div>
+  </div>
 </div>
 
 <app-bottom-nav

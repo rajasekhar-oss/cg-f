@@ -12,28 +12,40 @@ export class AdminService {
 
   // Achievements
   createAchievement(dto: AchievementDto): Observable<Achievement> {
-    return this.http.post<Achievement>('/admin/achievements', dto);
+    return this.http.post<Achievement>('http://localhost:8081/admin/achievements', dto);
   }
 
   // Cards
-  create(dto: CardRequestDto): Observable<Card> {
-    return this.http.post<Card>('/admin/cards', dto);
-  }
+  // create(dto: CardRequestDto | FormData): Observable<Card> {
+  //   console.log('[AdminService] Creating card:', dto);
+  //   return this.http.post<Card>('http://localhost:8081/admin/cards', dto);
+  // }
+  // Inside your Angular service
+create(payload: FormData): Observable<any> {
+  // If you are using HttpClient, the code should be simple like this.
+  // Do not add custom headers like 'Content-Type': 'multipart/form-data'
+  // The browser will handle it for FormData
+  return this.http.post<Card>('http://localhost:8081/admin/cards', payload);
+}
   getCards(): Observable<Card[]> {
-    return this.http.get<Card[]>('/admin/cards');
+    console.log('[AdminService] Fetching all cards...');
+    return this.http.get<Card[]>('http://localhost:8081/admin/cards');
   }
   getCard(id: number): Observable<Card> {
-    return this.http.get<Card>(`/admin/cards/${id}`);
+    console.log('[AdminService] Fetching card with ID:', id);
+    return this.http.get<Card>(`http://localhost:8081/admin/cards/${id}`);
   }
-  updateCard(id: number, dto: CardRequestDto): Observable<Card> {
-    return this.http.put<Card>(`/admin/cards/${id}`, dto);
+  updateCard(id: number, dto: CardRequestDto | FormData): Observable<Card> {
+    console.log('[AdminService] Updating card with ID:', id, 'Payload:', dto);
+    return this.http.put<Card>(`http://localhost:8081/admin/cards/${id}`, dto);
   }
   deleteCard(id: number): Observable<ResponseDto> {
-    return this.http.delete<ResponseDto>(`/admin/cards/${id}`);
+    console.log('[AdminService] Deleting card with ID:', id);
+    return this.http.delete<ResponseDto>(`http://localhost:8081/admin/cards/${id}`);
   }
 
   // Stickers
   createSticker(dto: StickerDto): Observable<Sticker> {
-    return this.http.post<Sticker>('/admin/stickers', dto);
+    return this.http.post<Sticker>('http://localhost:8081/admin/stickers', dto);
   }
 }

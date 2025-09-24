@@ -1,0 +1,36 @@
+<div class="admin-card-detail-container">
+  <h2>Card Details</h2>
+  <div *ngIf="card && !loading" class="card-header" style="display: flex; align-items: center; gap: 24px; margin-bottom: 24px;">
+    <img *ngIf="card.imageUrl" [src]="card.imageUrl" [alt]="card.name" class="card-image" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb;" />
+    <div>
+      <h3 style="font-size: 1.5rem; font-weight: 600; margin: 0;">{{ card.name }}</h3>
+    </div>
+  </div>
+  <div *ngIf="loading" class="loading">Loading card...</div>
+  <div *ngIf="error" class="error">{{error}}</div>
+  <form *ngIf="!loading && card" (ngSubmit)="updateCard()" class="card-form">
+    <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 16px;">
+  <!-- <div style="color: #888; font-size: 0.95rem; margin-bottom: 4px;">Debug: card.picture = {{ card?.picture }}</div> -->
+  <img *ngIf="card.picture" [src]="card.picture" [alt]="card.name" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; object-fit: cover; border: 2px solid #e5e7eb; margin-bottom: 8px;" />
+  <div *ngIf="!card.picture" style="color: #dc2626; font-size: 0.95rem;">No image available for this card.</div>
+    </div>
+    <label>Name <input [(ngModel)]="dto.name" name="name" required /></label>
+    <label>Image
+      <input type="file" accept="image/*" (change)="onFileSelected($event)" />
+    </label>
+    <label>Image URL <input [(ngModel)]="dto.imageUrl" name="imageUrl" required /></label>
+    <label>Total Films <input [(ngModel)]="dto.totalFilms" name="totalFilms" type="number" required /></label>
+    <label>Years Active <input [(ngModel)]="dto.yearsActive" name="yearsActive" type="number" required /></label>
+    <label>Highest Grossing <input [(ngModel)]="dto.highestGrossing" name="highestGrossing" required /></label>
+    <label>Awards <input [(ngModel)]="dto.awardsWon" name="awardsWon" type="number" required /></label>
+    <label>Follower<input [(ngModel)]="dto.followers" name="followers" required /></label>
+    <label>Languages (as integer) <input [(ngModel)]="dto.languages" name="languages" required /></label>
+    <label>Professions (as integer) <input [(ngModel)]="dto.professions" name="professions" required /></label>
+    <div class="button-row">
+      <button type="submit" class="update-btn">Update</button>
+      <button type="button" (click)="deleteCard()" class="delete-btn">Delete</button>
+    </div>
+  </form>
+  <div *ngIf="msg" class="success">{{msg}}</div>
+  <div *ngIf="!loading && !card && !error" class="no-data">No card data to display.</div>
+</div>

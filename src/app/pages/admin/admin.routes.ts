@@ -4,7 +4,7 @@ import { AdminCardsComponent } from './admin-cards.component';
 import { AdminStickersComponent } from './admin-stickers.component';
 import { AdminHomeComponent } from './admin-home.component';
 import { AdminCardsListComponent } from './admin-cards-list.component';
-import { AdminCardDetailComponent } from './admin-card-detail.component';
+import { AdminCardDetailComponent } from './admin-card-detail/admin-card-detail.component';
 
 export const adminRoutes: Routes = [
   { path: 'admin', component: AdminHomeComponent },

@@ -14,10 +14,9 @@ import { Card } from '../../models/card.model';
       <div *ngIf="loading">Loading cards...</div>
       <div *ngIf="error" style="color: #dc2626;">{{error}}</div>
       <div *ngIf="!loading && cards.length === 0">No cards found.</div>
-      <ul style="list-style: none; padding: 0;">
-        <li *ngFor="let card of cards" (click)="openCard(card.id)" style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #e5e7eb; margin-bottom: 16px; padding: 18px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: box-shadow 0.2s;">
-          <span style="font-weight: 600; color: #374151;">Card #{{card.id}}</span>
-          <span style="color: #6b7280;">Films: {{card.totalFilms}}, Awards: {{card.awardsWon}}</span>
+      <ul style="list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+        <li *ngFor="let card of cards" (click)="openCard(card.id)" style="background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #e5e7eb; padding: 0; cursor: pointer; width: 100%; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; transition: box-shadow 0.2s; overflow: hidden;">
+          <img *ngIf="card.picture || card.imageUrl" [src]="card.picture || card.imageUrl" [alt]="card.name" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; border: none;" />
         </li>
       </ul>
     </div>

@@ -1,5 +1,9 @@
+
 export interface Card {
   id: number;
+  name: string;
+  imageUrl: string;
+  picture?: string;
   totalFilms: number;
   yearsActive: number;
   highestGrossing: string;
@@ -12,7 +16,10 @@ export interface Card {
   orderIndex?: number;
 }
 
+
 export interface CardRequestDto {
+  name: string;
+  imageUrl: string;
   totalFilms: number;
   yearsActive: number;
   highestGrossing: string;

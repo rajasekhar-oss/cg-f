@@ -4,34 +4,43 @@ import { AuthService } from '../services/auth.service';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  console.log('[AuthInterceptor] Interceptor called');
   const auth = inject(AuthService);
+  console.log('[AuthInterceptor] AuthService injected:', !!auth);
   const token = auth.getAccessToken();
   const refreshToken = auth.getRefreshToken();
-  // Debug: Log tokens before request
   console.log('[AuthInterceptor] accessToken before request:', token);
   console.log('[AuthInterceptor] refreshToken before request:', refreshToken);
-  // Skip adding token for auth endpoints to avoid issues with login/register
   const isAuthEndpoint = req.url.includes('/auth/');
+  console.log('[AuthInterceptor] Request URL:', req.url);
+  console.log('[AuthInterceptor] isAuthEndpoint:', isAuthEndpoint);
 
   let modifiedReq = req;
   if (token && !isAuthEndpoint) {
+    console.log('[AuthInterceptor] Adding Authorization header');
     modifiedReq = req.clone({
       setHeaders: {
         Authorization: `Bearer ${token}`
       }
     });
+  } else {
+    console.log('[AuthInterceptor] Not adding Authorization header');
   }
 
+  console.log('[AuthInterceptor] Passing request to next handler');
   return next(modifiedReq).pipe(
     catchError((err: any) => {
+      console.log('[AuthInterceptor] Error caught:', err);
+      console.log('[AuthInterceptor] Error status:', err?.status);
+      console.log('[AuthInterceptor] isAuthEndpoint in error:', isAuthEndpoint);
       if ((err.status === 401 || err.status === 403) && !isAuthEndpoint) {
+        console.log(`[AuthInterceptor] ${err.status} detected, attempting refresh...`);
         console.warn(`[AuthInterceptor] ${err.status} detected, attempting refresh...`);
-        // Try to refresh token on 401 Unauthorized or 403 Forbidden
         return auth.refreshToken().pipe(
           switchMap(() => {
+            console.log('[AuthInterceptor] Token refresh successful');
             const newToken = auth.getAccessToken();
             const newRefreshToken = auth.getRefreshToken();
-            // Debug: Log tokens after refresh
             console.log('[AuthInterceptor] accessToken after refresh:', newToken);
             console.log('[AuthInterceptor] refreshToken after refresh:', newRefreshToken);
             const retriedReq = req.clone({
@@ -39,16 +48,21 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
                 Authorization: `Bearer ${newToken}`
               }
             });
+            console.log('[AuthInterceptor] Retrying request with new token');
             return next(retriedReq);
           }),
-          catchError(() => {
-            auth.logout();
-            alert('Your session has expired. Please log in again.');
+          catchError((refreshErr) => {
+            if (refreshErr.status === 401 || refreshErr.status === 403) {
+              console.log(refreshErr);
+    auth.logout();
+  }
+            console.log('[AuthInterceptor] Token refresh failed:', refreshErr);
+            alert('Your session has expired. Please log in.\nError: ' + (err?.error?.error || err?.message || err));
             return throwError(() => err);
           })
         );
       }
-      // For 403, just propagate the error (e.g., wrong password)
+      console.log('[AuthInterceptor] Propagating error');
       return throwError(() => err);
     })
   );

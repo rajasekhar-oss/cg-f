@@ -8,15 +8,39 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
   standalone: true,
   imports: [CommonModule, BottomNavComponent],
   selector: 'app-cards',
-  templateUrl: './cards.component.html'
+  templateUrl: './cards.component.html',
+  styleUrls: ['./cards.component.css']
 })
 export class CardsComponent {
   cards: any[] = [];
+  totalPoints: number = 0;
+  isLoading: boolean = true;
   constructor(private api: ApiService, private router: Router){
     this.reload();
   }
-  reload(){ this.api.get('/cards/my').subscribe((r:any)=> this.cards = r, ()=> this.cards = []); }
+  reload(){
+    this.isLoading = true;
+    // Fetch cards
+    this.api.get('/cards/my').subscribe((r:any)=> {
+      console.log('Fetched cards:', r);
+      this.cards = r;
+      this.isLoading = false;
+    }, ()=> {
+      this.cards = [];
+      this.isLoading = false;
+    });
+    // Fetch user points
+    this.api.get('/users/me').subscribe((user: any) => {
+      this.totalPoints = user.points || 0;
+    }, () => {
+      this.totalPoints = 0;
+    });
+  }
   arrange(){ this.router.navigate(['/cards/arrange']);}
+
+
+  add() { this.router.navigate(['/cards/add']); }
+  stored() { /* TODO: Implement stored cards logic */ }
 
   // Bottom nav logic
   bottomNavItems = [

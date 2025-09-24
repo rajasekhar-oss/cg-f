@@ -1,11 +1,21 @@
-<h3>Arrange Cards</h3>
-<div cdkDropList (cdkDropListDropped)="drop($event)">
-  <div *ngFor="let c of cards" cdkDrag style="padding:8px;border:1px solid #ddd;margin:4px">
-    #{{c.orderIndex}} — {{c.totalFilms}}
+
+<div class="cards-page-container">
+  <div class="cards-header">
+    <div class="cards-header-main">
+      <div class="cards-total">
+        <div class="cards-total-label">Arrange Cards</div>
+      </div>
+    </div>
+  </div>
+  <div class="cards-actions">
+    <button class="cards-action-btn arrange" (click)="save()">Set Order</button>
+  </div>
+  <div class="cards-grid" cdkDropList [cdkDropListData]="cards" (cdkDropListDropped)="drop($event)">
+    <div *ngFor="let c of cards" class="card-tile" cdkDrag>
+      <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+    </div>
   </div>
 </div>
-<button (click)="save()">Set Order</button>
-
 <app-bottom-nav
   [bottomNavItems]="bottomNavItems"
   [getIconForRoute]="getIconForRoute.bind(this)"
