@@ -35,7 +35,7 @@ export class HomePageLoggedInComponent implements OnInit {
       title: 'Gang Play',
       description: 'Play with your friends in a private group',
       icon: '👥',
-      route: '/gang-play'
+      route: '/gang-play/create'
     },
     {
       title: 'Stranger Play',
@@ -53,7 +53,7 @@ export class HomePageLoggedInComponent implements OnInit {
       title: 'Play with Code',
       description: 'Join a game using a room code',
       icon: '🔢',
-      route: '/play-code'
+      route: '/gang-play/join'
     }
   ];
 

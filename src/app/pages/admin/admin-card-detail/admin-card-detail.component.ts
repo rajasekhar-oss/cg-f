@@ -57,31 +57,20 @@ export class AdminCardDetailComponent implements OnInit {
   updateCard() {
     if (!this.card) return;
     this.msg = '';
-    let payload: any;
-    if (this.selectedFile) {
-      payload = new FormData();
-      payload.append('name', String(this.dto.name));
-      payload.append('pictureFile', this.selectedFile);
-      if (this.dto.imageUrl) payload.append('picture', String(this.dto.imageUrl));
-      if (this.dto.totalFilms) payload.append('totalFilms', String(this.dto.totalFilms));
-      if (this.dto.yearsActive) payload.append('yearsActive', String(this.dto.yearsActive));
-      if (this.dto.highestGrossing) payload.append('highestGrossing', String(this.dto.highestGrossing));
-      if (this.dto.awardsWon) payload.append('awardsWon', String(this.dto.awardsWon));
-      if (this.dto.followers) payload.append('followers', String(this.dto.followers));
-      if (this.dto.languages) payload.append('languages', String(this.dto.languages));
-      if (this.dto.professions) payload.append('professions', String(this.dto.professions));
-    } else {
-      payload = {
-        name: this.dto.name,
-        picture: this.dto.imageUrl,
-        totalFilms: Number(this.dto.totalFilms),
-        yearsActive: Number(this.dto.yearsActive),
-        highestGrossing: this.dto.highestGrossing,
-        awardsWon: Number(this.dto.awardsWon),
-        followers: this.dto.followers,
-        languages: Number(this.dto.languages),
-        professions: Number(this.dto.professions)
-      };
+    const payload = new FormData();
+    if (this.dto.name) payload.append('name', String(this.dto.name));
+    if (this.selectedFile) payload.append('pictureFile', this.selectedFile);
+    if (this.dto.imageUrl) payload.append('picture', String(this.dto.imageUrl));
+    if (this.dto.totalFilms) payload.append('totalFilms', String(this.dto.totalFilms));
+    if (this.dto.yearsActive) payload.append('yearsActive', String(this.dto.yearsActive));
+    if (this.dto.highestGrossing) payload.append('highestGrossing', String(this.dto.highestGrossing));
+    if (this.dto.awardsWon) payload.append('awardsWon', String(this.dto.awardsWon));
+    if (this.dto.followers) payload.append('followers', String(this.dto.followers));
+    if (this.dto.languages) payload.append('languages', String(this.dto.languages));
+    if (this.dto.professions) payload.append('professions', String(this.dto.professions));
+    // Debug log FormData
+    for (let [key, value] of payload.entries()) {
+      console.log(key, value);
     }
     this.admin.updateCard(this.card.id, payload).subscribe({
       next: () => {

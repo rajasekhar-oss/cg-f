@@ -15,6 +15,8 @@ export class CardsComponent {
   cards: any[] = [];
   totalPoints: number = 0;
   isLoading: boolean = true;
+  selectedCard: any = null;
+
   constructor(private api: ApiService, private router: Router){
     this.reload();
   }
@@ -38,9 +40,15 @@ export class CardsComponent {
   }
   arrange(){ this.router.navigate(['/cards/arrange']);}
 
-
   add() { this.router.navigate(['/cards/add']); }
   stored() { /* TODO: Implement stored cards logic */ }
+
+  showCardDetails(card: any) {
+    this.selectedCard = card;
+  }
+  closeCardDetails() {
+    this.selectedCard = null;
+  }
 
   // Bottom nav logic
   bottomNavItems = [

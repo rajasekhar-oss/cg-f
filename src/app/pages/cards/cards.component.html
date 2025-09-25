@@ -19,8 +19,48 @@
   </div>
   <div *ngIf="cards?.length === 0" class="cards-empty">No cards</div>
   <div class="cards-grid">
-    <div *ngFor="let c of cards" class="card-tile">
+    <div *ngFor="let c of cards" class="card-tile" (click)="showCardDetails(c)">
       <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+    </div>
+  </div>
+
+  <!-- Card Details Modal -->
+  <div *ngIf="selectedCard" class="card-details-modal">
+    <div class="card-details-content">
+      <button class="close-btn" (click)="closeCardDetails()">✖</button>
+      <div class="card-details-image">
+        <img *ngIf="selectedCard.picture || selectedCard.imageUrl" [src]="selectedCard.picture || selectedCard.imageUrl" [alt]="selectedCard.name || selectedCard.title || 'Card'" />
+      </div>
+      <div class="card-details-info">
+        <div *ngIf="selectedCard.totalFilms" class="stat-card">
+          <span class="stat-label">Total Films</span>
+          <span class="stat-value">{{ selectedCard.totalFilms }}</span>
+        </div>
+        <div *ngIf="selectedCard.yearsActive" class="stat-card">
+          <span class="stat-label">Years Active</span>
+          <span class="stat-value">{{ selectedCard.yearsActive }}</span>
+        </div>
+        <div *ngIf="selectedCard.highestGrossing" class="stat-card">
+          <span class="stat-label">Highest Grossing</span>
+          <span class="stat-value">{{ selectedCard.highestGrossing }}</span>
+        </div>
+        <div *ngIf="selectedCard.awardsWon" class="stat-card">
+          <span class="stat-label">Awards Won</span>
+          <span class="stat-value">{{ selectedCard.awardsWon }}</span>
+        </div>
+        <div *ngIf="selectedCard.followers" class="stat-card">
+          <span class="stat-label">Followers</span>
+          <span class="stat-value">{{ selectedCard.followers }}</span>
+        </div>
+        <div *ngIf="selectedCard.languages" class="stat-card">
+          <span class="stat-label">Languages</span>
+          <span class="stat-value">{{ selectedCard.languages }}</span>
+        </div>
+        <div *ngIf="selectedCard.professions" class="stat-card">
+          <span class="stat-label">Professions</span>
+          <span class="stat-value">{{ selectedCard.professions }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>

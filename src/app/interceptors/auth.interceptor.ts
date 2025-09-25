@@ -52,7 +52,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return next(retriedReq);
           }),
           catchError((refreshErr) => {
-            if (refreshErr.status === 401 || refreshErr.status === 403) {
+            if (refreshErr.status === 401) {
               console.log(refreshErr);
     auth.logout();
   }
