@@ -20,11 +20,11 @@ import { Router } from '@angular/router';
         <div class="info-item"><strong>Room Code:</strong> {{ roomInfo.roomCode }}</div>
         <div class="info-item"><strong>Required Players:</strong> {{ roomInfo.requiredPlayers }}</div>
         <div class="info-item"><strong>Joined Players:</strong></div>
-        <ul class="joined-list">
-          <li *ngFor="let user of roomInfo.joinedPlayers">
-            {{ user.name }} <span style="color:#6b7280;font-size:0.95em;">({{ user.id }})</span>
-          </li>
-        </ul>
+        <div class="joined-cards">
+          <div class="joined-card" *ngFor="let user of joinedUsernames">
+            {{ user.name }}
+          </div>
+        </div>
       </div>
       <div *ngIf="error" class="error">{{ error }}</div>
     </div>
@@ -37,6 +37,33 @@ import { Router } from '@angular/router';
     .join-btn { margin-top: 12px; padding: 12px 0; font-size: 1.1rem; border-radius: 10px; background: linear-gradient(90deg, #8b5cf6 60%, #3b82f6 100%); color: white; border: none; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; width: 100%; }
     .room-info { margin-top: 24px; background: #f3f4f6; border-radius: 8px; padding: 16px; }
     .info-item { font-size: 1.1rem; color: #1f2937; margin-bottom: 8px; }
+    .joined-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+    .joined-card {
+      background: #f3f4f6;
+      color: #374151;
+      border-radius: 8px;
+      padding: 12px 0;
+      font-size: 1.08rem;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      min-width: 120px;
+      max-width: 120px;
+      text-align: center;
+      letter-spacing: 0.5px;
+      transition: box-shadow 0.15s;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 2px;
+    }
+    .joined-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      background: #e5e7eb;
+    }
     .error { color: #dc2626; font-weight: 500; margin-top: 12px; }
   `]
 })
@@ -45,22 +72,32 @@ export class JoinRoomComponent {
   roomInfo: import('../../models/room-response').RoomResponse | null = null;
   isLoading = false;
   error = '';
+  joinedUsernames: { id: string, name: string }[] = [];
 
   constructor(private api: ApiService, private router: Router) {}
 
   joinRoom() {
     this.isLoading = true;
     this.error = '';
+    this.joinedUsernames = [];
     this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
       next: (res: any) => {
         this.roomInfo = res;
         this.isLoading = false;
-        // Log all relevant fields
-  console.log('roomCode:', res.roomCode);
-  console.log('requiredPlayers:', res.requiredPlayers);
-  console.log('joinedPlayers:', res.joinedPlayers);
-  console.log('error:', res.error);
-        if(res.error){
+        if (res.joinedPlayers && Array.isArray(res.joinedPlayers)) {
+          Promise.all(res.joinedPlayers.map((user: any) => {
+            const userId = user.id ? user.id : user;
+            const url = `/api/rooms/userName/${userId}`;
+            console.log('Fetching username from:', url);
+            return this.api.get(url).toPromise()
+              .then((dto: any) => ({ id: userId, name: dto.userName }))
+              .catch(() => ({ id: userId, name: 'Unknown' }));
+          })).then((users) => {
+            this.joinedUsernames = users;
+            console.log('Joined usernames:', this.joinedUsernames);
+          });
+        }
+        if(res.error &&  res.error != 'successfully joined in to the room'){
             this.error = res.error;
         }
       }
