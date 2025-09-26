@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
 import { Router } from '@angular/router';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   standalone: true,
@@ -15,7 +16,17 @@ import { Router } from '@angular/router';
 })
 export class ArrangeComponent {
   cards:any[] = [];
-  constructor(private api: ApiService, private router: Router){
+  showNotification = false;
+  notificationMessage = '';
+  fromWaitingRoom = false;
+  roomCode = '';
+  constructor(private api: ApiService, private router: Router, private notification: NotificationService){
+    const nav = (this.router.getCurrentNavigation() as any);
+    const state = nav?.extras?.state;
+    if (state?.fromWaitingRoom) {
+      this.fromWaitingRoom = true;
+      this.roomCode = state.roomCode || '';
+    }
     this.api.get('/cards/my').subscribe((r:any)=> {
       this.cards = r.sort((a: any, b: any)=>a.orderIndex-b.orderIndex);
       console.log('ArrangeComponent loaded cards:', this.cards);
@@ -52,7 +63,14 @@ export class ArrangeComponent {
   }
   save(){
     const order = this.cards.map(c=>c.id);
-    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(()=> alert('saved'), (err: any)=> alert('err'));
+    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(()=> {
+      this.notification.show('Order changed successfully');
+      if (this.fromWaitingRoom) {
+        window.history.back();
+      }
+    }, (err: any)=> {
+      this.notification.show('Error saving card order.');
+    });
   }
 
   // Bottom nav logic

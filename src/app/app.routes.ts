@@ -9,7 +9,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { CardsComponent } from './pages/cards/cards.component';
 import { ArrangeComponent } from './pages/arrange/arrange.component';
 import { AddCardsComponent } from './pages/cards/add-cards.component';
-import { WaitingRoomComponent } from './pages/waiting-room/waiting-room.component';
+import { WaitingRoomComponent } from './pages/gang-play/waiting-room.component';
 import { GameComponent } from './pages/game/game.component';
 import { PlaceholderComponent } from './pages/placeholder.component';
 import { CreateRoomComponent } from './pages/gang-play/create-room.component';
@@ -34,6 +34,7 @@ export const routes: Routes = [
   { path: 'gang-play', component: PlaceholderComponent },
   { path: 'gang-play/create', component: CreateRoomComponent },
   { path: 'gang-play/join', component: JoinRoomComponent },
+  { path: 'gang-play/waiting', component: WaitingRoomComponent },
   { path: 'stranger-play', component: PlaceholderComponent },
   { path: 'temporary-play', component: PlaceholderComponent },
   { path: 'play-code', component: PlaceholderComponent },

@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { RoomResponse } from '../../models/room-response';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
@@ -12,36 +13,29 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
 })
 export class WaitingRoomComponent {
   code = '';
-  players: string[] = [];
+  roomInfo: RoomResponse | null = null;
   constructor(private route: ActivatedRoute, private api: ApiService, private router: Router){
     this.code = route.snapshot.params['code'];
-    // Poll or use websocket to listen for changes — here we call join info once
-    // Example: GET /api/rooms/{code}/info  (if backend provides)
+    this.fetchRoomInfo();
+    // Optionally poll for updates or use websocket for real-time
   }
-  start(){ this.api.post(`/api/rooms/${this.code}/start`, {}).subscribe(()=>alert('starting'), (err: any)=>alert('nope')); }
+  fetchRoomInfo() {
+    this.api.get(`/rooms/${this.code}/info`, { responseType: 'json' }).subscribe((info) => {
+      this.roomInfo = info as unknown as RoomResponse;
+    });
+  }
+  get canStartGame(): boolean {
+    return this.roomInfo !== null && this.roomInfo.joinedPlayers.length === this.roomInfo.requiredPlayers;
+  }
+  start() {
+    console.log('Starting game for room');
+    this.api.post(`/api/rooms/${this.code}/start`, {}).subscribe(() => {
+      // Navigate to gang-play waiting room with state
+      this.router.navigate(['/gang-play/waiting'], { state: { roomInfo: this.roomInfo } });
+    }, (err: any) => {
+      // Optionally show notification
+    });
+  }
 
-  // Bottom nav logic
-  bottomNavItems = [
-    { label: 'Home', route: '/' },
-    { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
-    { label: 'Profile', route: '/profile' }
-  ];
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
-  }
-  isActiveRoute(route: string): boolean {
-    return this.router.url === route;
-  }
-  navigate(route: string) {
-    this.router.navigate([route]);
-  }
+  // ...existing bottom nav logic...
 }

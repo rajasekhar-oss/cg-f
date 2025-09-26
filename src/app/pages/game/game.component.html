@@ -1,11 +1,63 @@
-<div>
-  <h3>Game</h3>
-  <pre>{{state | json}}</pre>
-</div>
 
-<app-bottom-nav
-  [bottomNavItems]="bottomNavItems"
-  [getIconForRoute]="getIconForRoute.bind(this)"
-  [isActiveRoute]="isActiveRoute.bind(this)"
-  [navigate]="navigate.bind(this)">
-</app-bottom-nav>
+
+<div class="game-table-container">
+  <!-- Top controls -->
+  <div class="top-controls">
+  <button class="leave-btn">Leave Game</button>
+  <button *ngIf="isAdmin" class="delete-btn">End Game</button>
+  </div>
+
+  <!-- Spinner for game start -->
+  <div *ngIf="showSpinner" class="spinner">
+    <div class="spinner-graphic"></div>
+    <div class="spinner-label">Selecting first player...</div>
+  </div>
+
+  <!-- Table layout -->
+  <div class="table">
+    <ng-container *ngFor="let player of tablePlayers; let i = index">
+      <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
+        [ngStyle]="getCircularSeatStyle(i, tablePlayers.length)">
+        <img *ngIf="player.avatar" [src]="player.avatar" class="avatar" />
+        <div class="username">{{player.username}}</div>
+        <div *ngIf="player.isMe" class="label">You</div>
+        <div *ngIf="player.isMe && myCards.length" class="your-cards">
+          <div *ngFor="let card of myCards" class="mini-card">
+            <div class="mini-title">{{card.title}}</div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+    <div class="table-center">Game Table</div>
+  </div>
+
+  <!-- Bottom bar: cards and messaging -->
+  <div class="bottom-bar">
+    <span class="cards-count">Cards: {{myCards.length}}</span>
+    <button class="cards-btn" (click)="showCards = !showCards">Cards</button>
+    <button class="message-btn" (click)="sendMessage()">Message</button>
+  </div>
+
+  <!-- Cards view at bottom -->
+  <div *ngIf="showCards" class="cards-view">
+    <div class="card-stack">
+      <div *ngFor="let card of myCards; let idx = index" class="card" [ngStyle]="{ left: (idx * 24) + 'px', zIndex: (myCards.length - idx) }">
+        <div class="card-title">{{card.title}}</div>
+        <div class="card-stats">
+          <div *ngFor="let stat of card.stats" class="card-stat">
+            <span>{{stat.name}}: {{stat.value}}</span>
+            <button *ngIf="isMyTurn" (click)="selectStat(stat)">Select</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button *ngIf="isMyTurn && selectedStat" class="ok-btn">Select</button>
+  </div>
+
+  <!-- Messaging section at bottom -->
+  <div class="messages">
+    <div *ngFor="let msg of messages" class="message" [ngStyle]="{ bottom: msg.bottom + 'px', opacity: msg.opacity }">
+      {{msg.text}}
+    </div>
+  </div>
+</div>

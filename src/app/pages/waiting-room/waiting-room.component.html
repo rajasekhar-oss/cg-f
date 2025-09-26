@@ -1,7 +1,12 @@
 <div>
   <h3>Waiting Room — {{code}}</h3>
-  <div *ngFor="let p of players">{{p}}</div>
-  <button (click)="start()">Start (if you are admin)</button>
+  <div *ngIf="roomInfo">
+    <div>Required Players: {{roomInfo.requiredPlayers}}</div>
+    <div>Joined Players: {{roomInfo.joinedPlayers.length}}</div>
+    <div *ngFor="let p of roomInfo.joinedPlayers">{{p.name}}</div>
+    <button (click)="start()" [disabled]="!canStartGame">Start Game</button>
+  </div>
+  <div *ngIf="!roomInfo">Loading...</div>
 </div>
 
 <app-bottom-nav

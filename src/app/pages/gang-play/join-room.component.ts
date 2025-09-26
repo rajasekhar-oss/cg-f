@@ -22,8 +22,8 @@ import { Router } from '@angular/router';
         <div class="info-item"><strong>Joined Players:</strong></div>
         <div class="joined-cards">
           <div class="joined-card" *ngFor="let user of joinedUsernames">
-            {{ user.name }}
-          </div>
+              {{ user }}
+            </div>
         </div>
       </div>
       <div *ngIf="error" class="error">{{ error }}</div>
@@ -72,7 +72,7 @@ export class JoinRoomComponent {
   roomInfo: import('../../models/room-response').RoomResponse | null = null;
   isLoading = false;
   error = '';
-  joinedUsernames: { id: string, name: string }[] = [];
+  joinedUsernames: string[] = [];
 
   constructor(private api: ApiService, private router: Router) {}
 
@@ -80,7 +80,7 @@ export class JoinRoomComponent {
     this.isLoading = true;
     this.error = '';
     this.joinedUsernames = [];
-    this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
+        this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
       next: (res: any) => {
         this.roomInfo = res;
         this.isLoading = false;
@@ -88,16 +88,28 @@ export class JoinRoomComponent {
           Promise.all(res.joinedPlayers.map((user: any) => {
             const userId = user.id ? user.id : user;
             const url = `/api/rooms/userName/${userId}`;
-            console.log('Fetching username from:', url);
             return this.api.get(url).toPromise()
-              .then((dto: any) => ({ id: userId, name: dto.userName }))
-              .catch(() => ({ id: userId, name: 'Unknown' }));
-          })).then((users) => {
-            this.joinedUsernames = users;
-            console.log('Joined usernames:', this.joinedUsernames);
+              .then((dto: any) => dto.userName)
+              .catch(() => 'Unknown');
+          })).then((usernames: string[]) => {
+            this.joinedUsernames = usernames;
+            if (!res.error || res.error === 'successfully joined in to the room' || res.error==="You have already joined") {
+              // Pass usernames to waiting room
+              this.router.navigate(['/gang-play/waiting'], {
+                state: {
+                  roomInfo: {
+                    ...res,
+                    joinedPlayersUsernames: usernames
+                  }
+                }
+              });
+            }
           });
+        } else if (!res.error || res.error === 'successfully joined in to the room' || res.error==="You have already joined") {
+          // Fallback: no joinedPlayers array, just navigate
+          this.router.navigate(['/gang-play/waiting'], { state: { roomInfo: res } });
         }
-        if(res.error &&  res.error != 'successfully joined in to the room'){
+        if(res.error &&  (res.error != 'successfully joined in to the room' || res.error != "You have already joined")){
             this.error = res.error;
         }
       }

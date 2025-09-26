@@ -1,0 +1,265 @@
+
+.game-table-container {
+  position: relative;
+  min-height: 700px;
+  height: 700px;
+  background: #f9fafb;
+  border-radius: 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  margin: 32px auto;
+  max-width: 700px;
+  padding: 0;
+}
+.top-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 0 32px;
+}
+.leave-btn {
+  background: #f3f4f6;
+  color: #374151;
+  border-radius: 8px;
+  padding: 10px 24px;
+  border: 1px solid #e5e7eb;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.delete-btn {
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 10px 24px;
+  border: 1px solid #fecaca;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+/* Responsive circular table */
+.table {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(70vw, 500px);
+  height: min(70vw, 500px);
+  background: #e5e7eb;
+  border-radius: 50%;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.table-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 50%;
+  width: 22%;
+  height: 22%;
+  min-width: 90px;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.player-seat {
+  width: 80px;
+  height: 80px;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  /* Will be offset by ngStyle */
+  transition: left 0.3s, top 0.3s;
+}
+.player-seat.me {
+  z-index: 2;
+  box-shadow: 0 0 0 2px #22c55e;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-bottom: 4px;
+  border: 2px solid #22c55e;
+  background: #fff;
+}
+.username {
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #374151;
+  background: rgba(255,255,255,0.85);
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-top: 2px;
+  display: inline-block;
+}
+/* ...existing code... */
+.table-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.player-seat {
+  width: 80px;
+  height: 80px;
+  text-align: center;
+  position: absolute;
+}
+.player-seat.me {
+  z-index: 2;
+  box-shadow: 0 0 0 2px #22c55e;
+}
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin-bottom: 4px;
+  border: 2px solid #22c55e;
+}
+.username {
+  font-size: 0.98rem;
+  font-weight: 500;
+  color: #374151;
+}
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding: 16px 0;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+  z-index: 10;
+}
+.cards-btn, .message-btn, .sticker-btn {
+  background: #22c55e;
+  color: white;
+  border-radius: 8px;
+  padding: 10px 24px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.cards-view {
+  position: fixed;
+  left: 50%;
+  bottom: 70px;
+  transform: translateX(-50%);
+  max-width: 340px;
+  min-height: 120px;
+  z-index: 11;
+}
+.card-stack {
+  position: relative;
+  height: 120px;
+}
+.card {
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 110px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  transition: left 0.2s;
+}
+.card-title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.card-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-stat {
+  font-size: 0.98rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ok-btn {
+  background: #22c55e;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 24px;
+  border: none;
+  font-size: 1.05rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.messages {
+  position: fixed;
+  left: 50%;
+  bottom: 120px;
+  transform: translateX(-50%);
+  width: 320px;
+  pointer-events: none;
+  z-index: 12;
+}
+.message {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  color: #374151;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 1.02rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0.9;
+  animation: floatUp 2.5s linear forwards;
+}
+@keyframes floatUp {
+  0% { bottom: 0; opacity: 1; }
+  80% { bottom: 120px; opacity: 0.9; }
+  100% { bottom: 180px; opacity: 0; }
+}
+.spinner {
+  position: absolute;
+  left: 50%;
+  top: 24px;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+}
+.spinner-graphic {
+  width: 48px;
+  height: 48px;
+  border: 6px solid #22c55e;
+  border-top: 6px solid #e5e7eb;
+  border-radius: 50%;
+  animation: spin 1.2s linear infinite;
+  margin: 0 auto 8px auto;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
