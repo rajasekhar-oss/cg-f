@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -67,12 +67,14 @@ import { Router } from '@angular/router';
     .error { color: #dc2626; font-weight: 500; margin-top: 12px; }
   `]
 })
-export class JoinRoomComponent {
+export class JoinRoomComponent implements OnDestroy {
   roomCode: string = '';
-  roomInfo: import('../../models/room-response').RoomResponse | null = null;
+  roomInfo: any = null;
   isLoading = false;
   error = '';
   joinedUsernames: string[] = [];
+  joinedPlayerIds: string[] = [];
+  private sub: any = null;
 
   constructor(private api: ApiService, private router: Router) {}
 
@@ -80,38 +82,29 @@ export class JoinRoomComponent {
     this.isLoading = true;
     this.error = '';
     this.joinedUsernames = [];
-        this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
+    this.joinedPlayerIds = [];
+    if (this.sub) this.sub.unsubscribe && this.sub.unsubscribe();
+    this.sub = this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
       next: (res: any) => {
         this.roomInfo = res;
         this.isLoading = false;
-        if (res.joinedPlayers && Array.isArray(res.joinedPlayers)) {
-          Promise.all(res.joinedPlayers.map((user: any) => {
-            const userId = user.id ? user.id : user;
-            const url = `/api/rooms/userName/${userId}`;
-            return this.api.get(url).toPromise()
-              .then((dto: any) => dto.userName)
-              .catch(() => 'Unknown');
-          })).then((usernames: string[]) => {
-            this.joinedUsernames = usernames;
-            if (!res.error || res.error === 'successfully joined in to the room' || res.error==="You have already joined") {
-              // Pass usernames to waiting room
-              this.router.navigate(['/gang-play/waiting'], {
-                state: {
-                  roomInfo: {
-                    ...res,
-                    joinedPlayersUsernames: usernames
-                  }
-                }
-              });
-            }
-          });
-        } else if (!res.error || res.error === 'successfully joined in to the room' || res.error==="You have already joined") {
-          // Fallback: no joinedPlayers array, just navigate
-          this.router.navigate(['/gang-play/waiting'], { state: { roomInfo: res } });
+        this.joinedUsernames = res.joinedPlayersUsernames || [];
+        this.joinedPlayerIds = (res.joinedPlayers || []).map((id: any) => id.toString());
+        if (!res.error || res.error === 'successfully joined in to the room' || res.error === "You have already joined") {
+          this.router.navigate(['/gang-play/waiting', this.roomCode], { state: { roomInfo: res } });
         }
-        if(res.error &&  (res.error != 'successfully joined in to the room' || res.error != "You have already joined")){
-            this.error = res.error;
+        if (res.error && (res.error !== 'successfully joined in to the room' && res.error !== "You have already joined")) {
+          this.error = res.error;
         }
+      },
+      error: (e: any) => {
+        this.error = e?.error?.error || e?.message || 'Error joining room';
+        this.isLoading = false;
       }
-  })};
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.sub) this.sub.unsubscribe && this.sub.unsubscribe();
+  }
 }

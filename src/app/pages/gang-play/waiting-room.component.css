@@ -1,0 +1,146 @@
+.action-btn {
+  background: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  margin: 8px 0;
+  width: 100%;
+  max-width: 320px;
+  padding: 12px 0;
+  font-size: 1em;
+  color: #2d3748;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: background 0.2s;
+  display: block;
+}
+.action-btn:hover {
+  background: #cbd5e1;
+}
+.game-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .waiting-room-container {
+    padding: 16px 4px;
+    max-width: 98vw;
+  }
+  .action-btn {
+    max-width: 98vw;
+    font-size: 0.95em;
+    padding: 10px 0;
+  }
+}
+.more-options-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-left: 16px;
+}
+.more-options-btn {
+  background: #e2e8f0;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 1.5em;
+  color: #2d3748;
+  cursor: pointer;
+  vertical-align: middle;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: background 0.2s;
+}
+.more-options-btn:hover {
+  background: #cbd5e1;
+}
+.options-dropdown {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  min-width: 160px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+.options-dropdown button {
+  background: none;
+  border: none;
+  padding: 10px 24px;
+  text-align: left;
+  font-size: 1em;
+  color: #2d3748;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.options-dropdown button:hover {
+  background: #f1f5f9;
+}
+.waiting-room-container {
+  max-width: 480px;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+.room-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.room-code {
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #2d3748;
+}
+.players-status {
+  font-size: 1em;
+  color: #4a5568;
+}
+.players-list-section {
+  margin-bottom: 24px;
+}
+.players-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+.player-card {
+  background: #edf2f7;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 1em;
+  color: #2b6cb0;
+  font-weight: 500;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.game-controls {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.start-btn {
+  background: #3182ce;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 32px;
+  font-size: 1.1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.start-btn:disabled {
+  background: #a0aec0;
+  cursor: not-allowed;
+}

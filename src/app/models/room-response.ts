@@ -1,11 +1,9 @@
-export interface JoinedUser {
-  id: string;
-  name: string;
-}
-
 export interface RoomResponse {
   roomCode: string;
   requiredPlayers: number;
-  joinedPlayers: JoinedUser[];
+  joinedPlayers: string[];
+  joinedPlayersUsernames: string[];
+  active?: boolean;
+  creatorId?: string;
   error?: string;
 }

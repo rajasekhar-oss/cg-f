@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
@@ -43,27 +43,32 @@ import { Router } from '@angular/router';
     .error { color: #dc2626; font-weight: 500; margin-top: 12px; }
   `]
 })
-export class CreateRoomComponent {
+export class CreateRoomComponent implements OnDestroy {
   numPlayers: number = 2;
   roomCode: string = '';
   isLoading = false;
   error = '';
+  roomInfo: any = null;
+  private subscriptions: any[] = [];
 
   constructor(private api: ApiService, private router: Router) {}
 
   generateCode() {
     this.isLoading = true;
     this.error = '';
-  this.api.post('/api/rooms/create', { requiredPlayers: this.numPlayers }).subscribe({
+    const sub = this.api.post('/api/rooms/create', { requiredPlayers: this.numPlayers }).subscribe({
       next: (res: any) => {
+        this.roomInfo = res;
         this.roomCode = res.roomCode;
         this.isLoading = false;
+        // Do NOT navigate immediately; let user choose to enter/start
       },
       error: (e) => {
         this.error = e?.error?.error || e?.message || 'Error generating code';
         this.isLoading = false;
       }
     });
+    this.subscriptions.push(sub);
   }
 
   copyCode() {
@@ -73,11 +78,34 @@ export class CreateRoomComponent {
   }
 
   startGame() {
-    // Implement start game logic, e.g., call backend or navigate
-    this.router.navigate(['/gang-play/room', this.roomCode, 'start']);
+    if (!this.roomInfo) return;
+    this.isLoading = true;
+    // Call backend to start game, get gameId and updated room info
+    const sub = this.api.post(`/api/rooms/${this.roomCode}/start`, {}).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        // Pass roomCode in URL and state for robust navigation
+        this.router.navigate(['/gang-play/waiting', this.roomCode], {
+          state: { roomInfo: res }
+        });
+      },
+      error: (e) => {
+        this.error = e?.error?.error || e?.message || 'Error starting game';
+        this.isLoading = false;
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   enterRoom() {
-    this.router.navigate(['/gang-play/room', this.roomCode]);
+    if (!this.roomInfo) return;
+    // Pass roomCode in URL and state for robust navigation
+    this.router.navigate(['/gang-play/waiting', this.roomCode], {
+      state: { roomInfo: this.roomInfo }
+    });
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach(sub => sub.unsubscribe && sub.unsubscribe());
   }
 }

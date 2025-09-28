@@ -1,77 +1,181 @@
-import { Component } from '@angular/core';
+import { RoomResponse } from '../../models/room-response';
+import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ApiService } from '../../services/api.service';
+import { WebsocketService } from '../../services/websocket.service';
+import { NgZone } from '@angular/core';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-waiting-room',
   standalone: true,
   imports: [CommonModule],
+  styleUrls: ['./waiting-room.component.css'],
   template: `
     <div class="waiting-room-container">
       <div class="room-info">
-        <div class="room-code">Room Code: <span>{{ roomCode }}</span></div>
-        <div class="players-status">Players: {{ requiredPlayers }} / {{ joinedPlayers.length }}</div>
+        <div class="room-code">Room Code: <span>{{ roomInfo?.roomCode || roomCode }}</span></div>
+        <div class="players-status">Required Players: <strong>{{ roomInfo?.requiredPlayers || requiredPlayers }}</strong></div>
+        <div class="players-status">Joined Players: <strong>{{ roomInfo?.joinedPlayers?.length || joinedPlayers.length }}</strong></div>
       </div>
       <div class="players-list-section">
         <h3>Players Joined</h3>
         <div class="players-list">
-          <div class="player-card" *ngFor="let player of joinedPlayers">{{ player }}</div>
+          <div class="player-card" *ngFor="let username of roomInfo?.joinedPlayersUsernames || joinedPlayers">{{ username }}</div>
+          <div *ngIf="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayers.length) === 0" style="color:#888;font-size:1em;padding:12px;">No players joined yet.</div>
         </div>
       </div>
       <div class="game-controls">
-        <button class="start-btn" [disabled]="joinedPlayers.length < requiredPlayers" (click)="startGame()">Start Game</button>
-        <button class="arrange-btn" (click)="goToArrange()">Rearrange Cards</button>
-        <button class="invite-btn" (click)="openInvite()">Send Request</button>
-        <button class="leave-btn" (click)="leaveRoom()">Leave Game</button>
-        <button *ngIf="isCreator" class="delete-btn" (click)="deleteRoom()">Delete Game</button>
+        <button class="start-btn" [disabled]="(roomInfo?.joinedPlayers?.length || joinedPlayers.length) !== (roomInfo?.requiredPlayers || requiredPlayers)" (click)="startGame()">Start Game</button>
+        <button class="action-btn" (click)="openInvite()">Invite/Search</button>
+        <button class="action-btn" (click)="goToArrange()">Arrange Cards</button>
+        <button class="action-btn" (click)="leaveRoom()">Leave Room</button>
+        <button class="action-btn" (click)="deleteRoom()">Delete Room</button>
       </div>
     </div>
   `,
-  styles: [`
-    .waiting-room-container { max-width: 480px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; text-align: center; }
-    .room-info { margin-bottom: 18px; }
-    .room-code { font-size: 1.2rem; font-weight: 600; margin-bottom: 6px; }
-    .players-status { font-size: 1.08rem; color: #374151; margin-bottom: 12px; }
-    .players-list-section { margin-bottom: 18px; }
-    .players-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-    .player-card { background: #f3f4f6; color: #374151; border-radius: 8px; padding: 10px 0; font-size: 1.05rem; font-weight: 500; min-width: 110px; max-width: 110px; text-align: center; border: 1px solid #e5e7eb; }
-    .game-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
-    .start-btn { background: #22c55e; color: white; font-weight: 600; border-radius: 8px; padding: 12px 0; border: none; font-size: 1.08rem; cursor: pointer; }
-    .start-btn:disabled { background: #a7f3d0; color: #374151; cursor: not-allowed; }
-    .arrange-btn, .invite-btn, .leave-btn, .delete-btn { background: #f3f4f6; color: #374151; border-radius: 8px; padding: 10px 0; border: 1px solid #e5e7eb; font-size: 1.05rem; font-weight: 500; cursor: pointer; }
-    .delete-btn { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
-  `]
 })
-export class WaitingRoomComponent {
-  // ...existing properties...
 
-  start() {
-    this.startGame();
-  }
-  roomCode = '';
-  requiredPlayers = 0;
+export class WaitingRoomComponent implements OnDestroy {
+  // Removed showOptions, not needed for individual buttons
+  error: string = '';
+  isLoading: boolean = false;
+  roomInfo: RoomResponse | null = null;
+  subscriptions: any[] = [];
+  roomCode: string = '';
+  requiredPlayers: number = 0;
   joinedPlayers: string[] = [];
-  isCreator = false;
+  joinedPlayersUsernames: string[] = [];
+  joinedPlayerIds: string[] = [];
+  isCreator: boolean = false;
+  currentUserId: string | number | null = null;
+  private wsSub: any = null;
 
-  constructor(private router: Router) {
-    const nav = (this.router.getCurrentNavigation() as any);
-    const state = nav?.extras?.state?.roomInfo;
-    if (state) {
-      this.roomCode = state.roomCode;
-      this.requiredPlayers = state.requiredPlayers;
-      this.joinedPlayers = state.joinedPlayersUsernames || [];
-      this.isCreator = state.isCreator || false;
+    constructor(
+      private router: Router,
+      private route: ActivatedRoute,
+      private api: ApiService,
+      private ws: WebsocketService,
+      private cd: ChangeDetectorRef,
+      private ngZone: NgZone,
+      private auth: AuthService
+    ) {
+      // Get current user id from JWT
+      const token = this.auth.getAccessToken();
+      const payload = token ? ((window as any).decodeJwt ? (window as any).decodeJwt(token) : null) : null;
+      if (payload && (payload.id || payload.userId)) {
+        this.currentUserId = payload.id || payload.userId;
+      }
     }
+
+  ngOnInit() {
+    console.log('[WaitingRoom] ngOnInit called');
+    const nav = this.router.getCurrentNavigation();
+    console.log('[WaitingRoom] Navigation object:', nav);
+    let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
+    console.log('[WaitingRoom] State from navigation:', stateRoomInfo);
+      this.route.paramMap.subscribe((params: any) => {
+      this.roomCode = params.get('roomCode') || '';
+        if (stateRoomInfo) {
+          this.roomInfo = stateRoomInfo as RoomResponse;
+          this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
+          this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
+          this.isLoading = false;
+        } else if (this.roomCode) {
+          // Fetch from backend if not present in state
+          const apiPath = `/api/rooms/${this.roomCode}/info`;
+          console.log('[WaitingRoom] Fetching room info from API:', apiPath);
+          const sub = this.api.get(apiPath).subscribe({
+            next: (res: any) => {
+              console.log('[WaitingRoom] Data received from API:', res);
+              this.roomInfo = res;
+              this.requiredPlayers = res.requiredPlayers;
+              this.joinedPlayers = res.joinedPlayersUsernames || [];
+              this.isLoading = false;
+            },
+            error: (e: any) => {
+              this.error = e?.error?.error || e?.message || 'Error fetching room info';
+              console.error('[WaitingRoom] Error fetching room info:', this.error);
+              this.isLoading = false;
+            }
+          });
+          this.subscriptions.push(sub);
+        } else {
+          this.error = 'No room code found in URL.';
+          console.error('[WaitingRoom] No room code found in URL.');
+          this.isLoading = false;
+        }
+    });
+  }
+
+  fetchRoomInfo(roomCode: string) {
+    console.log('[WaitingRoom] Fetching room info for:', roomCode);
+    fetch(`/api/rooms/${roomCode}/info`)
+      .then(res => {
+        console.log('[WaitingRoom] API response status:', res.status);
+        if (!res.ok) throw new Error('Failed to fetch room info');
+        return res.json();
+      })
+      .then((roomInfo: RoomResponse) => {
+        // Set all DTO fields
+        this.roomInfo = roomInfo;
+        this.requiredPlayers = roomInfo.requiredPlayers || 0;
+        this.joinedPlayers = roomInfo.joinedPlayers || [];
+        this.joinedPlayersUsernames = roomInfo.joinedPlayersUsernames || [];
+        this.isCreator = roomInfo.creatorId === this.currentUserId;
+        console.log('[WaitingRoom] Initial state set:', {
+          requiredPlayers: this.requiredPlayers,
+          joinedPlayers: this.joinedPlayers,
+          joinedPlayersUsernames: this.joinedPlayersUsernames,
+          creatorId: roomInfo.creatorId,
+          active: roomInfo.active
+        });
+        // Connect to WebSocket for live updates
+        this.ws.connectToRoom(roomCode);
+        if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
+        this.wsSub = this.ws.messages$.subscribe((update: RoomResponse) => {
+          this.ngZone.run(() => {
+            console.log('[WaitingRoom] WebSocket update received:', update);
+            if (update.roomCode === this.roomCode) {
+              // Set all DTO fields from update
+              this.roomInfo = update;
+              this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
+              this.joinedPlayers = update.joinedPlayers || [];
+              this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
+              this.isCreator = update.creatorId === this.currentUserId;
+              console.log('[WaitingRoom] State updated from WebSocket:', {
+                requiredPlayers: this.requiredPlayers,
+                joinedPlayers: this.joinedPlayers,
+                joinedPlayersUsernames: this.joinedPlayersUsernames,
+                creatorId: update.creatorId,
+                active: update.active
+              });
+              this.cd.detectChanges();
+            }
+          });
+        });
+        this.cd.detectChanges();
+      })
+      .catch(err => {
+        this.error = 'Failed to fetch room info. Please try again.';
+        console.error('[WaitingRoom] Failed to fetch room info:', err);
+      });
   }
 
   startGame() {
-  console.log('Start Game button clicked');
-  // TODO: Implement start game logic
-  this.router.navigate(['/game', this.roomCode]);
+    // Call backend to start game, then navigate with gameId
+    fetch(`/api/rooms/${this.roomCode}/start`, { method: 'POST' })
+      .then(res => res.json())
+      .then((data: any) => {
+        if (data && data.gameId) {
+          this.router.navigate(['/game', data.gameId]);
+        }
+      });
   }
 
   goToArrange() {
-  this.router.navigate(['/cards/arrange'], { state: { fromWaitingRoom: true, roomCode: this.roomCode } });
+    this.router.navigate(['/cards/arrange'], { state: { fromWaitingRoom: true, roomCode: this.roomCode } });
   }
 
   openInvite() {
@@ -84,5 +188,11 @@ export class WaitingRoomComponent {
 
   deleteRoom() {
     // TODO: Implement delete room logic
+  }
+
+  ngOnDestroy() {
+    if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
+    this.ws.disconnect();
+      this.subscriptions.forEach(sub => sub.unsubscribe && sub.unsubscribe());
   }
 }

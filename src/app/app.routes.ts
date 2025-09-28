@@ -34,7 +34,7 @@ export const routes: Routes = [
   { path: 'gang-play', component: PlaceholderComponent },
   { path: 'gang-play/create', component: CreateRoomComponent },
   { path: 'gang-play/join', component: JoinRoomComponent },
-  { path: 'gang-play/waiting', component: WaitingRoomComponent },
+  { path: 'gang-play/waiting/:roomCode', component: WaitingRoomComponent },
   { path: 'stranger-play', component: PlaceholderComponent },
   { path: 'temporary-play', component: PlaceholderComponent },
   { path: 'play-code', component: PlaceholderComponent },
