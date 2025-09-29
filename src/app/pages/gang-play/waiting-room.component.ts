@@ -1,4 +1,5 @@
 import { RoomResponse } from '../../models/room-response';
+import { environment } from '../../../environments/environment';
 import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -72,46 +73,56 @@ export class WaitingRoomComponent implements OnDestroy {
   ngOnInit() {
     console.log('[WaitingRoom] ngOnInit called');
     const nav = this.router.getCurrentNavigation();
-    console.log('[WaitingRoom] Navigation object:', nav);
     let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
-    console.log('[WaitingRoom] State from navigation:', stateRoomInfo);
-      this.route.paramMap.subscribe((params: any) => {
+    this.route.paramMap.subscribe((params: any) => {
       this.roomCode = params.get('roomCode') || '';
-        if (stateRoomInfo) {
-          this.roomInfo = stateRoomInfo as RoomResponse;
-          this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
-          this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
-          this.isLoading = false;
-        } else if (this.roomCode) {
-          // Fetch from backend if not present in state
-          const apiPath = `/api/rooms/${this.roomCode}/info`;
-          console.log('[WaitingRoom] Fetching room info from API:', apiPath);
-          const sub = this.api.get(apiPath).subscribe({
-            next: (res: any) => {
-              console.log('[WaitingRoom] Data received from API:', res);
-              this.roomInfo = res;
-              this.requiredPlayers = res.requiredPlayers;
-              this.joinedPlayers = res.joinedPlayersUsernames || [];
-              this.isLoading = false;
-            },
-            error: (e: any) => {
-              this.error = e?.error?.error || e?.message || 'Error fetching room info';
-              console.error('[WaitingRoom] Error fetching room info:', this.error);
-              this.isLoading = false;
-            }
-          });
-          this.subscriptions.push(sub);
-        } else {
-          this.error = 'No room code found in URL.';
-          console.error('[WaitingRoom] No room code found in URL.');
-          this.isLoading = false;
-        }
+      if (stateRoomInfo) {
+        this.roomInfo = stateRoomInfo as RoomResponse;
+        this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
+        this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
+        this.isLoading = false;
+      } else if (this.roomCode) {
+        // Fetch from backend if not present in state
+        const apiPath = `/api/rooms/${this.roomCode}/info`;
+        const sub = this.api.get(apiPath).subscribe({
+          next: (res: any) => {
+            this.roomInfo = res;
+            this.requiredPlayers = res.requiredPlayers;
+            this.joinedPlayers = res.joinedPlayersUsernames || [];
+            this.isLoading = false;
+          },
+          error: (e: any) => {
+            this.error = e?.error?.error || e?.message || 'Error fetching room info';
+            this.isLoading = false;
+          }
+        });
+        this.subscriptions.push(sub);
+      } else {
+        this.error = 'No room code found in URL.';
+        this.isLoading = false;
+      }
+
+      // Always connect to WebSocket for live updates
+      this.ws.connectToRoom(this.roomCode);
+      if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
+      this.wsSub = this.ws.messages$.subscribe((update: RoomResponse) => {
+        this.ngZone.run(() => {
+          if (!update) return;
+          if (update.roomCode !== this.roomCode) return;
+          this.roomInfo = update;
+          this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
+          this.joinedPlayers = update.joinedPlayers || [];
+          this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
+          this.isCreator = update.creatorId === this.currentUserId;
+          this.cd.detectChanges();
+        });
+      });
     });
   }
 
   fetchRoomInfo(roomCode: string) {
     console.log('[WaitingRoom] Fetching room info for:', roomCode);
-    fetch(`/api/rooms/${roomCode}/info`)
+  fetch(`${environment.apiUrl}/api/rooms/${roomCode}/info`)
       .then(res => {
         console.log('[WaitingRoom] API response status:', res.status);
         if (!res.ok) throw new Error('Failed to fetch room info');
@@ -137,22 +148,37 @@ export class WaitingRoomComponent implements OnDestroy {
         this.wsSub = this.ws.messages$.subscribe((update: RoomResponse) => {
           this.ngZone.run(() => {
             console.log('[WaitingRoom] WebSocket update received:', update);
-            if (update.roomCode === this.roomCode) {
-              // Set all DTO fields from update
-              this.roomInfo = update;
-              this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
-              this.joinedPlayers = update.joinedPlayers || [];
-              this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
-              this.isCreator = update.creatorId === this.currentUserId;
-              console.log('[WaitingRoom] State updated from WebSocket:', {
-                requiredPlayers: this.requiredPlayers,
-                joinedPlayers: this.joinedPlayers,
-                joinedPlayersUsernames: this.joinedPlayersUsernames,
-                creatorId: update.creatorId,
-                active: update.active
-              });
-              this.cd.detectChanges();
+            if (!update) {
+              console.error('[WaitingRoom] WebSocket update is null/undefined:', update);
+              return;
             }
+            if (update.roomCode !== this.roomCode) {
+              console.warn('[WaitingRoom] WebSocket update roomCode mismatch:', update.roomCode, this.roomCode);
+              return;
+            }
+            // Log all DTO fields
+            console.log('[WaitingRoom] WebSocket DTO fields:', {
+              roomCode: update.roomCode,
+              requiredPlayers: update.requiredPlayers,
+              joinedPlayers: update.joinedPlayers,
+              joinedPlayersUsernames: update.joinedPlayersUsernames,
+              creatorId: update.creatorId,
+              active: update.active
+            });
+            // Set all DTO fields from update
+            this.roomInfo = update;
+            this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
+            this.joinedPlayers = update.joinedPlayers || [];
+            this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
+            this.isCreator = update.creatorId === this.currentUserId;
+            console.log('[WaitingRoom] State updated from WebSocket:', {
+              requiredPlayers: this.requiredPlayers,
+              joinedPlayers: this.joinedPlayers,
+              joinedPlayersUsernames: this.joinedPlayersUsernames,
+              creatorId: update.creatorId,
+              active: update.active
+            });
+            this.cd.detectChanges();
           });
         });
         this.cd.detectChanges();
@@ -165,11 +191,29 @@ export class WaitingRoomComponent implements OnDestroy {
 
   startGame() {
     // Call backend to start game, then navigate with gameId
-    fetch(`/api/rooms/${this.roomCode}/start`, { method: 'POST' })
-      .then(res => res.json())
+    const token = this.auth.getAccessToken();
+    fetch(`${environment.apiUrl}/api/rooms/${this.roomCode}/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      }
+    })
+      .then(async res => {
+        try {
+          const text = await res.text();
+          if (!text) return null;
+          return JSON.parse(text);
+        } catch (e) {
+          console.error('Failed to parse response JSON:', e);
+          return null;
+        }
+      })
       .then((data: any) => {
         if (data && data.gameId) {
           this.router.navigate(['/game', data.gameId]);
+        } else {
+          console.warn('No gameId in response:', data);
         }
       });
   }

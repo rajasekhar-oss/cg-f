@@ -1,11 +1,33 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from './api.service';
-import { BehaviorSubject } from 'rxjs';
-import { tap, throwError } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, throwError } from 'rxjs';
+import { tap, map } from 'rxjs/operators';
 import { decodeJwt } from '../utils/jwt-decode';
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
+  /**
+   * Returns a valid access token. If expired, refreshes and returns a Promise<string>.
+   */
+  async getValidAccessToken(): Promise<string> {
+    const token = this.getAccessToken();
+    if (!token) return '';
+
+    const payload = decodeJwt(token);
+    if (!payload || !payload.exp) return token;
+
+    const now = Math.floor(Date.now() / 1000);
+    if (payload.exp > now) return token;
+
+    // Expired → refresh
+    try {
+      const newToken = await firstValueFrom(this.refreshToken());
+      return newToken || '';
+    } catch (err) {
+      console.error('[AuthService] Token refresh failed:', err);
+      return '';
+    }
+  }
   getUserRole(): string | null {
     const token = this.getAccessToken();
     if (!token) return null;
@@ -86,7 +108,9 @@ export class AuthService {
       tap((res: any) => {
         if (res.accessToken) this.setAccessToken(res.accessToken);
         if (res.refreshToken) this.setRefreshToken(res.refreshToken);
-      })
+      }),
+      // Emit the new access token to the caller
+      map((res: any) => res.accessToken)
     );
   }
 }
