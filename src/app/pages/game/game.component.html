@@ -17,19 +17,24 @@
 
   <!-- Table layout -->
   <div class="table">
-    <ng-container *ngFor="let player of tablePlayers; let i = index">
-      <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
-        [ngStyle]="getCircularSeatStyle(i, tablePlayers.length)">
-        <img *ngIf="player.avatar" [src]="player.avatar" class="avatar" />
-        <div class="username">{{player.username}}</div>
-        <div *ngIf="player.isMe" class="label">You</div>
-        <div *ngIf="player.isMe && myCards.length" class="your-cards">
-          <div *ngFor="let card of myCards" class="mini-card">
-            <div class="mini-title">{{card.title}}</div>
+    <ng-container *ngIf="fullPlayers.length > 0; else noPlayers">
+      <ng-container *ngFor="let player of fullPlayers; let i = index">
+        <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
+          [ngStyle]="getCircularSeatStyle(i, tablePlayers.length)">
+          <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'" [alt]="player.username || player.id" class="player-avatar" />
+          <div class="username">{{player.username || player.id}}</div>
+          <div *ngIf="player.isMe" class="label">You</div>
+          <div *ngIf="player.isMe && myCards.length" class="your-cards">
+            <div *ngFor="let card of myCards" class="mini-card">
+              <div class="mini-title">{{card.title}}</div>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </ng-container>
+    <ng-template #noPlayers>
+      <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your data and console logs.</div>
+    </ng-template>
     <div class="table-center">Game Table</div>
   </div>
 
@@ -54,56 +59,28 @@
 
   <!-- Card details modal (used for both card list and next card) -->
   <div *ngIf="selectedCard" class="top-card-overlay">
-    <div class="top-card">
-      <button class="close-btn" (click)="closeCardDetails()">✖</button>
-      <div class="card-details-image">
-        <img *ngIf="selectedCard.picture || selectedCard.imageUrl"
-          [src]="selectedCard.picture || selectedCard.imageUrl"
-          [alt]="selectedCard.name || selectedCard.title || 'Card'"
-          [ngClass]="{'top-card-image': true, 'not-top-card-image': !showTopCard}" />
-      </div>
-      <div class="card-title" style="font-size:1.3rem; font-weight:600; margin-bottom:0.5rem;">{{selectedCard.title}}</div>
-      <div *ngIf="selectedCard.description" style="margin-bottom:1rem; color:#555;">{{selectedCard.description}}</div>
-      <div class="card-details-info">
-        <div *ngIf="selectedCard.totalFilms" class="stat-card">
-          <span class="stat-label">Total Films</span>
-          <span class="stat-value">{{ selectedCard.totalFilms }}</span>
-        </div>
-        <div *ngIf="selectedCard.yearsActive" class="stat-card">
-          <span class="stat-label">Years Active</span>
-          <span class="stat-value">{{ selectedCard.yearsActive }}</span>
-        </div>
-        <div *ngIf="selectedCard.highestGrossing" class="stat-card">
-          <span class="stat-label">Highest Grossing</span>
-          <span class="stat-value">{{ selectedCard.highestGrossing }}</span>
-        </div>
-        <div *ngIf="selectedCard.awardsWon" class="stat-card">
-          <span class="stat-label">Awards Won</span>
-          <span class="stat-value">{{ selectedCard.awardsWon }}</span>
-        </div>
-        <div *ngIf="selectedCard.followers" class="stat-card">
-          <span class="stat-label">Followers</span>
-          <span class="stat-value">{{ selectedCard.followers }}</span>
-        </div>
-        <div *ngIf="selectedCard.languages" class="stat-card">
-          <span class="stat-label">Languages</span>
-          <span class="stat-value">{{ selectedCard.languages }}</span>
-        </div>
-        <div *ngIf="selectedCard.professions" class="stat-card">
-          <span class="stat-label">Professions</span>
-          <span class="stat-value">{{ selectedCard.professions }}</span>
-        </div>
-        <div *ngIf="showTopCard && selectedCard" style="display: flex; justify-content: flex-end; width: 100%;">
-          <button class="select-card-btn" (click)="selectCard(selectedCard)">Select</button>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div class="table">
+      <ng-container *ngIf="fullPlayers.length > 0; else noPlayers">
+        <ng-container *ngFor="let player of fullPlayers; let i = index">
+          <div *ngIf="player" class="player-seat"
+            [ngStyle]="getCircularSeatStyle(i, fullPlayers.length)">
+            <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'" [alt]="player.username || player.id" class="player-avatar" />
+            <div class="username">{{player.username || player.id}}</div>
+          </div>
+        </ng-container>
+      </ng-container>
+      <ng-template #noPlayers>
+        <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your data and console logs.</div>
+      </ng-template>
+      <div class="table-center">Game Table</div>
 
-  <!-- Messaging section at bottom -->
-  <!-- <div class="messages">
+    <!-- Remove broken or stray template code below. If you want to re-add stats or messages, do so inside a valid parent div. -->
+
+<!--
+  <div class="messages">
     <div *ngFor="let msg of messages" class="message" [ngStyle]="{ bottom: msg.bottom + 'px', opacity: msg.opacity }">
       {{msg.text}}
     </div>
-  </div> -->
+  </div>
+-->
 </div>

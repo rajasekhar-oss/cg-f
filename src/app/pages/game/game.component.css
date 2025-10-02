@@ -1,3 +1,30 @@
+/* Player avatar for circular table */
+.player-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  margin-bottom: 10px;
+  background: #e5e7eb;
+  display: block;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.player-seat .player-avatar {
+  border: 3px solid #22c55e;
+  box-shadow: 0 4px 18px rgba(34,197,94,0.18);
+}
+/* Stat selection highlight */
+.stat-card.selectable {
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.stat-card.selected-stat {
+  background: #2563eb;
+  color: #fff;
+  border: 2px solid #1e40af;
+}
 /* Larger image for non-top card detail modal */
 .not-top-card-image {
   height: 48vh !important;
@@ -227,12 +254,16 @@
 .table {
   position: absolute;
   height: 80vw;
+  min-height: 320px;
   width: 80vw;
+  min-width: 320px;
   border-radius: 50%;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   background-color: black;
+  border: 3px dashed #22c55e;
+  box-sizing: border-box;
 }
 .game-table-container {
   display: flex;

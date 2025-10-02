@@ -1,12 +1,14 @@
-import { RoomResponse } from '../../models/room-response';
+import { RoomInfoDto } from '../../models/room-info.model';
+import { RoomResponse } from '../../models/room-response.model';
 import { environment } from '../../../environments/environment';
-import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { NgZone } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
+import { isStartGameBundleMessage } from '../../models/websocket.types';
 
 @Component({
   selector: 'app-waiting-room',
@@ -38,11 +40,14 @@ import { AuthService } from '../../services/auth.service';
   `,
 })
 
-export class WaitingRoomComponent implements OnDestroy {
+export class WaitingRoomComponent implements OnInit, OnDestroy {
+  private wasGameStartState: boolean = false;
+  private wsStartSub: any = null;
   // Removed showOptions, not needed for individual buttons
   error: string = '';
   isLoading: boolean = false;
-  roomInfo: RoomResponse | null = null;
+  roomInfo: RoomInfoDto | null = null;
+  roomResponse: RoomResponse | null = null;
   subscriptions: any[] = [];
   roomCode: string = '';
   requiredPlayers: number = 0;
@@ -52,6 +57,7 @@ export class WaitingRoomComponent implements OnDestroy {
   isCreator: boolean = false;
   currentUserId: string | number | null = null;
   private wsSub: any = null;
+  private wsConnSub: any = null;
 
     constructor(
       private router: Router,
@@ -76,11 +82,13 @@ export class WaitingRoomComponent implements OnDestroy {
     let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
     this.route.paramMap.subscribe((params: any) => {
       this.roomCode = params.get('roomCode') || '';
-      if (stateRoomInfo) {
-        this.roomInfo = stateRoomInfo as RoomResponse;
+      if (stateRoomInfo && 'creatorId' in stateRoomInfo) {
+        this.roomInfo = stateRoomInfo as RoomInfoDto;
         this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
         this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
         this.isLoading = false;
+        // Always keep latest RoomInfoDto for navigation
+        console.log('[WaitingRoom] Loaded roomInfo from router state:', this.roomInfo);
       } else if (this.roomCode) {
         // Fetch from backend if not present in state
         const apiPath = `/api/rooms/${this.roomCode}/info`;
@@ -104,16 +112,50 @@ export class WaitingRoomComponent implements OnDestroy {
 
       // Always connect to WebSocket for live updates
       this.ws.connectToRoom(this.roomCode);
+
+      // Subscribe to /start topic for all players
+      const startTopic = `/topic/rooms/${this.roomCode}/start`;
+      this.ws.connectAndSubscribe(startTopic);
+      if (this.wsStartSub) this.wsStartSub.unsubscribe && this.wsStartSub.unsubscribe();
+      this.wsStartSub = this.ws.filterMessagesByTopic(startTopic).subscribe((msg: any) => {
+        console.log('[WaitingRoom] StartGameBundleDto or new start message:', msg);
+        // Route to game for all players with the received message (old or new format)
+        if (Array.isArray(msg.players) && typeof msg.statSelectorId === 'string' && typeof msg.roomCode === 'string') {
+          // New format
+          this.router.navigate(['/game', this.roomCode], {
+            state: {
+              startGameBundle: msg
+            }
+          });
+        } else if (msg && msg.gameState && msg.roomInfo && msg.startGame) {
+          // Old StartGameBundleDto format
+          this.router.navigate(['/game', this.roomCode], {
+            state: {
+              startGameBundle: msg
+            }
+          });
+        }
+      });
+
+      // Subscribe to WebSocket connection status
+      if (this.wsConnSub) this.wsConnSub.unsubscribe && this.wsConnSub.unsubscribe();
+      this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
+        console.log('[WaitingRoom] WebSocket connection status:', connected);
+      });
+
+      // Subscribe to all WebSocket messages for debugging
       if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
-      this.wsSub = this.ws.messages$.subscribe((update: RoomResponse) => {
+      this.wsSub = this.ws.messages$.subscribe((msg: any) => {
+        console.log('[WaitingRoom] WebSocket message received:', msg);
         this.ngZone.run(() => {
-          if (!update) return;
-          if (update.roomCode !== this.roomCode) return;
-          this.roomInfo = update;
-          this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
-          this.joinedPlayers = update.joinedPlayers || [];
-          this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
-          this.isCreator = update.creatorId === this.currentUserId;
+          if (msg && 'creatorId' in msg) {
+            this.roomInfo = msg as RoomInfoDto;
+            this.requiredPlayers = msg.requiredPlayers || this.requiredPlayers;
+            this.joinedPlayers = msg.joinedPlayers || [];
+            this.joinedPlayersUsernames = msg.joinedPlayersUsernames || [];
+            this.isCreator = msg.creatorId === this.currentUserId;
+            console.log('[WaitingRoom] Updated roomInfo from WebSocket:', this.roomInfo);
+          }
           this.cd.detectChanges();
         });
       });
@@ -128,59 +170,28 @@ export class WaitingRoomComponent implements OnDestroy {
         if (!res.ok) throw new Error('Failed to fetch room info');
         return res.json();
       })
-      .then((roomInfo: RoomResponse) => {
-        // Set all DTO fields
-        this.roomInfo = roomInfo;
-        this.requiredPlayers = roomInfo.requiredPlayers || 0;
-        this.joinedPlayers = roomInfo.joinedPlayers || [];
-        this.joinedPlayersUsernames = roomInfo.joinedPlayersUsernames || [];
-        this.isCreator = roomInfo.creatorId === this.currentUserId;
-        console.log('[WaitingRoom] Initial state set:', {
-          requiredPlayers: this.requiredPlayers,
-          joinedPlayers: this.joinedPlayers,
-          joinedPlayersUsernames: this.joinedPlayersUsernames,
-          creatorId: roomInfo.creatorId,
-          active: roomInfo.active
-        });
+      .then((roomInfo: any) => {
+        // Only treat as RoomInfoDto if creatorId exists
+        if (roomInfo && 'creatorId' in roomInfo) {
+          this.roomInfo = roomInfo as RoomInfoDto;
+          this.requiredPlayers = roomInfo.requiredPlayers || 0;
+          this.joinedPlayers = roomInfo.joinedPlayers || [];
+          this.joinedPlayersUsernames = roomInfo.joinedPlayersUsernames || [];
+          this.isCreator = roomInfo.creatorId === this.currentUserId;
+          console.log('[WaitingRoom] Initial state set:', {
+            requiredPlayers: this.requiredPlayers,
+            joinedPlayers: this.joinedPlayers,
+            joinedPlayersUsernames: this.joinedPlayersUsernames,
+            creatorId: roomInfo.creatorId,
+            active: roomInfo.active
+          });
+        } else {
+          console.warn('[WaitingRoom] API response missing creatorId, ignoring:', roomInfo);
+        }
         // Connect to WebSocket for live updates
         this.ws.connectToRoom(roomCode);
         if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
-        this.wsSub = this.ws.messages$.subscribe((update: RoomResponse) => {
-          this.ngZone.run(() => {
-            console.log('[WaitingRoom] WebSocket update received:', update);
-            if (!update) {
-              console.error('[WaitingRoom] WebSocket update is null/undefined:', update);
-              return;
-            }
-            if (update.roomCode !== this.roomCode) {
-              console.warn('[WaitingRoom] WebSocket update roomCode mismatch:', update.roomCode, this.roomCode);
-              return;
-            }
-            // Log all DTO fields
-            console.log('[WaitingRoom] WebSocket DTO fields:', {
-              roomCode: update.roomCode,
-              requiredPlayers: update.requiredPlayers,
-              joinedPlayers: update.joinedPlayers,
-              joinedPlayersUsernames: update.joinedPlayersUsernames,
-              creatorId: update.creatorId,
-              active: update.active
-            });
-            // Set all DTO fields from update
-            this.roomInfo = update;
-            this.requiredPlayers = update.requiredPlayers || this.requiredPlayers;
-            this.joinedPlayers = update.joinedPlayers || [];
-            this.joinedPlayersUsernames = update.joinedPlayersUsernames || [];
-            this.isCreator = update.creatorId === this.currentUserId;
-            console.log('[WaitingRoom] State updated from WebSocket:', {
-              requiredPlayers: this.requiredPlayers,
-              joinedPlayers: this.joinedPlayers,
-              joinedPlayersUsernames: this.joinedPlayersUsernames,
-              creatorId: update.creatorId,
-              active: update.active
-            });
-            this.cd.detectChanges();
-          });
-        });
+        // WebSocket subscription already set up in ngOnInit
         this.cd.detectChanges();
       })
       .catch(err => {
@@ -190,32 +201,13 @@ export class WaitingRoomComponent implements OnDestroy {
   }
 
   startGame() {
-    // Call backend to start game, then navigate with gameId
-    const token = this.auth.getAccessToken();
-    fetch(`${environment.apiUrl}/api/rooms/${this.roomCode}/start`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      }
-    })
-      .then(async res => {
-        try {
-          const text = await res.text();
-          if (!text) return null;
-          return JSON.parse(text);
-        } catch (e) {
-          console.error('Failed to parse response JSON:', e);
-          return null;
-        }
-      })
-      .then((data: any) => {
-        if (data && data.gameId) {
-          this.router.navigate(['/game', data.gameId]);
-        } else {
-          console.warn('No gameId in response:', data);
-        }
-      });
+    // Only trigger the backend to start the game; all players are already subscribed in ngOnInit
+    this.api.post(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse: any) => {
+      console.log('[WaitingRoom] RoomResponse:', roomResponse);
+    }, (err: any) => {
+      this.error = err?.error?.error || err?.message || 'Failed to start game';
+      console.error('[WaitingRoom] Failed to start game:', err);
+    });
   }
 
   goToArrange() {
@@ -236,7 +228,9 @@ export class WaitingRoomComponent implements OnDestroy {
 
   ngOnDestroy() {
     if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
+    if (this.wsConnSub) this.wsConnSub.unsubscribe && this.wsConnSub.unsubscribe();
+    if (this.wsStartSub) this.wsStartSub.unsubscribe && this.wsStartSub.unsubscribe();
     this.ws.disconnect();
-      this.subscriptions.forEach(sub => sub.unsubscribe && sub.unsubscribe());
+    this.subscriptions.forEach(sub => sub.unsubscribe && sub.unsubscribe());
   }
 }

@@ -1,0 +1,767 @@
+import { Injectable, OnDestroy } from '@angular/core';
+
+import { Observable, Subject, BehaviorSubject } from 'rxjs';
+
+import { Client, IMessage, Frame } from '@stomp/stompjs';import { Injectable, OnDestroy } from '@angular/core';
+
+import { environment } from '../../environments/environment';import { Observable, Subject, BehaviorSubject } from 'rxjs';
+
+import { AuthService } from './auth.service';import { Client, IMessage, Frame } from '@stomp/stompjs';
+
+import { RoomInfoDto, GameStateDto } from '../models/backend.types';import { environment } from '../../environments/environment';
+
+import { TopicType, WebSocketEvent, WebSocketSubscription } from '../models/websocket.types';import { AuthService } from './auth.service';
+
+import { RoomInfoDto, GameStateDto } from '../models/backend.types';
+
+@Injectable({ providedIn: 'root' })import { TopicType, WebSocketEvent, WebSocketSubscription } from '../models/websocket.types';
+
+export class WebsocketService implements OnDestroy {
+
+  private stompClient: Client | null = null;
+
+  private subscriptions: Map<string, WebSocketSubscription> = new Map();
+
+  public messages$ = new Subject<WebSocketEvent>();@Injectable({ providedIn: 'root' })
+
+  private connectionStatus$ = new BehaviorSubject<boolean>(false);export class WebsocketService implements OnDestroy {
+
+  private reconnectAttempts = 0;  private stompClient: Client | null = null;
+
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;  private subscriptions: Map<string, WebSocketSubscription> = new Map();
+
+  private readonly RECONNECT_BACKOFF_MAX_MS = 30000; // Max 30 seconds between retries  public messages$ = new Subject<WebSocketEvent<RoomInfoDto | GameStateDto>>();
+
+  private readonly ROOM_TOPIC_PREFIX = '/topic/rooms/';  private connectionStatus$ = new BehaviorSubject<boolean>(false);
+
+  private readonly GAME_TOPIC_PREFIX = '/topic/game/';  private reconnectAttempts = 0;
+
+  private readonly MAX_RECONNECT_ATTEMPTS = 5;
+
+  constructor(private auth: AuthService) {}  private readonly RECONNECT_BACKOFF_MAX_MS = 30000; // Max 30 seconds between retries
+
+  private readonly ROOM_TOPIC_PREFIX = '/topic/rooms/';
+
+  /**  private readonly GAME_TOPIC_PREFIX = '/topic/game/';
+
+   * Connect to a game room's WebSocket topic  private readonly MAX_RECONNECT_ATTEMPTS = 5;
+
+   * Follows the backend's /topic/rooms/{roomCode} pattern  private readonly RECONNECT_BACKOFF_MAX_MS = 30000; // Max 30 seconds between retries
+
+   */  private readonly ROOM_TOPIC_PREFIX = '/topic/rooms/';
+
+  connectToRoom(roomCode: string): void {  private readonly GAME_TOPIC_PREFIX = '/topic/game/';
+
+    if (!roomCode) {
+
+      console.error('[WebsocketService] Room code is required');  constructor(private auth: AuthService) {}
+
+      return;
+
+    }
+
+    const topic = `${this.ROOM_TOPIC_PREFIX}${roomCode}`;  /**
+
+    this.connectAndSubscribe(topic, 'room');   * Connect to a game room's WebSocket topic
+
+  }   * Follows the backend's /topic/rooms/{roomCode} pattern
+
+   */
+
+  /**  connectToRoom(roomCode: string): void {
+
+   * Connect to a game's WebSocket topic for a specific user    if (!roomCode) {
+
+   * Follows the backend's /topic/game/{gameId}/user/{userId} pattern      console.error('[WebsocketService] Room code is required');
+
+   */      return;
+
+  connectToGame(gameId: string, userId: string): void {    }
+
+    if (!gameId || !userId) {    const topic = `${this.ROOM_TOPIC_PREFIX}${roomCode}`;
+
+      console.error('[WebsocketService] Game ID and User ID are required');    this.connectAndSubscribe(topic, 'room');
+
+      return;  }
+
+    }
+
+    const topic = `${this.GAME_TOPIC_PREFIX}${gameId}/user/${userId}`;  /**
+
+    this.connectAndSubscribe(topic, 'game');   * Connect to a game's WebSocket topic for a specific user
+
+  }   * Follows the backend's /topic/game/{gameId}/user/{userId} pattern
+
+   */
+
+  /**  connectToGame(gameId: string, userId: string): void {
+
+   * Validates and decodes a JWT token payload    if (!gameId || !userId) {
+
+   */      console.error('[WebsocketService] Game ID and User ID are required');
+
+  private validateTokenPayload(token: string): any | null {      return;
+
+    try {    }
+
+      const parts = token.split('.');    const topic = `${this.GAME_TOPIC_PREFIX}${gameId}/user/${userId}`;
+
+      if (parts.length !== 3) {    this.connectAndSubscribe(topic, 'game');
+
+        console.error('[WebsocketService] Invalid token format');  }
+
+        return null;
+
+      }  /**
+
+      return JSON.parse(atob(parts[1]));   * Initiates WebSocket connection with token validation
+
+    } catch {   * @param topic The WebSocket topic to subscribe to
+
+      return null;   * @param type The type of topic (room or game)
+
+    }   */
+
+  }  private connectAndSubscribe(topic: string, type: TopicType): void {
+
+    // Always use AuthService for token
+
+  /**    const token = this.auth.getAccessToken();
+
+   * Initiates WebSocket connection with token validation    if (!token) {
+
+   */      console.warn('[WebsocketService] No token found, refreshing...');
+
+  private connectAndSubscribe(topic: string, type: TopicType): void {      this.refreshAndConnect(topic, type);
+
+    const token = this.auth.getAccessToken();      return;
+
+    if (!token) {    }
+
+      console.warn('[WebsocketService] No token found, refreshing...');
+
+      this.refreshAndConnect(topic, type);    try {
+
+      return;      const payload = this.validateTokenPayload(token);
+
+    }      const now = Math.floor(Date.now() / 1000);
+
+      
+
+    try {      if (!payload || payload.exp < now) {
+
+      const payload = this.validateTokenPayload(token);        console.warn('[WebsocketService] Token invalid or expired, refreshing...');
+
+      const now = Math.floor(Date.now() / 1000);        this.refreshAndConnect(topic, type);
+
+            } else {
+
+      if (!payload || payload.exp < now) {        this._connectWithTokenAndSubscribe(topic, token, type);
+
+        console.warn('[WebsocketService] Token invalid or expired, refreshing...');      }
+
+        this.refreshAndConnect(topic, type);    } catch (e) {
+
+      } else {      console.error('[WebsocketService] Token validation error:', e);
+
+        this._connectWithTokenAndSubscribe(topic, token, type);      this.refreshAndConnect(topic, type);
+
+      }    }
+
+    } catch (e) {  }
+
+      console.error('[WebsocketService] Token validation error:', e);
+
+      this.refreshAndConnect(topic, type);  /**
+
+    }   * Validates and decodes a JWT token payload
+
+  }   * @param token The JWT token to validate
+
+   * @returns Decoded token payload or null if invalid
+
+  /**   */
+
+   * Refreshes token and attempts to reconnect  private validateTokenPayload(token: string): any | null {
+
+   * Handles failed refresh attempts with reconnection strategy    try {
+
+   */      const parts = token.split('.');
+
+  private refreshAndConnect(topic: string, type: TopicType): void {      if (parts.length !== 3) {
+
+    this.auth.refreshToken().subscribe({        console.error('[WebsocketService] Invalid token format');
+
+      next: (freshToken: string) => {        return null;
+
+        if (!freshToken) {      }
+
+          console.error('[WebsocketService] Token refresh failed - empty token');      return JSON.parse(atob(parts[1]));
+
+          this.handleReconnect(topic, type);    } catch {
+
+          return;      return null;
+
+        }    }
+
+          }
+
+        const payload = this.validateTokenPayload(freshToken);
+
+        if (!payload) {  /**
+
+          console.error('[WebsocketService] Token refresh failed - invalid token');   * Refreshes token and attempts to reconnect
+
+          this.handleReconnect(topic, type);   * Handles failed refresh attempts with reconnection strategy
+
+          return;   */
+
+        }  private refreshAndConnect(topic: string, type: TopicType): void {
+
+    this.auth.refreshToken().subscribe({
+
+        console.log('[WebsocketService] Token refreshed successfully');      next: (freshToken: string) => {
+
+        this._connectWithTokenAndSubscribe(topic, freshToken, type);        if (!freshToken) {
+
+      },          console.error('[WebsocketService] Token refresh failed - empty token');
+
+      error: (err) => {          this.handleReconnect(topic, type);
+
+        console.error('[WebsocketService] Token refresh error:', err);          return;
+
+        this.handleReconnect(topic, type);        }
+
+      }        
+
+    });        const payload = this.validateTokenPayload(freshToken);
+
+  }        if (!payload) {
+
+          console.error('[WebsocketService] Token refresh failed - invalid token');
+
+  /**          this.handleReconnect(topic, type);
+
+   * Establishes STOMP client connection with token          return;
+
+   * Handles connection lifecycle and error cases        }
+
+   */
+
+  private _connectWithTokenAndSubscribe(topic: string, token: string, type: TopicType): void {        console.log('[WebsocketService] Token refreshed successfully');
+
+    if (!token) {        this._connectWithTokenAndSubscribe(topic, freshToken, type);
+
+      console.error('[WebsocketService] Cannot connect: No token provided');      },
+
+      return;      error: (err) => {
+
+    }        console.error('[WebsocketService] Token refresh error:', err);
+
+        this.handleReconnect(topic, type);
+
+    const base = environment.apiUrl.replace(/\/$/, '');      }
+
+    const wsUrl = `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`;    });
+
+      }
+
+    if (!this.stompClient) {
+
+      try {  /**
+
+        this.stompClient = new Client({   * Establishes STOMP client connection with token
+
+          brokerURL: wsUrl,   * Handles connection lifecycle and error cases
+
+          reconnectDelay: 5000,   */
+
+          heartbeatIncoming: 4000,  private _connectWithTokenAndSubscribe(topic: string, token: string, type: TopicType): void {
+
+          heartbeatOutgoing: 4000,    if (!token) {
+
+          debug: (msg: string) => {      console.error('[WebsocketService] Cannot connect: No token provided');
+
+            if (environment.production) return;      return;
+
+            console.debug('[STOMP]', msg);    }
+
+          }
+
+        });    const base = environment.apiUrl.replace(/\/$/, '');
+
+    const wsUrl = `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`;
+
+        this.setupStompHandlers(topic, type);    
+
+        this.stompClient.activate();    if (!this.stompClient) {
+
+      } catch (err) {      try {
+
+        console.error('[WebsocketService] Failed to create STOMP client:', err);        this.stompClient = new Client({
+
+        this.handleReconnect(topic, type);          brokerURL: wsUrl,
+
+      }          reconnectDelay: 5000,
+
+    } else {          heartbeatIncoming: 4000,
+
+      // Already have a client, just subscribe to topic          heartbeatOutgoing: 4000,
+
+      this._subscribeToTopic(topic, type);          debug: (msg: string) => {
+
+    }            if (environment.production) return;
+
+  }            console.debug('[STOMP]', msg);
+
+          }
+
+  /**        });
+
+   * Sets up STOMP client event handlers
+
+   */        this.stompClient.onConnect = (frame: IFrame) => {
+
+  private setupStompHandlers(topic: string, type: TopicType): void {          console.log('[WebsocketService] STOMP connection established');
+
+    if (!this.stompClient) return;          this.connectionStatus$.next(true);
+
+          this.reconnectAttempts = 0;
+
+    this.stompClient.onConnect = (frame: Frame) => {          
+
+      console.log('[WebsocketService] STOMP connection established');          // Clear existing subscriptions
+
+      this.connectionStatus$.next(true);          this.cleanupSubscriptions();
+
+      this.reconnectAttempts = 0;          
+
+                // Subscribe to the new topic
+
+      // Clear existing subscriptions          this._subscribeToTopic(topic, type);
+
+      this.cleanupSubscriptions();        };
+
+      
+
+      // Subscribe to the new topic        this.stompClient.onStompError = (frame: IFrame) => {
+
+      this._subscribeToTopic(topic, type);          console.error('[WebsocketService] STOMP protocol error:', frame);
+
+    };          const msg = frame.headers?.['message'] ?? '';
+
+          
+
+    this.stompClient.onStompError = (frame: Frame) => {          if (msg.includes('expired') || msg.includes('invalid')) {
+
+      console.error('[WebsocketService] STOMP protocol error:', frame);            this.handleTokenError(topic, type);
+
+      const msg = frame.headers?.['message'] ?? '';          } else {
+
+                  console.error('[WebsocketService] Unhandled STOMP error:', msg);
+
+      if (msg.includes('expired') || msg.includes('invalid')) {            this.handleReconnect(topic, type);
+
+        this.handleTokenError(topic, type);          }
+
+      } else {        };
+
+        console.error('[WebsocketService] Unhandled STOMP error:', msg);
+
+        this.handleReconnect(topic, type);        this.stompClient.onWebSocketError = (event: Event) => {
+
+      }          console.error('[WebsocketService] WebSocket error:', event);
+
+    };          this.handleReconnect(topic, type);
+
+        };
+
+    this.stompClient.onWebSocketError = (event: Event) => {
+
+      console.error('[WebsocketService] WebSocket error:', event);        this.stompClient.onDisconnect = () => {
+
+      this.handleReconnect(topic, type);          console.log('[WebsocketService] STOMP client disconnected');
+
+    };          this.connectionStatus$.next(false);
+
+        };
+
+    this.stompClient.onDisconnect = () => {
+
+      console.log('[WebsocketService] STOMP client disconnected');        this.stompClient.activate();
+
+      this.connectionStatus$.next(false);      } catch (err) {
+
+    };        console.error('[WebsocketService] Failed to create STOMP client:', err);
+
+  }        this.handleReconnect(topic, type);
+
+      }
+
+  /**    } else {
+
+   * Handles token-related errors by attempting refresh      // Already have a client, just subscribe to topic
+
+   */      this._subscribeToTopic(topic, type);
+
+  private handleTokenError(topic: string, type: TopicType): void {    }
+
+    this.auth.refreshToken().subscribe({  }
+
+      next: async (freshToken: string) => {
+
+        if (!this.validateTokenPayload(freshToken)) {  /**
+
+          console.error('[WebsocketService] Received invalid token during refresh');   * Handles token-related errors by attempting refresh
+
+          this.handleReconnect(topic, type);   */
+
+          return;  private handleTokenError(topic: string, type: TopicType): void {
+
+        }    this.auth.refreshToken().subscribe({
+
+      next: async (freshToken: string) => {
+
+        if (this.stompClient) {        if (!this.validateTokenPayload(freshToken)) {
+
+          await this.stompClient.deactivate();          console.error('[WebsocketService] Received invalid token during refresh');
+
+          this.stompClient = null;          this.handleReconnect(topic, type);
+
+        }          return;
+
+                }
+
+        this._connectWithTokenAndSubscribe(topic, freshToken, type);
+
+      },        if (this.stompClient) {
+
+      error: (err) => {          await this.stompClient.deactivate();
+
+        console.error('[WebsocketService] Token refresh failed:', err);          this.stompClient = null;
+
+        this.handleReconnect(topic, type);        }
+
+      }        
+
+    });        this._connectWithTokenAndSubscribe(topic, freshToken, type);
+
+  }      },
+
+      error: (err) => {
+
+  /**        console.error('[WebsocketService] Token refresh failed:', err);
+
+   * Cleans up existing subscriptions before reconnecting        this.handleReconnect(topic, type);
+
+   */      }
+
+  private cleanupSubscriptions(): void {    });
+
+    for (const [topic, sub] of this.subscriptions.entries()) {  }
+
+      try {
+
+        if (sub?.subscription) {  /**
+
+          sub.subscription.unsubscribe();   * Cleans up existing subscriptions before reconnecting
+
+        }   */
+
+      } catch (err) {  private cleanupSubscriptions(): void {
+
+        console.warn('[WebsocketService] Error unsubscribing from topic:', topic, err);    for (const [topic, sub] of this.subscriptions.entries()) {
+
+      }      try {
+
+    }        if (sub?.subscription) {
+
+    this.subscriptions.clear();          sub.subscription.unsubscribe();
+
+  }        }
+
+      } catch (err) {
+
+  /**        console.warn('[WebsocketService] Error unsubscribing from topic:', topic, err);
+
+   * Implements exponential backoff for reconnection attempts      }
+
+   */    }
+
+  private handleReconnect(topic: string, type: TopicType): void {    this.subscriptions.clear();
+
+    this.connectionStatus$.next(false);  }
+
+    
+
+    if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {      this.stompClient.activate();
+
+      this.reconnectAttempts++;    } else {
+
+      const backoffMs = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), this.RECONNECT_BACKOFF_MAX_MS);      // Already connected, just subscribe to topic
+
+            this._subscribeToTopic(topic, type);
+
+      console.log(`[WebsocketService] Attempting reconnect ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS} in ${backoffMs}ms`);    }
+
+        }
+
+      setTimeout(() => {
+
+        this.connectAndSubscribe(topic, type);  private handleReconnect(topic: string, type: TopicType): void {
+
+      }, backoffMs);    this.connectionStatus$.next(false);
+
+    } else {    if (this.reconnectAttempts < this.MAX_RECONNECT_ATTEMPTS) {
+
+      console.error('[WebsocketService] Max reconnection attempts reached');      this.reconnectAttempts++;
+
+    }      console.log(`[WebsocketService] Attempting reconnect ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}`);
+
+  }      setTimeout(() => {
+
+        this.connectAndSubscribe(topic, type);
+
+  /**      }, 5000 * this.reconnectAttempts);
+
+   * Subscribe to a topic with type-safe message handling    } else {
+
+   */      console.error('[WebsocketService] Max reconnection attempts reached');
+
+  private _subscribeToTopic(topic: string, type: TopicType): void {    }
+
+    if (!this.stompClient?.connected) {  }
+
+      console.error('[WebsocketService] Cannot subscribe: STOMP client not connected');
+
+      return;  private _subscribeToTopic(topic: string, type: TopicType): void {
+
+    }    if (!this.stompClient) {
+
+      console.error('[WebsocketService] No STOMP client available');
+
+    // Check if already subscribed      return;
+
+    if (this.subscriptions.has(topic)) {    }
+
+      console.log('[WebsocketService] Already subscribed to:', topic);
+
+      return;    // Check if already subscribed
+
+    }    if (this.subscriptions.has(topic)) {
+
+      console.log('[WebsocketService] Already subscribed to:', topic);
+
+    // Create new subscription with type-safe message handling      return;
+
+    const subscription = this.stompClient.subscribe(topic, (message: IMessage) => {    }
+
+      try {
+
+        const parsed = JSON.parse(message.body);    // Create new subscription with type-safe message handling
+
+            const subscription = this.stompClient.subscribe(topic, (message: IMessage) => {
+
+        // Type-guard the message based on topic type      try {
+
+        if (type === 'room') {        const parsed = JSON.parse(message.body);
+
+          const roomMessage: WebSocketEvent<RoomInfoDto> = {        
+
+            type,        // Type-guard the message based on topic type
+
+            payload: parsed as RoomInfoDto        if (type === 'room') {
+
+          };          const roomMessage: WebSocketEvent<RoomInfoDto> = {
+
+          this.messages$.next(roomMessage);            type,
+
+          console.log('[WebsocketService] Room update:', roomMessage.payload);            payload: parsed as RoomInfoDto
+
+        } else {          };
+
+          const gameMessage: WebSocketEvent<GameStateDto> = {          this.messages$.next(roomMessage);
+
+            type,          console.log('[WebsocketService] Room update:', roomMessage.payload);
+
+            payload: parsed as GameStateDto        } else {
+
+          };          const gameMessage: WebSocketEvent<GameStateDto> = {
+
+          this.messages$.next(gameMessage);            type,
+
+          console.log('[WebsocketService] Game state update:', gameMessage.payload);            payload: parsed as GameStateDto
+
+        }          };
+
+      } catch (e) {          this.messages$.next(gameMessage);
+
+        console.error('[WebsocketService] Message parse error:', e, message.body);          console.log('[WebsocketService] Game state update:', gameMessage.payload);
+
+      }        }
+
+    });      } catch (e) {
+
+        console.error('[WebsocketService] Message parse error:', e, message.body);
+
+    // Store subscription with metadata      }
+
+    const wsSubscription: WebSocketSubscription = {    });
+
+      topic,
+
+      subscription,    // Store subscription with metadata
+
+      type    const wsSubscription: WebSocketSubscription = {
+
+    };      topic,
+
+          subscription,
+
+    this.subscriptions.set(topic, wsSubscription);      type
+
+    console.log(`[WebsocketService] Subscribed to ${type} topic:`, topic);    };
+
+  }    
+
+    this.subscriptions.set(topic, wsSubscription);
+
+  /**    console.log(`[WebsocketService] Subscribed to ${type} topic:`, topic);
+
+   * Disconnect from a specific topic  }
+
+   */
+
+  disconnectTopic(topic: string): void {  disconnectTopic(topic: string): void {
+
+    const sub = this.subscriptions.get(topic);    const sub = this.subscriptions.get(topic);
+
+    if (sub?.subscription) {    if (sub?.subscription) {
+
+      sub.subscription.unsubscribe();      sub.subscription.unsubscribe();
+
+      this.subscriptions.delete(topic);      this.subscriptions.delete(topic);
+
+      console.log('[WebsocketService] Disconnected from topic:', topic);      console.log('[WebsocketService] Disconnected from topic:', topic);
+
+    }    }
+
+
+
+    // If no more subscriptions, disconnect client    // If no more subscriptions, disconnect client
+
+    if (this.subscriptions.size === 0 && this.stompClient) {    if (this.subscriptions.size === 0 && this.stompClient) {
+
+      console.log('[WebsocketService] No more subscriptions, deactivating client');      console.log('[WebsocketService] No more subscriptions, deactivating client');
+
+      this.stompClient.deactivate();      this.stompClient.deactivate();
+
+      this.stompClient = null;      this.stompClient = null;
+
+      this.connectionStatus$.next(false);      this.connectionStatus$.next(false);
+
+    }    }
+
+  }  }
+
+
+
+  /**  send(destination: string, data: any): void {
+
+   * Send a message to a destination    if (!this.stompClient?.connected) {
+
+   */      console.error('[WebsocketService] Cannot send message: not connected');
+
+  send(destination: string, data: any): void {      return;
+
+    if (!this.stompClient?.connected) {    }
+
+      console.error('[WebsocketService] Cannot send message: not connected');
+
+      return;    try {
+
+    }      this.stompClient.publish({
+
+        destination,
+
+    try {        body: JSON.stringify(data)
+
+      this.stompClient.publish({      });
+
+        destination,      console.log('[WebsocketService] Sent message to:', destination);
+
+        body: JSON.stringify(data)    } catch (e) {
+
+      });      console.error('[WebsocketService] Error sending message:', e);
+
+      console.log('[WebsocketService] Sent message to:', destination);    }
+
+    } catch (e) {  }
+
+      console.error('[WebsocketService] Error sending message:', e);
+
+    }  disconnect(): void {
+
+  }    console.log('[WebsocketService] Disconnecting all subscriptions');
+
+    
+
+  /**    // Unsubscribe from all topics
+
+   * Disconnect from all topics and cleanup    for (const [topic, sub] of this.subscriptions.entries()) {
+
+   */      if (sub?.subscription) {
+
+  disconnect(): void {        sub.subscription.unsubscribe();
+
+    console.log('[WebsocketService] Disconnecting all subscriptions');        console.log('[WebsocketService] Unsubscribed from:', topic);
+
+          }
+
+    // Unsubscribe from all topics    }
+
+    this.cleanupSubscriptions();    this.subscriptions.clear();
+
+
+
+    // Deactivate STOMP client    // Deactivate STOMP client
+
+    if (this.stompClient) {    if (this.stompClient) {
+
+      this.stompClient.deactivate();      this.stompClient.deactivate();
+
+      this.stompClient = null;      this.stompClient = null;
+
+      console.log('[WebsocketService] STOMP client deactivated');      console.log('[WebsocketService] STOMP client deactivated');
+
+    }    }
+
+
+
+    this.connectionStatus$.next(false);    this.connectionStatus$.next(false);
+
+  }  }
+
+
+
+  ngOnDestroy(): void {  ngOnDestroy(): void {
+
+    this.disconnect();    this.disconnect();
+
+    this.messages$.complete();    this.messages$.complete();
+
+    this.connectionStatus$.complete();    this.connectionStatus$.complete();
+
+  }  }
+
+
+
+  getConnectionStatus(): Observable<boolean> {  getConnectionStatus(): Observable<boolean> {
+
+    return this.connectionStatus$.asObservable();    return this.connectionStatus$.asObservable();
+
+  }  }
+
+}
+  // getToken() is now obsolete; use AuthService.getValidAccessToken()
+}
