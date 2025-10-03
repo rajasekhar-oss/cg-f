@@ -28,6 +28,16 @@ export class AuthService {
       return '';
     }
   }
+  /**
+   * Returns the userId from the JWT access token payload (from 'sub' or 'id').
+   */
+  getUserId(): string | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+    const payload = decodeJwt(token);
+    // Try 'sub' (standard), fallback to 'id'
+    return payload?.sub || payload?.id || null;
+  }
   getUserRole(): string | null {
     const token = this.getAccessToken();
     if (!token) return null;

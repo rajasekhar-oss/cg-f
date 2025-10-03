@@ -10,6 +10,7 @@
   import { RoomInfoDto } from '../../models/room-info.model';
   import { GameStateDto, PlayerInfo, RoundInfo } from '../../models/game-state.model';
   import { RoomResponse } from '../../models/room-response.model';
+  import { AuthService } from '../../services/auth.service';
 
   @Component({
     selector: 'app-game',
@@ -29,6 +30,9 @@
   myUserId: string = '';
   players: PlayerInfo[] = [];
   fullPlayers: any[] = []; // Store full player objects from StartGameBundleDto
+
+  // Always return fullPlayers with local user first
+  
   gameState: GameStateDto | null = null;
     gameId: string = '';
     // Strict typing for backend DTOs
@@ -50,10 +54,11 @@
       private api: ApiService,
       private route: ActivatedRoute,
       private ws: WebsocketService,
-      private router: Router
+      private router: Router,
+      private auth: AuthService
     ) {
-      // Set myUserId as early as possible
-      this.myUserId = localStorage.getItem('userId') || '';
+      // Set myUserId as early as possible using AuthService
+      this.myUserId = this.auth.getUserId() || '';
       this.showSpinner = true;
       this.showCards = false;
       this.selectedStat = null;
@@ -75,9 +80,23 @@
         // Extract players, statSelectorId, roomCode, and roomInfo if present
         this.roomCode = startGameBundle.roomCode || this.roomCode;
         this.players = (startGameBundle.players || []).map((p: any) => p.id ? p.id : p); // keep for legacy
-        this.fullPlayers = startGameBundle.players || [];
+        // Arrange so local player is always at index 0
+        const allPlayers = startGameBundle.players || [];
+        const myIdx = allPlayers.findIndex((p: any) => p.id?.toString() === this.myUserId);
+        if (myIdx > -1) {
+          this.fullPlayers = [
+            ...allPlayers.slice(myIdx),
+            ...allPlayers.slice(0, myIdx)
+          ];
+        } else {
+          this.fullPlayers = allPlayers;
+        }
         console.log('[GameComponent] fullPlayers from StartGameBundleDto:', this.fullPlayers);
         this.currentStatSelector = startGameBundle.statSelectorId || '';
+        console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
+
+        this.currentStatSelector = startGameBundle.statSelectorId || '';
+        console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
         // If roomInfo is present in startGameBundle, use it
         if (startGameBundle.roomInfo) {
           this.roomInfo = startGameBundle.roomInfo;
@@ -91,6 +110,21 @@
       this.fetchMyCards();
       console.log('[GameComponent] Loaded roomInfo:', this.roomInfo);
     }
+     get arrangedFullPlayers() {
+    console.log('[GameComponent] arrangedFullPlayers getter called', {
+      fullPlayers: this.fullPlayers,
+      myUserId: this.myUserId
+    });
+    if (!Array.isArray(this.fullPlayers) || !this.fullPlayers.length || !this.myUserId) return this.fullPlayers;
+    const idx = this.fullPlayers.findIndex((p: any) => p.id?.toString() === this.myUserId);
+    if (idx === -1) return this.fullPlayers;
+    console.log('[GameComponent] arrangedFullPlayers:', this.fullPlayers, idx);
+    return [
+      ...this.fullPlayers.slice(idx),
+      ...this.fullPlayers.slice(0, idx)
+    ];
+
+  }
 
     showNextCard() {
       if (this.myCards && this.myCards.length) {
@@ -132,10 +166,19 @@
   }
 
   submitStatSelection() {
-    if (!this.selectedStat || !this.gameId || !this.isMyTurn) return;
-    console.log('[GameComponent] Submitting stat selection:', this.selectedStat);
-    this.api.post(`/api/rooms/game/${this.gameId}/play-stat`, { statKey: this.selectedStat }).subscribe({
-      next: () => {
+    console.log('[GameComponent] submitStatSelection called with:', { selectedStat: this.selectedStat, roomCode: this.roomCode });
+    if (!this.selectedStat || !this.roomCode) return;
+    // Find the stat label for the selected stat key
+    const statObj = this.statList.find(stat => stat.key === this.selectedStat);
+    const statLabel = statObj ? statObj.label : this.selectedStat;
+    console.log('[GameComponent] Submitting stat selection:', { statKey: this.selectedStat, statLabel }, this.roomCode);
+    // Send both statKey and statLabel to backend as per PlayStatRequest
+    this.api.post(`/api/rooms/game/${this.roomCode}/play-stat`, { statKey: this.selectedStat, statLabel }).subscribe({
+      next: (data) => {
+        // Log the response data
+        console.log('[GameComponent] play-stat API response:', data);
+        // Log the previous selectedStat value before resetting
+        console.log('[GameComponent] Previous selectedStat sent:', this.selectedStat);
         this.selectedStat = null;
       },
       error: err => {
@@ -221,6 +264,8 @@
 
     // Log tablePlayers at init
     console.log('[GameComponent] tablePlayers at ngOnInit:', this.tablePlayers);
+    // Force evaluation for debugging
+    console.log('[GameComponent] arrangedFullPlayers (ngOnInit):', this.arrangedFullPlayers);
   }
 
   ngOnDestroy() {
@@ -325,7 +370,6 @@
       top: `${yPercent}%`,
       transform: 'translate(-50%, -50%)'
     };
-    console.log(`[GameComponent] getCircularSeatStyle: player index ${i} of ${total}, style:`, style);
     return style;
   }
 

@@ -17,12 +17,16 @@
 
   <!-- Table layout -->
   <div class="table">
-    <ng-container *ngIf="fullPlayers.length > 0; else noPlayers">
-      <ng-container *ngFor="let player of fullPlayers; let i = index">
+    <!-- Player seats arranged in a circle -->
+    <ng-container *ngIf="arrangedFullPlayers.length > 0; else noPlayers">
+      <ng-container *ngFor="let player of arrangedFullPlayers; let i = index">
         <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
-          [ngStyle]="getCircularSeatStyle(i, tablePlayers.length)">
-          <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'" [alt]="player.username || player.id" class="player-avatar" />
-          <div class="username">{{player.username || player.id}}</div>
+          [ngStyle]="getCircularSeatStyle(i, arrangedFullPlayers.length)">
+    <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'"
+      [alt]="player.username || player.id"
+      class="player-avatar"
+      [ngClass]="{'stat-selector-avatar': player.id?.toString() === currentStatSelector}" />
+          <div class="username">{{player.username }}</div>
           <div *ngIf="player.isMe" class="label">You</div>
           <div *ngIf="player.isMe && myCards.length" class="your-cards">
             <div *ngFor="let card of myCards" class="mini-card">
@@ -35,7 +39,8 @@
     <ng-template #noPlayers>
       <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your data and console logs.</div>
     </ng-template>
-    <div class="table-center">Game Table</div>
+    <!-- Game Table center label -->
+    <!-- <div class="table-center">Game Table</div> -->
   </div>
 
   <!-- Bottom bar: cards and messaging -->
@@ -59,20 +64,35 @@
 
   <!-- Card details modal (used for both card list and next card) -->
   <div *ngIf="selectedCard" class="top-card-overlay">
-    <div class="table">
-      <ng-container *ngIf="fullPlayers.length > 0; else noPlayers">
-        <ng-container *ngFor="let player of fullPlayers; let i = index">
-          <div *ngIf="player" class="player-seat"
-            [ngStyle]="getCircularSeatStyle(i, fullPlayers.length)">
-            <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'" [alt]="player.username || player.id" class="player-avatar" />
-            <div class="username">{{player.username || player.id}}</div>
-          </div>
-        </ng-container>
-      </ng-container>
-      <ng-template #noPlayers>
-        <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your data and console logs.</div>
-      </ng-template>
-      <div class="table-center">Game Table</div>
+    <div class="top-card">
+      <button class="close-btn" (click)="closeCardDetails()">✖</button>
+      <div class="card-details-image">
+        <img *ngIf="selectedCard.picture || selectedCard.imageUrl"
+          [src]="selectedCard.picture || selectedCard.imageUrl"
+          [alt]="selectedCard.name || selectedCard.title || 'Card'"
+          [ngClass]="{'top-card-image': true, 'not-top-card-image': !showTopCard}" />
+      </div>
+      <div class="card-title" style="font-size:1.3rem; font-weight:600; margin-bottom:0.5rem;">{{selectedCard.title}}</div>
+      <div *ngIf="selectedCard.description" style="margin-bottom:1rem; color:#555;">{{selectedCard.description}}</div>
+      <div class="card-details-info">
+        <div *ngFor="let stat of statList"
+             class="stat-card"
+             [ngClass]="{
+               'selectable': currentStatSelector === myUserId,
+               'selected-stat': selectedStat === stat.key
+             }"
+             (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
+          <span class="stat-label">{{ stat.label }}</span>
+          <span class="stat-value">{{ stat.value }}</span>
+        </div>
+        <div *ngIf="showTopCard && selectedCard" style="display: flex; justify-content: flex-end; width: 100%;">
+          <button *ngIf="currentStatSelector === myUserId" class="select-card-btn" (click)="submitStatSelection()">Select</button>
+          <button *ngIf="currentStatSelector !== myUserId" class="select-card-btn-disabled" disabled>Select</button>
+        </div>
+      </div>
+    </div>
+  </div>
+      
 
     <!-- Remove broken or stray template code below. If you want to re-add stats or messages, do so inside a valid parent div. -->
 
