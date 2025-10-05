@@ -19,6 +19,7 @@
     imports: [CommonModule]
   })
   export class GameComponent {
+  allMyCards: any[] = [];
     topCard: any = null;
     selectedCard: any = null;
     showCardList: boolean = false;
@@ -147,18 +148,45 @@
     this.selectedStat = null;
   }
   // Stat list for the top card
-  get statList() {
-    if (!this.topCard) return [];
-    return [
-      { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
-      { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
-      { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
-      { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
-      { key: 'followers', label: 'Followers', value: this.topCard.followers },
-      { key: 'languages', label: 'Languages', value: this.topCard.languages },
-      { key: 'professions', label: 'Professions', value: this.topCard.professions }
-    ];
-  }
+  // get statList() {
+  //   if (!this.topCard) return [];
+  //   return [
+  //     { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
+  //     { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
+  //     { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
+  //     { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
+  //     { key: 'followers', label: 'Followers', value: this.topCard.followers },
+  //     { key: 'languages', label: 'Languages', value: this.topCard.languages },
+  //     { key: 'professions', label: 'Professions', value: this.topCard.professions }
+  //   ];
+  // }
+  // Inside GameComponent
+get statList() {
+  if (!this.topCard) return [];
+  return [
+    { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
+    { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
+    { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
+    { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
+    { key: 'followers', label: 'Followers', value: this.topCard.followers },
+    { key: 'languages', label: 'Languages', value: this.topCard.languages },
+    { key: 'professions', label: 'Professions', value: this.topCard.professions }
+  ];
+}
+
+  getStatList(card: any) {
+  if (!card) return [];
+  return [
+    { key: 'totalFilms', label: 'Total Films', value: card.totalFilms },
+    { key: 'yearsActive', label: 'Years Active', value: card.yearsActive },
+    { key: 'highestGrossing', label: 'Highest Grossing', value: card.highestGrossing },
+    { key: 'awardsWon', label: 'Awards Won', value: card.awardsWon },
+    { key: 'followers', label: 'Followers', value: card.followers },
+    { key: 'languages', label: 'Languages', value: card.languages },
+    { key: 'professions', label: 'Professions', value: card.professions }
+  ];
+}
+
 
   selectStat(statKey: string) {
     this.selectedStat = statKey;
@@ -172,8 +200,14 @@
     const statObj = this.statList.find(stat => stat.key === this.selectedStat);
     const statLabel = statObj ? statObj.label : this.selectedStat;
     console.log('[GameComponent] Submitting stat selection:', { statKey: this.selectedStat, statLabel }, this.roomCode);
+    console.log("playerCards being sent:", this.tablePlayers);
+    const playerCards = this.tablePlayers.map((player: any) => ({
+  userId: player.id,
+  cardId: player.topCard?.id || null
+}))
+console.log('[GameComponent] PlayerCards being sent:', playerCards);
     // Send both statKey and statLabel to backend as per PlayStatRequest
-    this.api.post(`/api/rooms/game/${this.roomCode}/play-stat`, { statKey: this.selectedStat, statLabel }).subscribe({
+    this.api.post(`/api/rooms/game/${this.roomCode}/play-stat`, { statKey: this.selectedStat, statLabel, playerCards }).subscribe({
       next: (data) => {
         // Log the response data
         console.log('[GameComponent] play-stat API response:', data);
@@ -207,7 +241,9 @@
           const userId = localStorage.getItem('userId') || this.myUserId;
           if (userId) {
             const gameTopic = `/topic/game/${msg.gameId}/user/${userId}`;
+            const altGameTopic = `/topic/game/user/${userId}`;
             this.ws.connectAndSubscribe(gameTopic);
+            this.ws.connectAndSubscribe(altGameTopic);
           }
           // 4. Subscribe to /topic/rooms/{roomCode} for RoomInfoDto
           const roomInfoTopic = `/topic/rooms/${msg.roomCode}`;
@@ -231,7 +267,13 @@
       }, 1500);
     }, 1500);
 
-    // Subscribe to all WebSocket messages and log each DTO type
+    // Always subscribe to /topic/game/user/{userId} for general GameStateDto updates
+    if (this.myUserId) {
+      const altGameTopic = `/topic/game/user/${this.myUserId}`;
+      this.ws.connectAndSubscribe(altGameTopic);
+    }
+
+    // Subscribe to all WebSocket messages and update myCards and currentStatSelector on GameStateDto
     this.ws.messages$.subscribe((msg: any) => {
       if (!msg) return;
       // RoomInfoDto: has roomCode, requiredPlayers, joinedPlayers, joinedPlayersUsernames
@@ -243,13 +285,31 @@
       ) {
         console.log('[GameComponent] RoomInfoDto:', msg);
       }
-      // GameStateDto: has gameId, players, deckSizes
+      // GameStateDto: has gameId, playerCards, winnerUserId
+      if (
+        Array.isArray(msg.myCards) &&
+        msg.winner
+      ) {
+        console.log('[GameComponent] GameStateDto:', msg);
+        // Update myCards with playerCards for this user
+        // const me = msg.myCards.find((c: any) => c.userId?.toString() === this.myUserId);
+        // if (me && me.cards) {
+        //   this.myCards = me.cards.map((shortCard: any) =>
+        //     this.allMyCards.find((fullCard: any) => fullCard.id === shortCard.id) || shortCard
+        //   );
+        // }
+        this.myCards=msg.myCards
+        // Set currentStatSelector to winnerUserId
+        this.currentStatSelector = msg.winner;
+        this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
+      }
+      // GameStateDto: has gameId, players, deckSizes (legacy)
       if (
         msg.gameId &&
         Array.isArray(msg.players) &&
         typeof msg.deckSizes === 'object'
       ) {
-        console.log('[GameComponent] GameStateDto:', msg);
+        console.log('[GameComponent] GameStateDto (legacy):', msg);
       }
       // StartGameDto: has gameId and roomCode, but not players/deckSizes
       if (
@@ -303,6 +363,7 @@
     this.api.get(path).subscribe((cards: any) => {
       console.log('Cards response:', cards);
       this.myCards = cards;
+      console.log('All cards stored separately:', this.myCards);
     }, err => {
       console.error('Error fetching cards:', err);
     });
