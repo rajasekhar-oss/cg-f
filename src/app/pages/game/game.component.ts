@@ -19,7 +19,6 @@
     imports: [CommonModule]
   })
   export class GameComponent {
-  allMyCards: any[] = [];
     topCard: any = null;
     selectedCard: any = null;
     showCardList: boolean = false;
@@ -194,6 +193,9 @@ get statList() {
   }
 
   submitStatSelection() {
+  this.showTopCard = false; // Close the next card when submitting
+  this.selectedCard = null; // Also close the card detail view
+   
     console.log('[GameComponent] submitStatSelection called with:', { selectedStat: this.selectedStat, roomCode: this.roomCode });
     if (!this.selectedStat || !this.roomCode) return;
     // Find the stat label for the selected stat key
@@ -241,9 +243,7 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
           const userId = localStorage.getItem('userId') || this.myUserId;
           if (userId) {
             const gameTopic = `/topic/game/${msg.gameId}/user/${userId}`;
-            const altGameTopic = `/topic/game/user/${userId}`;
             this.ws.connectAndSubscribe(gameTopic);
-            this.ws.connectAndSubscribe(altGameTopic);
           }
           // 4. Subscribe to /topic/rooms/{roomCode} for RoomInfoDto
           const roomInfoTopic = `/topic/rooms/${msg.roomCode}`;
