@@ -10,7 +10,7 @@
   <div *ngIf="showGoodLuck" class="good-luck-message">Good Luck!</div>
 
   <!-- Spinner for game start -->
-  <div *ngIf="showSpinner" class="spinner">
+  <div *ngIf="!currentStatSelector" class="spinner">
     <div class="spinner-graphic"></div>
     <div class="spinner-label">Selecting first player...</div>
   </div>
@@ -22,17 +22,15 @@
       <ng-container *ngFor="let player of arrangedFullPlayers; let i = index">
         <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
           [ngStyle]="getCircularSeatStyle(i, arrangedFullPlayers.length)">
+          <div>
     <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'"
       [alt]="player.username || player.id"
       class="player-avatar"
       [ngClass]="{'stat-selector-avatar': player.id?.toString() === currentStatSelector}" />
           <div class="username">{{player.username }}</div>
-          <div *ngIf="player.isMe" class="label">You</div>
-          <div *ngIf="player.isMe && myCards.length" class="your-cards">
-            <div *ngFor="let card of myCards" class="mini-card">
-              <div class="mini-title">{{card.title}}</div>
-            </div>
           </div>
+
+    
         </div>
       </ng-container>
     </ng-container>
@@ -48,7 +46,7 @@
     <span class="cards-count">Cards: {{myCards.length}}</span>
     <button class="game-action-btn cards-btn" (click)="showCardList = true">Cards</button>
     <button class="game-action-btn next-card-btn" (click)="showNextCard()">Next Card</button>
-    <button class="game-action-btn message-btn" (click)="sendMessage()">Message</button>
+    <button class="game-action-btn message-btn" (click)="sendMessage()">M</button>
   </div>
 
   <!-- Card list overlay -->
@@ -61,39 +59,6 @@
     </div>
     <button class="close-btn" (click)="showCardList = false">✖</button>
   </div>
-
-  <!-- Card details modal (used for both card list and next card) -->
-  <!-- <div *ngIf="selectedCard" class="top-card-overlay">
-    <div class="top-card">
-      <button class="close-btn" (click)="closeCardDetails()">✖</button> -->
-      
-      <!-- <div class="card-details-image">
-        <img *ngIf="selectedCard.picture || selectedCard.imageUrl"
-          [src]="selectedCard.picture || selectedCard.imageUrl"
-          [alt]="selectedCard.name || selectedCard.title || 'Card'"
-          [ngClass]="{'top-card-image': true, 'not-top-card-image': !showTopCard}" />
-      </div>
-      <div class="card-title" style="font-size:1.3rem; font-weight:600; margin-bottom:0.5rem;">{{selectedCard.title}}</div>
-      <div *ngIf="selectedCard.description" style="margin-bottom:1rem; color:#555;">{{selectedCard.description}}</div>
-      <div class="card-details-info">
-        <div *ngFor="let stat of statList"
-             class="stat-card"
-             [ngClass]="{
-               'selectable': currentStatSelector === myUserId,
-               'selected-stat': selectedStat === stat.key
-             }"
-             (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
-          <span class="stat-label">{{ stat.label }}</span>
-          <span class="stat-value">{{ stat.value }}</span>
-        </div>
-        <div *ngIf="showTopCard && selectedCard" style="display: flex; justify-content: flex-end; width: 100%;">
-          <button *ngIf="currentStatSelector === myUserId" class="select-card-btn" (click)="submitStatSelection()">Select</button>
-          <button *ngIf="currentStatSelector !== myUserId" class="select-card-btn-disabled" disabled>Select</button>
-        </div>
-      </div> -->
-    <!-- </div>
-  </div>
-       -->
   <div *ngIf="topCard && showTopCard" class="top-card-overlay">
   <div class="top-card">
     <button class="close-btn" (click)="closeCardDetails()">✖</button>
@@ -137,16 +102,4 @@
     </div>
   </div>
 </div>
-
-
-
-    <!-- Remove broken or stray template code below. If you want to re-add stats or messages, do so inside a valid parent div. -->
-
-<!--
-  <div class="messages">
-    <div *ngFor="let msg of messages" class="message" [ngStyle]="{ bottom: msg.bottom + 'px', opacity: msg.opacity }">
-      {{msg.text}}
-    </div>
-  </div>
--->
 </div>

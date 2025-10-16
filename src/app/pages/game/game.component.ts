@@ -38,6 +38,8 @@
     // Strict typing for backend DTOs
   roomInfo: RoomInfoDto | null = null;
     myCards: any[] = [];
+      // Map of playerId -> top card object (first card on their pile)
+      currentTopCards: { [playerId: string]: any } = {};
     showSpinner: boolean;
     showCards: boolean;
     canLeaveGame: boolean;
@@ -174,6 +176,7 @@ get statList() {
 }
 
   getStatList(card: any) {
+  console.log('[GameComponent] getStatList called for card:', card && (card.id || card.title));
   if (!card) return [];
   return [
     { key: 'totalFilms', label: 'Total Films', value: card.totalFilms },
@@ -291,14 +294,24 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
         msg.winner
       ) {
         console.log('[GameComponent] GameStateDto:', msg);
-        // Update myCards with playerCards for this user
-        // const me = msg.myCards.find((c: any) => c.userId?.toString() === this.myUserId);
-        // if (me && me.cards) {
-        //   this.myCards = me.cards.map((shortCard: any) =>
-        //     this.allMyCards.find((fullCard: any) => fullCard.id === shortCard.id) || shortCard
-        //   );
-        // }
-        this.myCards=msg.myCards
+        this.showTopCard = false; // Close the next card when submitting
+        this.selectedCard = null;
+        this.myCards = msg.myCards;
+
+        try {
+          if (Array.isArray(msg.myCards)) {
+            msg.myCards.forEach((entry: any) => {
+              const uid = entry.userId?.toString();
+              if (uid) {
+                const first = Array.isArray(entry.cards) && entry.cards.length ? entry.cards[0] : (Array.isArray(entry) && entry.length ? entry[0] : null);
+                this.currentTopCards[uid] = first || null;
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('[GameComponent] Failed to populate currentTopCards from myCards shape', e);
+        }
+
         // Set currentStatSelector to winnerUserId
         this.currentStatSelector = msg.winner;
         this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
@@ -310,6 +323,21 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
         typeof msg.deckSizes === 'object'
       ) {
         console.log('[GameComponent] GameStateDto (legacy):', msg);
+        // Legacy playerCards shape: msg.playerCards is expected to be an array of { userId, card } or similar
+        if (Array.isArray((msg as any).playerCards)) {
+          try {
+            (msg as any).playerCards.forEach((pc: any) => {
+              const uid = pc.userId?.toString();
+              if (uid) {
+                // If card is nested under 'card' or direct
+                const card = pc.card || pc.topCard || pc;
+                this.currentTopCards[uid] = card || null;
+              }
+            });
+          } catch (e) {
+            console.warn('[GameComponent] Failed to populate currentTopCards from playerCards shape', e);
+          }
+        }
       }
       // StartGameDto: has gameId and roomCode, but not players/deckSizes
       if (
@@ -388,7 +416,8 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
       ].map((p: any) => ({
         ...p,
         isMe: p.id?.toString() === this.myUserId,
-        profilePicture: p.profilePicUrl
+        profilePicture: p.profilePicUrl,
+        topCard: this.currentTopCards[p.id?.toString()] || null
       }));
       console.log('[GameComponent] tablePlayers (arranged, fullPlayers):', arranged);
       arranged.forEach((p, i) => console.log(`[GameComponent] Player #${i}:`, p));
@@ -413,12 +442,33 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
       ...players.slice(idx),
       ...players.slice(0, idx)
     ];
-    console.log('[GameComponent] tablePlayers (arranged):', arranged);
-    arranged.forEach((p, i) => console.log(`[GameComponent] Player #${i}:`, p));
-    return arranged;
+    const withTop = arranged.map((p: any) => ({ ...p, topCard: this.currentTopCards[p.id?.toString()] || null }));
+    console.log('[GameComponent] tablePlayers (arranged):', withTop);
+    withTop.forEach((p, i) => console.log(`[GameComponent] Player #${i}:`, p));
+    return withTop;
   }
 
-  getCircularSeatStyle(i: number, total: number) {
+  // Helper for template: get top card object for a given player id (accepts string or number)
+  getTopCardForPlayer(id: any) {
+    console.log('[GameComponent] getTopCardForPlayer called with id:', id);
+    if (!id) {
+      console.log('[GameComponent] getTopCardForPlayer returning null because id is falsy');
+      return null;
+    }
+    const key = id?.toString();
+    // Prefer currentTopCards populated from GameStateDto
+    if (this.currentTopCards) {
+      console.log('[GameComponent] getTopCardForPlayer found in currentTopCards:', this.myCards[0]);
+      return this.myCards[0];
+    }
+    // Fallback: if tablePlayers has topCard property
+    const p = this.tablePlayers.find((pl: any) => pl.id?.toString() === key);
+    const res = this.myCards[0];
+    console.log('[GameComponent] getTopCardForPlayer fallback result:', res);
+    return res;
+  }
+
+    getCircularSeatStyle(i: number, total: number) {
     // Local player (index 0) always at bottom center
     // All others distributed evenly clockwise
     const percentRadius = 40; // % of table size
@@ -433,7 +483,6 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
     };
     return style;
   }
-
   confirmLeave = (event: any) => {
     event.preventDefault();
     event.returnValue = 'Are you sure you want to leave the game?';
