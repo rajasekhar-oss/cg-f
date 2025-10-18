@@ -22,6 +22,9 @@
     topCard: any = null;
     selectedCard: any = null;
     showCardList: boolean = false;
+    // Previous round cards panel (separate from user's myCards)
+    showPreviousRoundCards: boolean = false;
+    previousRoundCards: any[] = [];
     showTopCard: boolean = false;
     selectedStat: string | null = null;
   isMyTurn: boolean = false;
@@ -511,5 +514,10 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
 
   sendSticker() {
     this.messages?.push({ text: '🎉', bottom: 10, opacity: 1 });
+  }
+
+  togglePreviousRoundCards() {
+    // Just toggle visibility. Data will be provided later.
+    this.showPreviousRoundCards = !this.showPreviousRoundCards;
   }
 }
