@@ -67,8 +67,8 @@
     </div>
   </div>
 
-  <!-- Card list overlay (kept in DOM so we can animate close) -->
-  <div class="card-list" [class.open]="showCardList" [attr.aria-hidden]="!showCardList">
+  <!-- Card list overlay -->
+  <div *ngIf="showCardList" class="card-list">
     <div class="card-grid">
       <div *ngFor="let card of myCards" class="card-item" (click)="showCardDetails(card)">
         <img [src]="card.picture || card.imageUrl" [alt]="card.title" class="card-image-thumb" />
@@ -77,8 +77,8 @@
     </div>
     <button class="close-btn" (click)="showCardList = false">✖</button>
   </div>
-  <div class="top-card-overlay" [class.open]="topCard && showTopCard" [attr.aria-hidden]="!(topCard && showTopCard)">
-  <div class="top-card" [attr.aria-hidden]="!(topCard && showTopCard)">
+  <div *ngIf="topCard && showTopCard" class="top-card-overlay">
+  <div class="top-card">
     <button class="close-btn" (click)="closeCardDetails()">✖</button>
     <div class="card-details-image">
       <img [src]="topCard.picture || topCard.imageUrl" [alt]="topCard.title" class="top-card-image"/>
@@ -102,8 +102,8 @@
     </div>
   </div>
 </div>
-<div class="top-card-overlay" [class.open]="selectedCard && (!topCard || selectedCard.id !== topCard.id)" [attr.aria-hidden]="!(selectedCard && (!topCard || selectedCard.id !== topCard.id))">
-  <div class="top-card" [attr.aria-hidden]="!(selectedCard && (!topCard || selectedCard.id !== topCard.id))">
+<div *ngIf="selectedCard && (!topCard || selectedCard.id !== topCard.id)" class="top-card-overlay">
+  <div class="top-card">
     <button class="close-btn" (click)="closeCardDetails()">✖</button>
     <div class="card-details-image">
       <img [src]="selectedCard.picture || selectedCard.imageUrl" [alt]="selectedCard.title" class="card-image-thumb top-card-image not-top-card-image"/>

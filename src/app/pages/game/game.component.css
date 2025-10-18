@@ -113,18 +113,6 @@
   border-radius: 2vh;
 }
 
-.card-list {
-  transform: translateY(20vh);
-  opacity: 0;
-  transition: transform 0.28s cubic-bezier(0.22, 0.9, 0.2, 1), opacity 0.22s ease;
-  pointer-events: none;
-}
-.card-list.open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -242,18 +230,6 @@
   align-items: center;
   justify-content: center;
   z-index: 200;
-}
-
-.top-card-overlay {
-  transform: translateY(12vh);
-  opacity: 0;
-  transition: transform 0.22s cubic-bezier(0.22, 0.9, 0.2, 1), opacity 0.18s ease;
-  pointer-events: none;
-}
-.top-card-overlay.open {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .top-card {
