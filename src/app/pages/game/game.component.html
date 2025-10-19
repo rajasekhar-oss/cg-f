@@ -67,8 +67,8 @@
     </div>
   </div>
 
-  <!-- Card list overlay -->
-  <div *ngIf="showCardList" class="card-list">
+  <!-- Card list overlay (kept in DOM for smooth close animation) -->
+  <div class="card-list" [class.open]="showCardList" [attr.aria-hidden]="!showCardList">
     <div class="card-grid">
       <div *ngFor="let card of myCards" class="card-item" (click)="showCardDetails(card)">
         <img [src]="card.picture || card.imageUrl" [alt]="card.title" class="card-image-thumb" />
@@ -77,47 +77,51 @@
     </div>
     <button class="close-btn" (click)="showCardList = false">✖</button>
   </div>
-  <div *ngIf="topCard && showTopCard" class="top-card-overlay">
-  <div class="top-card">
-    <button class="close-btn" (click)="closeCardDetails()">✖</button>
-    <div class="card-details-image">
-      <img [src]="topCard.picture || topCard.imageUrl" [alt]="topCard.title" class="top-card-image"/>
-    </div>
-    <div class="card-title">{{topCard.title}}</div>
-    <div *ngIf="topCard.description" class="card-description">{{topCard.description}}</div>
-    
-    <div class="card-details-info">
-      <div *ngFor="let stat of statList"
-           class="stat-card"
-           [ngClass]="{'selectable': currentStatSelector === myUserId, 'selected-stat': selectedStat === stat.key}"
-           (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
-        <span class="stat-label">{{stat.label}}</span>
-        <span class="stat-value">{{stat.value}}</span>
-      </div>
 
-      <div style="display:flex; justify-content:flex-end; width:100%;">
-        <button *ngIf="currentStatSelector === myUserId" class="select-card-btn" (click)="submitStatSelection()">Select</button>
-        <button *ngIf="currentStatSelector !== myUserId" class="select-card-btn-disabled" disabled>Select</button>
+  <!-- Top card overlay (kept in DOM for animation) -->
+  <div class="top-card-overlay" [class.open]="topCard && showTopCard" [attr.aria-hidden]="!(topCard && showTopCard)">
+    <div class="top-card">
+      <button class="close-btn" (click)="closeCardDetails()">✖</button>
+      <div class="card-details-image">
+        <img [src]="topCard?.picture || topCard?.imageUrl" [alt]="topCard?.title" class="top-card-image"/>
+      </div>
+      <div class="card-title">{{topCard?.title}}</div>
+      <div *ngIf="topCard?.description" class="card-description">{{topCard.description}}</div>
+
+      <div class="card-details-info">
+        <div *ngFor="let stat of statList"
+             class="stat-card"
+             [ngClass]="{'selectable': currentStatSelector === myUserId, 'selected-stat': selectedStat === stat.key}"
+             (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
+          <span class="stat-label">{{stat.label}}</span>
+          <span class="stat-value">{{stat.value}}</span>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; width:100%;">
+          <button *ngIf="currentStatSelector === myUserId" class="select-card-btn" (click)="submitStatSelection()">Select</button>
+          <button *ngIf="currentStatSelector !== myUserId" class="select-card-btn-disabled" disabled>Select</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<div *ngIf="selectedCard && (!topCard || selectedCard.id !== topCard.id)" class="top-card-overlay">
-  <div class="top-card">
-    <button class="close-btn" (click)="closeCardDetails()">✖</button>
-    <div class="card-details-image">
-      <img [src]="selectedCard.picture || selectedCard.imageUrl" [alt]="selectedCard.title" class="card-image-thumb top-card-image not-top-card-image"/>
-    </div>
-    <div class="card-title">{{selectedCard.title}}</div>
-    <div *ngIf="selectedCard.description" class="card-description">{{selectedCard.description}}</div>
-    
-    <div class="card-details-info">
-      <div *ngFor="let stat of getStatList(selectedCard)"
-           class="stat-card">
-        <span class="stat-label">{{stat.label}}</span>
-        <span class="stat-value">{{stat.value}}</span>
+
+  <!-- Selected card overlay (kept in DOM for animation) -->
+  <div class="top-card-overlay" [class.open]="selectedCard && (!topCard || selectedCard.id !== topCard.id)" [attr.aria-hidden]="!(selectedCard && (!topCard || selectedCard.id !== topCard.id))">
+    <div class="top-card">
+      <button class="close-btn" (click)="closeCardDetails()">✖</button>
+      <div class="card-details-image">
+        <img [src]="selectedCard?.picture || selectedCard?.imageUrl" [alt]="selectedCard?.title" class="card-image-thumb top-card-image not-top-card-image"/>
+      </div>
+      <div class="card-title">{{selectedCard?.title}}</div>
+      <div *ngIf="selectedCard?.description" class="card-description">{{selectedCard.description}}</div>
+
+      <div class="card-details-info">
+        <div *ngFor="let stat of getStatList(selectedCard)"
+             class="stat-card">
+          <span class="stat-label">{{stat.label}}</span>
+          <span class="stat-value">{{stat.value}}</span>
+        </div>
       </div>
     </div>
   </div>
-</div>
 </div>

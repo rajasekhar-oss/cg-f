@@ -201,6 +201,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   startGame() {
+    // console.log('[WaitingRoom] Start Game clicked');
     // Only trigger the backend to start the game; all players are already subscribed in ngOnInit
     this.api.post(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse: any) => {
       console.log('[WaitingRoom] RoomResponse:', roomResponse);
@@ -219,11 +220,54 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   leaveRoom() {
-    // TODO: Implement leave room logic
+    if (!this.roomCode) {
+      this.error = 'No room code to leave';
+      return;
+    }
+    const ok = window.confirm('Are you sure you want to leave the room?');
+    if (!ok) return;
+    this.isLoading = true;
+    const path = `/api/rooms/${this.roomCode}/leave`;
+    const sub = this.api.post(path, {}).subscribe({
+      next: (res: any) => {
+        console.log('[WaitingRoom] leaveRoom response:', res);
+        this.isLoading = false;
+        // disconnect websocket and navigate away
+        try { this.ws.disconnect(); } catch (e) { /* ignore */ }
+        this.router.navigate(['/']);
+      },
+      error: (err: any) => {
+        console.error('[WaitingRoom] leaveRoom error:', err);
+        this.error = err?.error?.error || err?.message || 'Failed to leave room';
+        this.isLoading = false;
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   deleteRoom() {
-    // TODO: Implement delete room logic
+    if (!this.roomCode) {
+      this.error = 'No room code to delete';
+      return;
+    }
+    const ok = window.confirm('Are you sure you want to DELETE this room? This cannot be undone.');
+    if (!ok) return;
+    this.isLoading = true;
+    const path = `/api/rooms/${this.roomCode}/delete`;
+    const sub = this.api.post(path, {}).subscribe({
+      next: (res: any) => {
+        console.log('[WaitingRoom] deleteRoom response:', res);
+        this.isLoading = false;
+        try { this.ws.disconnect(); } catch (e) { /* ignore */ }
+        this.router.navigate(['/']);
+      },
+      error: (err: any) => {
+        console.error('[WaitingRoom] deleteRoom error:', err);
+        this.error = err?.error?.error || err?.message || 'Failed to delete room';
+        this.isLoading = false;
+      }
+    });
+    this.subscriptions.push(sub);
   }
 
   ngOnDestroy() {
