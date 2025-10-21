@@ -2,7 +2,7 @@ import { RoomInfoDto } from '../../models/room-info.model';
 import { RoomResponse } from '../../models/room-response.model';
 import { environment } from '../../../environments/environment';
 import { Component, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
@@ -13,7 +13,7 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 @Component({
   selector: 'app-waiting-room',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, NgClass],
   styleUrls: ['./waiting-room.component.css'],
   template: `
     <div class="waiting-room-container">
@@ -34,7 +34,7 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
         <button class="action-btn" (click)="openInvite()">Invite/Search</button>
         <button class="action-btn" (click)="goToArrange()">Arrange Cards</button>
         <button class="action-btn" (click)="leaveRoom()">Leave Room</button>
-        <button class="action-btn" (click)="deleteRoom()">Delete Room</button>
+        <button *ngIf="isCreator" class="action-btn" (click)="deleteRoom()">Delete Room</button>
       </div>
     </div>
   `,
@@ -68,13 +68,52 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       private ngZone: NgZone,
       private auth: AuthService
     ) {
-      // Get current user id from JWT
+      // Get current user id from JWT with safer parsing and detailed logs
       const token = this.auth.getAccessToken();
-      const payload = token ? ((window as any).decodeJwt ? (window as any).decodeJwt(token) : null) : null;
-      if (payload && (payload.id || payload.userId)) {
-        this.currentUserId = payload.id || payload.userId;
+      try {
+        // Log token presence (truncate long tokens)
+        console.log('[WaitingRoom] access token:', token ? (typeof token === 'string' && token.length > 48 ? token.slice(0, 48) + '...' : token) : token);
+        const payload = this.getJwtPayload(token as any);
+        console.log('[WaitingRoom] jwt payload:', payload);
+        if (payload) {
+          // support multiple possible claim names commonly used
+          const id = payload.id || payload.userId || payload.sub || payload.user_id || payload.uid;
+          if (id) {
+            this.currentUserId = id;
+            console.log('[WaitingRoom] resolved currentUserId:', this.currentUserId);
+          } else {
+            console.warn('[WaitingRoom] Could not find user id claim in JWT payload. Available keys:', Object.keys(payload));
+          }
+        }
+      } catch (e) {
+        console.error('[WaitingRoom] Error parsing token for user id:', e);
       }
     }
+
+  // Helper: parse JWT payload (supports window.decodeJwt if present, otherwise base64-decodes)
+  private getJwtPayload(token: string | null | undefined): any {
+    if (!token || typeof token !== 'string') return null;
+    try {
+      if ((window as any).decodeJwt && typeof (window as any).decodeJwt === 'function') {
+        return (window as any).decodeJwt(token);
+      }
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const payloadB64 = parts[1];
+      // Add padding if needed
+      const pad = payloadB64.length % 4;
+      const base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/') + (pad ? '='.repeat(4 - pad) : '');
+      const decoded = atob(base64);
+      try {
+        return JSON.parse(decodeURIComponent(escape(decoded)));
+      } catch (e) {
+        return JSON.parse(decoded);
+      }
+    } catch (e) {
+      console.error('[WaitingRoom] getJwtPayload failed:', e);
+      return null;
+    }
+  }
 
   ngOnInit() {
     console.log('[WaitingRoom] ngOnInit called');
@@ -82,11 +121,15 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
     this.route.paramMap.subscribe((params: any) => {
       this.roomCode = params.get('roomCode') || '';
+      console.log('[WaitingRoom] Extracted roomCode from URL:', params);
       if (stateRoomInfo && 'creatorId' in stateRoomInfo) {
+        console.log('[WaitingRoom] Initialized roomInfo from router state:', stateRoomInfo);
         this.roomInfo = stateRoomInfo as RoomInfoDto;
         this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
         this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
         this.isLoading = false;
+        this.isCreator = this.roomInfo.creatorId === this.currentUserId;
+        console.log('[WaitingRoom] Initialized roomInfo from router state:', this.roomInfo);
         // Always keep latest RoomInfoDto for navigation
         console.log('[WaitingRoom] Loaded roomInfo from router state:', this.roomInfo);
       } else if (this.roomCode) {
@@ -98,6 +141,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
             this.requiredPlayers = res.requiredPlayers;
             this.joinedPlayers = res.joinedPlayersUsernames || [];
             this.isLoading = false;
+            this.isCreator = res.creatorId === this.currentUserId;
+            console.log('[WaitingRoom] Fetched roomInfo from API:', this.roomInfo);
           },
           error: (e: any) => {
             this.error = e?.error?.error || e?.message || 'Error fetching room info';
@@ -149,11 +194,17 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         console.log('[WaitingRoom] WebSocket message received:', msg);
         this.ngZone.run(() => {
           if (msg && 'creatorId' in msg) {
+            if(msg.eventType === 'ROOM_DELETED') {
+              alert('The room has been deleted by the creator. You will be redirected to the home page.');
+              this.router.navigate(['/']);
+              return;
+            }
             this.roomInfo = msg as RoomInfoDto;
             this.requiredPlayers = msg.requiredPlayers || this.requiredPlayers;
             this.joinedPlayers = msg.joinedPlayers || [];
             this.joinedPlayersUsernames = msg.joinedPlayersUsernames || [];
             this.isCreator = msg.creatorId === this.currentUserId;
+            console.log('userId:', this.currentUserId, 'creatorId:', msg.creatorId);
             console.log('[WaitingRoom] Updated roomInfo from WebSocket:', this.roomInfo);
           }
           this.cd.detectChanges();

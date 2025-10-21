@@ -15,19 +15,7 @@ import { Router } from '@angular/router';
         <label for="roomCode">Enter Room Code</label>
         <input id="roomCode" type="text" [(ngModel)]="roomCode" placeholder="Room code" />
       </div>
-      <button class="join-btn" [disabled]="!roomCode || isLoading" (click)="joinRoom()">Join Room</button>
-      <div *ngIf="roomInfo" class="room-info">
-        <div class="info-item"><strong>Room Code:</strong> {{ roomInfo.roomCode }}</div>
-        <div class="info-item"><strong>Required Players:</strong> {{ roomInfo.requiredPlayers }}</div>
-        <div class="info-item"><strong>Joined Players:</strong></div>
-        <div class="joined-cards">
-          <div class="joined-card" *ngFor="let user of joinedUsernames">
-              {{ user }}
-            </div>
-        </div>
-      </div>
-      <div *ngIf="error" class="error">{{ error }}</div>
-    </div>
+      <button  [disabled]="roomCode.length !== 6" class="join-btn" (click)="joinRoom()">Join Room</button>
   `,
   styles: [`
     .join-room-container { max-width: 420px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; text-align: center; }
@@ -44,6 +32,14 @@ import { Router } from '@angular/router';
       margin-top: 10px;
       justify-content: center;
     }
+      .join-btn:disabled {
+  background-color: #ccc;   /* dull gray */
+  color: #666;              /* text muted */
+  cursor: not-allowed;      /* show the “nah” cursor */
+  opacity: 0.6;             /* make it look sleepy */
+  box-shadow: none;         /* remove glow or shadow if any */
+}
+
     .joined-card {
       background: #f3f4f6;
       color: #374151;

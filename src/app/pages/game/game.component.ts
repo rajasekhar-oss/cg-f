@@ -316,7 +316,8 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
         }
 
         // Set currentStatSelector to winnerUserId
-        this.currentStatSelector = msg.winner;
+        this.previousRoundCards=msg.currentRoundCards;
+        this.currentStatSelector = msg.currentStatSelector;
         this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
       }
       // GameStateDto: has gameId, players, deckSizes (legacy)
