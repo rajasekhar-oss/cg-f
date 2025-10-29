@@ -20,17 +20,17 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
       <div class="room-info">
         <div class="room-code">Room Code: <span>{{ roomInfo?.roomCode || roomCode }}</span></div>
         <div class="players-status">Required Players: <strong>{{ roomInfo?.requiredPlayers || requiredPlayers }}</strong></div>
-        <div class="players-status">Joined Players: <strong>{{ roomInfo?.joinedPlayers?.length || joinedPlayers.length }}</strong></div>
+        <div class="players-status">Joined Players: <strong>{{ roomInfo?.joinedPlayersUsernames?.length || joinedPlayersUsernames.length }}</strong></div>
       </div>
       <div class="players-list-section">
         <h3>Players Joined</h3>
         <div class="players-list">
-          <div class="player-card" *ngFor="let username of roomInfo?.joinedPlayersUsernames || joinedPlayers">{{ username }}</div>
-          <div *ngIf="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayers.length) === 0" style="color:#888;font-size:1em;padding:12px;">No players joined yet.</div>
+          <div class="player-card" *ngFor="let username of roomInfo?.joinedPlayersUsernames || joinedPlayersUsernames">{{ username }}</div>
+          <div *ngIf="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayersUsernames.length) === 0" style="color:#888;font-size:1em;padding:12px;">No players joined yet.</div>
         </div>
       </div>
       <div class="game-controls">
-        <button class="start-btn" [disabled]="(roomInfo?.joinedPlayers?.length || joinedPlayers.length) !== (roomInfo?.requiredPlayers || requiredPlayers)" (click)="startGame()">Start Game</button>
+        <button class="start-btn" [disabled]="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayersUsernames.length) !== (roomInfo?.requiredPlayers || requiredPlayers)" (click)="startGame()">Start Game</button>
         <button class="action-btn" (click)="openInvite()">Invite/Search</button>
         <button class="action-btn" (click)="goToArrange()">Arrange Cards</button>
         <button class="action-btn" (click)="leaveRoom()">Leave Room</button>
@@ -51,9 +51,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   subscriptions: any[] = [];
   roomCode: string = '';
   requiredPlayers: number = 0;
-  joinedPlayers: string[] = [];
   joinedPlayersUsernames: string[] = [];
-  joinedPlayerIds: string[] = [];
   isCreator: boolean = false;
   currentUserId: string | number | null = null;
   private wsSub: any = null;
@@ -126,7 +124,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         console.log('[WaitingRoom] Initialized roomInfo from router state:', stateRoomInfo);
         this.roomInfo = stateRoomInfo as RoomInfoDto;
         this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
-        this.joinedPlayers = this.roomInfo?.joinedPlayersUsernames || [];
+        this.joinedPlayersUsernames = this.roomInfo?.joinedPlayersUsernames || [];
         this.isLoading = false;
         this.isCreator = this.roomInfo.creatorId === this.currentUserId;
         console.log('[WaitingRoom] Initialized roomInfo from router state:', this.roomInfo);
@@ -139,7 +137,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           next: (res: any) => {
             this.roomInfo = res;
             this.requiredPlayers = res.requiredPlayers;
-            this.joinedPlayers = res.joinedPlayersUsernames || [];
+            this.joinedPlayersUsernames = res.joinedPlayersUsernames || [];
             this.isLoading = false;
             this.isCreator = res.creatorId === this.currentUserId;
             console.log('[WaitingRoom] Fetched roomInfo from API:', this.roomInfo);
@@ -201,7 +199,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
             }
             this.roomInfo = msg as RoomInfoDto;
             this.requiredPlayers = msg.requiredPlayers || this.requiredPlayers;
-            this.joinedPlayers = msg.joinedPlayers || [];
             this.joinedPlayersUsernames = msg.joinedPlayersUsernames || [];
             this.isCreator = msg.creatorId === this.currentUserId;
             console.log('userId:', this.currentUserId, 'creatorId:', msg.creatorId);
@@ -226,12 +223,10 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         if (roomInfo && 'creatorId' in roomInfo) {
           this.roomInfo = roomInfo as RoomInfoDto;
           this.requiredPlayers = roomInfo.requiredPlayers || 0;
-          this.joinedPlayers = roomInfo.joinedPlayers || [];
           this.joinedPlayersUsernames = roomInfo.joinedPlayersUsernames || [];
           this.isCreator = roomInfo.creatorId === this.currentUserId;
           console.log('[WaitingRoom] Initial state set:', {
             requiredPlayers: this.requiredPlayers,
-            joinedPlayers: this.joinedPlayers,
             joinedPlayersUsernames: this.joinedPlayersUsernames,
             creatorId: roomInfo.creatorId,
             active: roomInfo.active

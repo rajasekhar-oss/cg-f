@@ -58,11 +58,32 @@
       <h3>Previous Round Cards</h3>
       <button class="close-panel" (click)="togglePreviousRoundCards()">✖</button>
     </div>
-    <div class="prev-cards-list">
+    <div class="prev-cards-list detailed-prev-cards-list">
       <div *ngIf="!previousRoundCards?.length" class="empty">No previous round cards available.</div>
-      <div *ngFor="let card of previousRoundCards" class="prev-card-item">
-        <img [src]="card.picture || card.imageUrl" [alt]="card.title" />
-        <div class="title">{{card.title}}</div>
+      <div *ngFor="let card of previousRoundCards" 
+           class="detailed-prev-card-item">
+        <div class="detailed-prev-card">
+          <div class="detailed-prev-username"
+               [ngClass]="{
+                 'winner-card': card.winner === card.userName,
+                 'tie-card': card.tiePlayersWinners && card.tiePlayersWinners.includes(card.userName)
+               }">
+            {{card.userName || card.username}}
+          </div>
+          <div class="detailed-prev-card-content">
+            <div class="detailed-prev-card-image">
+              <img [src]="card.picture || card.imageUrl" [alt]="card.name || card.title" />
+            </div>
+            <div class="detailed-prev-card-stats">
+              <div *ngFor="let stat of getPrevCardStats(card)" 
+                   class="detailed-prev-card-stat"
+                   [ngClass]="{'selected-stat-row': isSelectedStat(card, stat)}"
+              >
+                <span class="stat-label">{{stat.label}}</span> <span class="stat-value">{{stat.value}}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

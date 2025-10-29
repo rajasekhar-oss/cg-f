@@ -1,121 +1,115 @@
-// ...existing imports and decorator...
-  // ...existing code removed...
-  import { Component } from '@angular/core';
-  import { ApiService } from '../../services/api.service';
-  import { ActivatedRoute } from '@angular/router';
-  import { CommonModule } from '@angular/common';
-  import { Router } from '@angular/router';
-  import { BottomNavComponent } from '../../shared/bottom-nav.component';
-  import { WebsocketService } from '../../services/websocket.service';
-  import { RoomInfoDto } from '../../models/room-info.model';
-  import { GameStateDto, PlayerInfo, RoundInfo } from '../../models/game-state.model';
-  import { RoomResponse } from '../../models/room-response.model';
-  import { AuthService } from '../../services/auth.service';
+import { Component } from '@angular/core';
+import { ApiService } from '../../services/api.service';
+import { ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
+import { WebsocketService } from '../../services/websocket.service';
+import { RoomInfoDto } from '../../models/room-info.model';
+import { GameStateDto, PlayerInfo, RoundInfo } from '../../models/game-state.model';
+import { RoomResponse } from '../../models/room-response.model';
+import { AuthService } from '../../services/auth.service';
 
-  @Component({
-    selector: 'app-game',
-    templateUrl: './game.component.html',
-    styleUrls: ['./game.component.css'],
-    imports: [CommonModule]
-  })
-  export class GameComponent {
-    topCard: any = null;
-    selectedCard: any = null;
-    showCardList: boolean = false;
-    // Previous round cards panel (separate from user's myCards)
-    showPreviousRoundCards: boolean = false;
-    previousRoundCards: any[] = [];
-    showTopCard: boolean = false;
-    selectedStat: string | null = null;
+@Component({
+  selector: 'app-game',
+  templateUrl: './game.component.html',
+  styleUrls: ['./game.component.css'],
+  imports: [CommonModule]
+})
+export class GameComponent {
+  // ...existing code...
+
+  isSelectedStat(card: any, stat: any): boolean {
+    if (!card.selectedStat || !stat.label) return false;
+    return stat.label.replace(/\s/g, '').toLowerCase() === card.selectedStat.replace(/\s/g, '').toLowerCase();
+  }
+  topCard: any = null;
+  selectedCard: any = null;
+  showCardList: boolean = false;
+  showPreviousRoundCards: boolean = false;
+  previousRoundCards: any[] = [];
+  showTopCard: boolean = false;
+  selectedStat: string | null = null;
   isMyTurn: boolean = false;
   currentStatSelector: string = '';
-  currentPlayerName: string = '';
   myUserId: string = '';
   players: PlayerInfo[] = [];
-  fullPlayers: any[] = []; // Store full player objects from StartGameBundleDto
-
-  // Always return fullPlayers with local user first
-  
+  fullPlayers: any[] = [];
   gameState: GameStateDto | null = null;
-    gameId: string = '';
-    // Strict typing for backend DTOs
+  gameId: string = '';
   roomInfo: RoomInfoDto | null = null;
-    myCards: any[] = [];
-      // Map of playerId -> top card object (first card on their pile)
-      currentTopCards: { [playerId: string]: any } = {};
-    showSpinner: boolean;
-    showCards: boolean;
-    canLeaveGame: boolean;
-    canDeleteGame: boolean;
-    messages: any[];
-    isAdmin: boolean = false;
-    roomCode: string = '';
-    showWelcome = true;
-    showGoodLuck = false;
-
-    private gameWsSub: any = null;
-
-    constructor(
-      private api: ApiService,
-      private route: ActivatedRoute,
-      private ws: WebsocketService,
-      private router: Router,
-      private auth: AuthService
-    ) {
-      // Set myUserId as early as possible using AuthService
-      this.myUserId = this.auth.getUserId() || '';
-      this.showSpinner = true;
-      this.showCards = false;
-      this.selectedStat = null;
-      this.canLeaveGame = true;
-      this.canDeleteGame = true;
-      this.messages = [
-        { text: 'Welcome!', bottom: 10, opacity: 1 },
-        { text: 'Good luck!', bottom: 40, opacity: 0.8 }
-      ];
-      window.addEventListener('beforeunload', this.confirmLeave);
-      window.addEventListener('popstate', this.confirmLeave);
-      this.roomCode = this.route.snapshot.params['code'] || '';
-      this.gameId = this.route.snapshot.params['gameId'] || '';
-      // Get StartGameBundleDto from router state (from WaitingRoom)
-      const nav = this.router.getCurrentNavigation();
-      const startGameBundle: any = nav?.extras?.state?.['startGameBundle'] || null;
-      if (startGameBundle) {
-        console.log('[GameComponent] StartGameBundleDto from router state:', startGameBundle);
-        // Extract players, statSelectorId, roomCode, and roomInfo if present
-        this.roomCode = startGameBundle.roomCode || this.roomCode;
-        this.players = (startGameBundle.players || []).map((p: any) => p.id ? p.id : p); // keep for legacy
-        // Arrange so local player is always at index 0
-        const allPlayers = startGameBundle.players || [];
-        const myIdx = allPlayers.findIndex((p: any) => p.id?.toString() === this.myUserId);
-        if (myIdx > -1) {
-          this.fullPlayers = [
-            ...allPlayers.slice(myIdx),
-            ...allPlayers.slice(0, myIdx)
-          ];
-        } else {
-          this.fullPlayers = allPlayers;
-        }
-        console.log('[GameComponent] fullPlayers from StartGameBundleDto:', this.fullPlayers);
-        this.currentStatSelector = startGameBundle.statSelectorId || '';
-        console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
-
-        this.currentStatSelector = startGameBundle.statSelectorId || '';
-        console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
-        // If roomInfo is present in startGameBundle, use it
-        if (startGameBundle.roomInfo) {
-          this.roomInfo = startGameBundle.roomInfo;
-          console.log('[GameComponent] roomInfo from StartGameBundleDto:', this.roomInfo);
-        }
+  myCards: any[] = [];
+  currentTopCards: { [playerId: string]: any } = {};
+  showSpinner: boolean;
+  showCards: boolean;
+  canLeaveGame: boolean;
+  canDeleteGame: boolean;
+  messages: any[];
+  isAdmin: boolean = false;
+  roomCode: string = '';
+  showWelcome = true;
+  showGoodLuck = false;
+  private gameWsSub: any = null;
+  constructor(
+    private api: ApiService,
+    private route: ActivatedRoute,
+    private ws: WebsocketService,
+    private router: Router,
+    private auth: AuthService
+  ) {
+    // Set myUserId as early as possible using AuthService
+    this.myUserId = this.auth.getUserId() || '';
+    this.showSpinner = true;
+    this.showCards = false;
+    this.selectedStat = null;
+    this.canLeaveGame = true;
+    this.canDeleteGame = true;
+    this.messages = [
+      { text: 'Welcome!', bottom: 10, opacity: 1 },
+      { text: 'Good luck!', bottom: 40, opacity: 0.8 }
+    ];
+    window.addEventListener('beforeunload', this.confirmLeave);
+    window.addEventListener('popstate', this.confirmLeave);
+    this.roomCode = this.route.snapshot.params['code'] || '';
+    this.gameId = this.route.snapshot.params['gameId'] || '';
+    // Get StartGameBundleDto from router state (from WaitingRoom)
+    const nav = this.router.getCurrentNavigation();
+    const startGameBundle: any = nav?.extras?.state?.['startGameBundle'] || null;
+    if (startGameBundle) {
+      console.log('[GameComponent] StartGameBundleDto from router state:', startGameBundle);
+      // Extract players, statSelectorId, roomCode, and roomInfo if present
+      this.roomCode = startGameBundle.roomCode || this.roomCode;
+      this.players = (startGameBundle.players || []).map((p: any) => p.id ? p.id : p); // keep for legacy
+      // Arrange so local player is always at index 0
+      const allPlayers = startGameBundle.players || [];
+      const myIdx = allPlayers.findIndex((p: any) => p.id?.toString() === this.myUserId);
+      if (myIdx > -1) {
+        this.fullPlayers = [
+          ...allPlayers.slice(myIdx),
+          ...allPlayers.slice(0, myIdx)
+        ];
+      } else {
+        this.fullPlayers = allPlayers;
       }
-      // Fallback: fetch room info from API only if not present
-      if (!this.roomInfo && this.roomCode) {
-        this.fetchRoomInfo(this.roomCode);
+      console.log('[GameComponent] fullPlayers from StartGameBundleDto:', this.fullPlayers);
+      this.currentStatSelector = startGameBundle.statSelectorId || '';
+      console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
+
+      this.currentStatSelector = startGameBundle.statSelectorId || '';
+      console.log('[GameComponent] currentStatSelector from StartGameBundleDto:', this.currentStatSelector);
+      // If roomInfo is present in startGameBundle, use it
+      if (startGameBundle.roomInfo) {
+        this.roomInfo = startGameBundle.roomInfo;
+        console.log('[GameComponent] roomInfo from StartGameBundleDto:', this.roomInfo);
       }
-      this.fetchMyCards();
-      console.log('[GameComponent] Loaded roomInfo:', this.roomInfo);
     }
-     get arrangedFullPlayers() {
+    // Fallback: fetch room info from API only if not present
+    if (!this.roomInfo && this.roomCode) {
+      this.fetchRoomInfo(this.roomCode);
+    }
+    this.fetchMyCards();
+    console.log('[GameComponent] Loaded roomInfo:', this.roomInfo);
+  }
+  get arrangedFullPlayers() {
     console.log('[GameComponent] arrangedFullPlayers getter called', {
       fullPlayers: this.fullPlayers,
       myUserId: this.myUserId
@@ -131,15 +125,15 @@
 
   }
 
-    showNextCard() {
-      if (this.myCards && this.myCards.length) {
-        this.topCard = this.myCards[0];
-        this.selectedCard = this.topCard;
-        this.showTopCard = true;
-        this.selectedStat = null;
-      }
+  showNextCard() {
+    if (this.myCards && this.myCards.length) {
+      this.topCard = this.myCards[0];
+      this.selectedCard = this.topCard;
+      this.showTopCard = true;
+      this.selectedStat = null;
     }
-// (removed duplicate import block and class definition)
+  }
+  // (removed duplicate import block and class definition)
 
   showCardDetails(card: any) {
     this.selectedCard = card;
@@ -165,32 +159,32 @@
   //   ];
   // }
   // Inside GameComponent
-get statList() {
-  if (!this.topCard) return [];
-  return [
-    { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
-    { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
-    { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
-    { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
-    { key: 'followers', label: 'Followers', value: this.topCard.followers },
-    { key: 'languages', label: 'Languages', value: this.topCard.languages },
-    { key: 'professions', label: 'Professions', value: this.topCard.professions }
-  ];
-}
+  get statList() {
+    if (!this.topCard) return [];
+    return [
+      { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
+      { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
+      { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
+      { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
+      { key: 'followers', label: 'Followers', value: this.topCard.followers },
+      { key: 'languages', label: 'Languages', value: this.topCard.languages },
+      { key: 'professions', label: 'Professions', value: this.topCard.professions }
+    ];
+  }
 
   getStatList(card: any) {
-  console.log('[GameComponent] getStatList called for card:', card && (card.id || card.title));
-  if (!card) return [];
-  return [
-    { key: 'totalFilms', label: 'Total Films', value: card.totalFilms },
-    { key: 'yearsActive', label: 'Years Active', value: card.yearsActive },
-    { key: 'highestGrossing', label: 'Highest Grossing', value: card.highestGrossing },
-    { key: 'awardsWon', label: 'Awards Won', value: card.awardsWon },
-    { key: 'followers', label: 'Followers', value: card.followers },
-    { key: 'languages', label: 'Languages', value: card.languages },
-    { key: 'professions', label: 'Professions', value: card.professions }
-  ];
-}
+    console.log('[GameComponent] getStatList called for card:', card && (card.id || card.title));
+    if (!card) return [];
+    return [
+      { key: 'totalFilms', label: 'Total Films', value: card.totalFilms },
+      { key: 'yearsActive', label: 'Years Active', value: card.yearsActive },
+      { key: 'highestGrossing', label: 'Highest Grossing', value: card.highestGrossing },
+      { key: 'awardsWon', label: 'Awards Won', value: card.awardsWon },
+      { key: 'followers', label: 'Followers', value: card.followers },
+      { key: 'languages', label: 'Languages', value: card.languages },
+      { key: 'professions', label: 'Professions', value: card.professions }
+    ];
+  }
 
 
   selectStat(statKey: string) {
@@ -199,9 +193,9 @@ get statList() {
   }
 
   submitStatSelection() {
-  this.showTopCard = false; // Close the next card when submitting
-  this.selectedCard = null; // Also close the card detail view
-   
+    this.showTopCard = false; // Close the next card when submitting
+    this.selectedCard = null; // Also close the card detail view
+
     console.log('[GameComponent] submitStatSelection called with:', { selectedStat: this.selectedStat, roomCode: this.roomCode });
     if (!this.selectedStat || !this.roomCode) return;
     // Find the stat label for the selected stat key
@@ -210,10 +204,10 @@ get statList() {
     console.log('[GameComponent] Submitting stat selection:', { statKey: this.selectedStat, statLabel }, this.roomCode);
     console.log("playerCards being sent:", this.tablePlayers);
     const playerCards = this.tablePlayers.map((player: any) => ({
-  userId: player.id,
-  cardId: player.topCard?.id || null
-}))
-console.log('[GameComponent] PlayerCards being sent:', playerCards);
+      userId: player.id,
+      cardId: player.topCard?.id || null
+    }))
+    console.log('[GameComponent] PlayerCards being sent:', playerCards);
     // Send both statKey and statLabel to backend as per PlayStatRequest
     this.api.post(`/api/rooms/game/${this.roomCode}/play-stat`, { statKey: this.selectedStat, statLabel, playerCards }).subscribe({
       next: (data) => {
@@ -235,7 +229,7 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
       return;
     }
     // 1. REST: Start game and get RoomResponse
-  this.api.post<RoomResponse>(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse) => {
+    this.api.post<RoomResponse>(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse) => {
       console.log('[GameComponent] RoomResponse:', roomResponse);
       // 2. WebSocket: Subscribe to /topic/rooms/{roomCode}/start for StartGameDto
       const startTopic = `/topic/rooms/${this.roomCode}/start`;
@@ -262,7 +256,19 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
       console.error('[GameComponent] Error starting game:', err);
     });
   }
-
+  fetchPrevRoundCards() {
+    if (!this.roomCode) return;
+    const path = `/api/rooms/game/${this.roomCode}/prevRoundCards`;
+    this.api.get(path).subscribe({
+      next: (cards) => {
+        this.previousRoundCards = (cards as unknown as any[]) || [];
+        console.log('[GameComponent] previousRoundCards fetched on refresh:', this.previousRoundCards);
+      },
+      error: err => {
+        console.error('[GameComponent] Error fetching previous round cards:', err);
+      }
+    });
+  }
   ngOnInit() {
     // Show welcome for 1.5s, then good luck for 1.5s, then hide both
     setTimeout(() => {
@@ -279,13 +285,18 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
       this.ws.connectAndSubscribe(altGameTopic);
     }
 
+    // On refresh/rejoin, fetch previous round cards from backend
+    if (this.roomCode) {
+      this.fetchPrevRoundCards();
+    }
+  // Fetch previous round cards for this user/room
+
     // Subscribe to all WebSocket messages and update myCards and currentStatSelector on GameStateDto
     this.ws.messages$.subscribe((msg: any) => {
       if (!msg) return;
       // RoomInfoDto: has roomCode, requiredPlayers, joinedPlayers, joinedPlayersUsernames
       if (
         msg.roomCode &&
-        Array.isArray(msg.joinedPlayers) &&
         Array.isArray(msg.joinedPlayersUsernames) &&
         typeof msg.requiredPlayers !== 'undefined'
       ) {
@@ -316,8 +327,10 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
         }
 
         // Set currentStatSelector to winnerUserId
-        this.previousRoundCards=msg.currentRoundCards;
+        this.previousRoundCards = msg.currentRoundCards;
+        console.log('[GameComponent] previousRoundCards updated:', this.previousRoundCards);
         this.currentStatSelector = msg.currentStatSelector;
+        console.log('[GameComponent] currentStatSelector updated:', this.currentStatSelector);
         this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
       }
       // GameStateDto: has gameId, players, deckSizes (legacy)
@@ -372,7 +385,7 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
   }
 
   fetchRoomInfo(roomCode: string) {
-  const path = `/api/rooms/${roomCode}/info`;
+    const path = `/api/rooms/${roomCode}/info`;
     console.log('API GET:', path);
     this.api.get(path).subscribe((info: any) => {
       console.log('Room info response:', info);
@@ -472,7 +485,7 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
     return res;
   }
 
-    getCircularSeatStyle(i: number, total: number) {
+  getCircularSeatStyle(i: number, total: number) {
     // Local player (index 0) always at bottom center
     // All others distributed evenly clockwise
     const percentRadius = 40; // % of table size
@@ -520,5 +533,18 @@ console.log('[GameComponent] PlayerCards being sent:', playerCards);
   togglePreviousRoundCards() {
     // Just toggle visibility. Data will be provided later.
     this.showPreviousRoundCards = !this.showPreviousRoundCards;
+  }
+  // Returns stat list for previous round card (for detailed prev card view)
+  getPrevCardStats(card: any) {
+    if (!card) return [];
+    return [
+      { label: 'Total Films', value: card.totalFilms },
+      { label: 'Years Active', value: card.yearsActive },
+      { label: 'Highest Grossing', value: card.highestGrossing },
+      { label: 'Awards Won', value: card.awardsWon },
+      { label: 'Followers', value: card.followers },
+      { label: 'Languages', value: card.languages },
+      { label: 'Professions', value: card.professions }
+    ];
   }
 }

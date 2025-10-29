@@ -6,7 +6,6 @@ export interface BaseWebSocketMessage {
 export interface RoomInfoMessage extends BaseWebSocketMessage {
     roomCode: string;
     requiredPlayers: number;
-    joinedPlayers: string[];
     joinedPlayersUsernames: string[];
     joinedCount: number;
     active: boolean;
@@ -45,7 +44,7 @@ export const isRoomInfoMessage = (msg: any): msg is RoomInfoMessage => {
     return msg && 
            typeof msg.roomCode === 'string' && 
            typeof msg.requiredPlayers === 'number' &&
-           Array.isArray(msg.joinedPlayers);
+           Array.isArray(msg.joinedPlayersUsernames);
 };
 
 export const isGameStateMessage = (msg: any): msg is GameStateMessage => {

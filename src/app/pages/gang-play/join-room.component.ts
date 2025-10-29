@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
   template: `
     <div class="join-room-container">
       <h2>Join Game Room</h2>
+      <div *ngIf="error" class="error-banner">{{ error }}</div>
       <div class="input-section">
         <label for="roomCode">Enter Room Code</label>
         <input id="roomCode" type="text" [(ngModel)]="roomCode" placeholder="Room code" />
@@ -61,6 +62,16 @@ import { Router } from '@angular/router';
       background: #e5e7eb;
     }
     .error { color: #dc2626; font-weight: 500; margin-top: 12px; }
+    .error-banner {
+      background: #fee2e2;
+      color: #b91c1c;
+      font-weight: 600;
+      padding: 12px 0;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(220,38,38,0.08);
+      letter-spacing: 0.5px;
+    }
   `]
 })
 export class JoinRoomComponent implements OnDestroy {
@@ -85,16 +96,16 @@ export class JoinRoomComponent implements OnDestroy {
         this.roomInfo = res;
         this.isLoading = false;
         this.joinedUsernames = res.joinedPlayersUsernames || [];
-        this.joinedPlayerIds = (res.joinedPlayers || []).map((id: any) => id.toString());
         if (!res.error || res.error === 'successfully joined in to the room' || res.error === "You have already joined") {
           this.router.navigate(['/gang-play/waiting', this.roomCode], { state: { roomInfo: res } });
         }
         if (res.error && (res.error !== 'successfully joined in to the room' && res.error !== "You have already joined")) {
           this.error = res.error;
+          this.roomCode="";
         }
       },
       error: (e: any) => {
-        this.error = e?.error?.error || e?.message || 'Error joining room';
+        this.error = 'Error joining room';
         this.isLoading = false;
       }
     });

@@ -57,7 +57,18 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     auth.logout();
   }
             console.log('[AuthInterceptor] Token refresh failed:', refreshErr);
-            alert('Your session has expired. Please log in.\nError: ' + (err?.error?.error || err?.message || err));
+            // Only show session expired alert for true auth errors
+            const authErrorMsg = (refreshErr?.error?.error || refreshErr?.message || '').toLowerCase();
+            if (
+              authErrorMsg.includes('token') ||
+              authErrorMsg.includes('expired') ||
+              authErrorMsg.includes('unauthorized') ||
+              authErrorMsg.includes('invalid')
+            ) {
+              alert('Your session has expired. Please log in.');
+            } else {
+              alert('An error occurred: ' + (refreshErr?.error?.error || refreshErr?.message || refreshErr));
+            }
             return throwError(() => err);
           })
         );
