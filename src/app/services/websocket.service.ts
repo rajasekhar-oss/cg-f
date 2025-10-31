@@ -221,11 +221,13 @@ export class WebsocketService implements OnDestroy {
           break;
         case 'room':
           isValid = isRoomInfoMessage(messageWithTopic);
+          isValid = true; // Accept room messages even if validation fails
           break;
         default:
           isValid = true; // Accept unknown message types
       }
       if (!isValid) {
+        console.log('[WebsocketService] Message validation failed for type', messageType);
         console.warn(`[WebsocketService] Invalid ${messageType} message:`, messageWithTopic);
         return;
       }

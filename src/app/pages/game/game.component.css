@@ -1,4 +1,245 @@
-/* Winner, tie, and selected stat highlight for previous round cards */
+/* Sticker recipient row layout */
+.sticker-recipients-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Checkbox base style */
+.recipient-checkbox {
+  accent-color: #1976d2;
+  margin-right: 0.4em;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: middle;
+}
+
+/* Selected checkbox label */
+.selected-checkbox {
+  background: #e3f2fd;
+  border-radius: 6px;
+  padding: 0.2em 0.7em 0.2em 0.4em;
+  color: #1976d2;
+  font-weight: 600;
+  box-shadow: 0 1px 4px 0 rgba(25, 118, 210, 0.08);
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Unselected checkbox label */
+.unselected-checkbox {
+  background: #f5f5f5;
+  border-radius: 6px;
+  padding: 0.2em 0.7em 0.2em 0.4em;
+  color: #757575;
+  font-weight: 400;
+  transition: background 0.2s, color 0.2s;
+}
+/* Sticker search input */
+.sticker-search {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border 0.2s;
+}
+.sticker-search:focus {
+  border-color: #2563eb;
+}
+/* Stickers panel styles */
+.stickers-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.stickers-panel {
+  background: #fff;
+  border-radius: 1.2rem;
+  box-shadow: 0 2px 24px rgba(0,0,0,0.18);
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+  min-width: 320px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1001;
+}
+.stickers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1.2rem;
+  margin-top: 1.2rem;
+}
+.sticker-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
+.sticker-img {
+  max-width: 64px;
+  max-height: 64px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: none;
+  padding: 0;
+}
+/* Round summary bar styles */
+.round-summary-bar.compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.18rem 0.28rem;
+  background: #f8fafc;
+  border-radius: 5px;
+  padding: 0.08rem 0.38rem;
+  margin-bottom: 0.12rem;
+  font-size: 0.84rem;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  width: 100%;
+  flex-wrap: wrap;
+  row-gap: 0.18rem;
+  column-gap: 0.28rem;
+  white-space: normal;
+  word-break: break-word;
+  overflow: visible;
+  flex-shrink: 0;
+  flex-grow: 1;
+  justify-content: flex-start;
+}
+
+.winner-card {
+  background: #e0fbe6;
+  color: #059669 !important;
+  border: 2px solid #22c55e;
+  box-shadow: 0 2px 8px rgba(34,197,94,0.13);
+}
+.tie-card {
+  background: linear-gradient(90deg,#fef9c3 60%,#f3e8ff 100%);
+  color: #a16207 !important;
+  border: 2px solid #f59e42;
+  font-style: italic;
+}
+.selected-stat-row {
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+  border-radius: 6px;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(55,48,163,0.08);
+}
+.round-label {
+  color: #6366f1;
+  font-weight: 700;
+  margin-right: 0.3rem;
+  font-size: 0.92em;
+  letter-spacing: 0.01em;
+}
+.player-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.93em;
+  font-weight: 600;
+  padding: 0.08em 0.7em 0.08em 0.5em;
+  margin-right: 0.13em;
+  margin-bottom: 0.05em;
+  background: #e5e7eb;
+  color: #222;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+  min-width: 0;
+}
+.winner-player {
+  background: #e0fbe6;
+  color: #059669;
+  border: 1.2px solid #22c55e;
+}
+.loser-player {
+  background: #fbeaea;
+  color: #b91c1c;
+  border: 1.2px solid #ef4444;
+}
+.tie-player {
+  background: linear-gradient(90deg,#fef9c3 60%,#f3e8ff 100%);
+  color: #a16207;
+  border: 1.2px solid #f59e42;
+  font-style: italic;
+}
+.badge-count {
+  display: inline-block;
+  margin-left: 0.18em;
+  font-size: 0.93em;
+  font-weight: 700;
+  padding: 0.01em 0.32em;
+  border-radius: 0.7em;
+  background: #fff;
+  color: inherit;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.round-label {
+  color: #6366f1;
+  font-weight: 700;
+  margin-right: 0.7rem;
+}
+.winner-label {
+  color: #22c55e;
+  font-weight: 700;
+}
+.tie-label {
+  color: #f59e42;
+  font-weight: 700;
+}
+.player-name {
+  margin: 0 0.3rem;
+  font-weight: 600;
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+}
+.winner-player {
+  background: #d1fae5;
+  color: #059669;
+  border: 1.5px solid #22c55e;
+}
+.tie-player {
+  background: #fef9c3;
+  color: #b45309;
+  border: 1.5px solid #f59e42;
+}
+.loser-player {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #ef4444;
+}
+.selected-stat-label {
+  margin-left: auto;
+  color: #6366f1;
+  font-weight: 600;
+}
+.selected-stat-value {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-radius: 4px;
+  padding: 0.1rem 0.5rem;
+  margin-left: 0.3rem;
+  font-weight: 700;
+}
+/* Detailed previous round card layout */
+
 .winner-card{
   border: 2.5px solid #ffd700;
   background: linear-gradient(90deg, #fffbe6 0%, #fffde7 100%);
@@ -15,8 +256,6 @@
   font-weight: bold;
   border-left: 4px solid #1976d2;
 }
-
-/* Detailed previous round card layout */
 .detailed-prev-cards-list {
   display: flex;
   flex-direction: column;
@@ -491,6 +730,80 @@
   align-items: center;
   justify-content: center;
 }
+
+/* Sticker animation overlay */
+/* Sticker animation overlay - right side */
+.sticker-anim-overlay {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 30vw;
+  min-width: 220px;
+  max-width: 340px;
+  pointer-events: none;
+  z-index: 2002;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding-right: 2vw;
+  margin-right: 15vw;
+}
+.sticker-anim-item {
+  position: relative;
+  right: 0;
+  bottom: 0;
+  margin-bottom: 0.5vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  animation: sticker-float-up 2.2s cubic-bezier(0.4,0.0,0.2,1) forwards;
+}
+.sticker-anim-img {
+  width: auto;
+  /* height: 10vh; */
+  width:10vh;
+  object-fit: contain;
+  /* border-radius: 1.2vh; */
+  /* box-shadow: 0 2px 16px rgba(0,0,0,0.18); */
+  margin: 0 0 0 0;
+  margin-top: 0.5vh;
+}
+.sticker-anim-username {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2563eb;
+  /* background: #e0e7ff; */
+  border-radius: 0.7vh;
+  margin: 0 0 0 0;
+  /* padding: 0.2vh 1.2vw;
+  margin-bottom: 0.2vh; */
+  width: 10vw;
+  /* box-shadow: 0 1px 4px rgba(37,99,235,0.08); */
+}
+@keyframes sticker-float-up {
+  0% {
+    opacity: 0.1;
+    bottom: 0;
+    transform: translateX(50%) scale(0.95);
+  }
+  10% {
+    opacity: 1;
+    bottom: 6vh;
+    transform: translateX(50%) scale(1.05);
+  }
+  80% {
+    opacity: 1;
+    bottom: 60vh;
+    transform: translateX(50%) scale(1.0);
+  }
+  100% {
+    opacity: 0;
+    bottom: 80vh;
+    transform: translateX(50%) scale(0.92);
+  }
+}
+
 
 /* Welcome and Good Luck messages */
 .welcome-message,

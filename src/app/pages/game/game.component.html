@@ -1,4 +1,12 @@
 <div class="game-table-container">
+  <!-- Sticker animation overlay -->
+  <div class="sticker-anim-overlay">
+    <div *ngFor="let sticker of stickerAnimations" class="sticker-anim-item">
+      <div class="sticker-anim-username">{{sticker.userName}}</div>
+      <img [src]="sticker.imageUrl" [alt]="sticker.name" class="sticker-anim-img" />
+      <div *ngIf="sticker.message" class="sticker-anim-message">{{sticker.message}}</div>
+    </div>
+  </div>
   <!-- Top controls -->
   <div class="top-controls">
     <button class="leave-btn" (click)="leaveGame()">Leave Game</button>
@@ -23,19 +31,20 @@
         <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
           [ngStyle]="getCircularSeatStyle(i, arrangedFullPlayers.length)">
           <div>
-    <img [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'"
-      [alt]="player.username || player.id"
-      class="player-avatar"
-      [ngClass]="{'stat-selector-avatar': player.id?.toString() === currentStatSelector}" />
-          <div class="username">{{player.username }}</div>
+            <img
+              [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'"
+              [alt]="player.username || player.id" class="player-avatar"
+              [ngClass]="{'stat-selector-avatar': player.id?.toString() === currentStatSelector}" />
+            <div class="username">{{player.username }}</div>
           </div>
 
-    
+
         </div>
       </ng-container>
     </ng-container>
     <ng-template #noPlayers>
-      <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your data and console logs.</div>
+      <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your
+        data and console logs.</div>
     </ng-template>
     <!-- Game Table center label -->
     <!-- <div class="table-center">Game Table</div> -->
@@ -46,7 +55,42 @@
     <span class="cards-count">Cards: {{myCards.length}}</span>
     <button class="game-action-btn cards-btn" (click)="showCardList = true">Cards</button>
     <button class="game-action-btn next-card-btn" (click)="showNextCard()">Next Card</button>
-    <button class="game-action-btn message-btn" (click)="sendMessage()">M</button>
+    <button class="game-action-btn message-btn" (click)="fetchStickers()">Stickers</button>
+  </div>
+  <!-- Stickers panel overlay -->
+  <div class="stickers-panel-overlay" *ngIf="showStickersPanel">
+    <div class="stickers-panel">
+      <button class="close-btn" (click)="closeStickersPanel()">✖</button>
+      <!-- Sticker recipient filter radio buttons -->
+      <div class="sticker-recipients-row">
+        <!-- Select All -->
+        <label [class.selected-checkbox]="isAllSelected" [class.unselected-checkbox]="!isAllSelected">
+          <input type="checkbox" [checked]="isAllSelected" (change)="toggleAll($event)" />
+          All
+        </label>
+
+        <!-- Individual Players -->
+        <label *ngFor="let player of tablePlayers"
+          [class.selected-checkbox]="stickerRecipient.includes(player.username) && !isAllSelected"
+          [class.unselected-checkbox]="!stickerRecipient.includes(player.username) || isAllSelected">
+          <input type="checkbox" [checked]="stickerRecipient.includes(player.username)"
+            (change)="togglePlayer(player.username, ($event))" class="recipient-checkbox" />
+          {{ player.username }}
+        </label>
+      </div>
+      <input type="text" class="sticker-search" [(ngModel)]="stickerSearch" placeholder="Search stickers by name..." />
+      <input type="text" class="sticker-message-input" [(ngModel)]="message" placeholder="Enter a message (optional)" />
+      <div class="stickers-grid">
+        <div *ngFor="let sticker of filteredStickers" class="sticker-item"
+          [ngClass]="{'selected-sticker': selectedStickerId === sticker.id}" (click)="selectSticker(sticker.id)">
+          <img [src]="sticker.imageUrl" [alt]="sticker.name" class="sticker-img" />
+        </div>
+        <button class="send-sticker-btn" (click)="sendSticker(selectedStickerId, message)"
+          [disabled]="stickerRecipient.length === 0 || (!selectedStickerId && !message)">
+          Send Sticker
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Floating previous-round-cards toggle button (bottom-right, above bottom bar) -->
@@ -60,31 +104,54 @@
     </div>
     <div class="prev-cards-list detailed-prev-cards-list">
       <div *ngIf="!previousRoundCards?.length" class="empty">No previous round cards available.</div>
-      <div *ngFor="let card of previousRoundCards" 
-           class="detailed-prev-card-item">
-        <div class="detailed-prev-card">
-          <div class="detailed-prev-username"
-               [ngClass]="{
-                 'winner-card': card.winner === card.userName,
-                 'tie-card': card.tiePlayersWinners && card.tiePlayersWinners.includes(card.userName)
-               }">
-            {{card.userName || card.username}}
-          </div>
-          <div class="detailed-prev-card-content">
-            <div class="detailed-prev-card-image">
-              <img [src]="card.picture || card.imageUrl" [alt]="card.name || card.title" />
-            </div>
-            <div class="detailed-prev-card-stats">
-              <div *ngFor="let stat of getPrevCardStats(card)" 
-                   class="detailed-prev-card-stat"
-                   [ngClass]="{'selected-stat-row': isSelectedStat(card, stat)}"
-              >
-                <span class="stat-label">{{stat.label}}</span> <span class="stat-value">{{stat.value}}</span>
+      <ng-container *ngFor="let round of getGroupedRounds()">
+        <!-- One summary bar per round -->
+        <div class="round-summary-bar compact">
+          <span class="round-label">R{{round.roundnumber}}</span>
+          <ng-container *ngIf="round.winner; else tieBlock">
+            <span class="player-badge winner-player">{{round.winner === myUsername ? 'You' : round.winner}}<span
+                class="badge-count">+{{round.winnerCount}}</span></span>
+            <ng-container *ngFor="let loser of round.losers">
+              <span class="player-badge loser-player">{{loser.userName === myUsername ? 'You' : loser.userName}}<span
+                  class="badge-count">-{{loser.count}}</span></span>
+            </ng-container>
+          </ng-container>
+          <ng-template #tieBlock>
+            <ng-container *ngFor="let tie of round.tiePlayers">
+              <span class="player-badge tie-player">{{tie.userName === myUsername ? 'You' : tie.userName}}<span
+                  class="badge-count">-{{tie.count}}</span></span>
+            </ng-container>
+            <ng-container *ngFor="let loser of round.losers">
+              <span class="player-badge loser-player">{{loser.userName === myUsername ? 'You' : loser.userName}}<span
+                  class="badge-count">-{{loser.count}}</span></span>
+            </ng-container>
+          </ng-template>
+        </div>
+        <!-- All cards for this round -->
+        <ng-container *ngFor="let card of round.cards">
+          <div class="detailed-prev-card-item">
+            <div class="detailed-prev-card">
+              <div class="detailed-prev-username" [ngClass]="{
+                  'winner-card': card.winner === (card.userName || card.username),
+                  'tie-card': card.tiePlayersWinners && card.tiePlayersWinners.includes(card.userName || card.username)
+                }">
+                {{(card.userName || card.username) === myUsername ? 'You' : (card.userName || card.username)}}
+              </div>
+              <div class="detailed-prev-card-content">
+                <div class="detailed-prev-card-image">
+                  <img [src]="card.picture || card.imageUrl" [alt]="card.name || card.title" />
+                </div>
+                <div class="detailed-prev-card-stats">
+                  <div *ngFor="let stat of getPrevCardStats(card)" class="detailed-prev-card-stat"
+                    [ngClass]="{'selected-stat-row': isSelectedStat(card, stat)}">
+                    <span class="stat-label">{{stat.label}}</span> <span class="stat-value">{{stat.value}}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </ng-container>
+      </ng-container>
     </div>
   </div>
 
@@ -104,22 +171,22 @@
     <div class="top-card">
       <button class="close-btn" (click)="closeCardDetails()">✖</button>
       <div class="card-details-image">
-        <img [src]="topCard?.picture || topCard?.imageUrl" [alt]="topCard?.title" class="top-card-image"/>
+        <img [src]="topCard?.picture || topCard?.imageUrl" [alt]="topCard?.title" class="top-card-image" />
       </div>
       <div class="card-title">{{topCard?.title}}</div>
       <div *ngIf="topCard?.description" class="card-description">{{topCard.description}}</div>
 
       <div class="card-details-info">
-        <div *ngFor="let stat of statList"
-             class="stat-card"
-             [ngClass]="{'selectable': currentStatSelector === myUserId, 'selected-stat': selectedStat === stat.key}"
-             (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
+        <div *ngFor="let stat of statList" class="stat-card"
+          [ngClass]="{'selectable': currentStatSelector === myUserId, 'selected-stat': selectedStat === stat.key}"
+          (click)="currentStatSelector === myUserId ? selectStat(stat.key) : null">
           <span class="stat-label">{{stat.label}}</span>
           <span class="stat-value">{{stat.value}}</span>
         </div>
 
         <div style="display:flex; justify-content:flex-end; width:100%;">
-          <button *ngIf="currentStatSelector === myUserId" class="select-card-btn" (click)="submitStatSelection()">Select</button>
+          <button *ngIf="currentStatSelector === myUserId" class="select-card-btn"
+            (click)="submitStatSelection()">Select</button>
           <button *ngIf="currentStatSelector !== myUserId" class="select-card-btn-disabled" disabled>Select</button>
         </div>
       </div>
@@ -127,18 +194,20 @@
   </div>
 
   <!-- Selected card overlay (kept in DOM for animation) -->
-  <div class="top-card-overlay" [class.open]="selectedCard && (!topCard || selectedCard.id !== topCard.id)" [attr.aria-hidden]="!(selectedCard && (!topCard || selectedCard.id !== topCard.id))">
+  <div class="top-card-overlay" [class.open]="selectedCard && (!topCard || selectedCard.id !== topCard.id)"
+    [attr.aria-hidden]="!(selectedCard && (!topCard || selectedCard.id !== topCard.id))">
     <div class="top-card">
       <button class="close-btn" (click)="closeCardDetails()">✖</button>
       <div class="card-details-image">
-        <img [src]="selectedCard?.picture || selectedCard?.imageUrl" [alt]="selectedCard?.title" class="card-image-thumb top-card-image not-top-card-image"/>
+        <img [src]="selectedCard?.picture || selectedCard?.imageUrl" [alt]="selectedCard?.title"
+          class="card-image-thumb top-card-image not-top-card-image" />
       </div>
       <div class="card-title">{{selectedCard?.title}}</div>
       <div *ngIf="selectedCard?.description" class="card-description">{{selectedCard.description}}</div>
 
       <div class="card-details-info">
-        <div *ngFor="let stat of getStatList(selectedCard)"
-             class="stat-card">
+        <div *ngFor="let stat of getStatList(selectedCard)" class="stat-card"
+          [ngClass]="{'selected-stat-row': isSelectedStat(selectedCard, stat)}">
           <span class="stat-label">{{stat.label}}</span>
           <span class="stat-value">{{stat.value}}</span>
         </div>

@@ -78,6 +78,7 @@ export class HomePageLoggedInComponent implements OnInit {
       next: (userData: any) => {
         console.log('User data received:', userData);
         this.profile = userData as UserDto;
+        this.auth.user$.next(userData);
         this.updateUserInfo();
         const role = this.auth.getUserRole();
         this.isAdmin = role === 'ADMIN';

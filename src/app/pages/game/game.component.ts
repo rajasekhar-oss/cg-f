@@ -1,27 +1,122 @@
-import { Component } from '@angular/core';
+import { Component, NgModule } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { ActivatedRoute } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
+import { FormsModule, NgModel } from '@angular/forms';
 import { Router } from '@angular/router';
 import { WebsocketService } from '../../services/websocket.service';
 import { RoomInfoDto } from '../../models/room-info.model';
+import { GameInfo } from '../../models/gameinfo';
 import { GameStateDto, PlayerInfo, RoundInfo } from '../../models/game-state.model';
 import { RoomResponse } from '../../models/room-response.model';
 import { AuthService } from '../../services/auth.service';
+
+// Sticker animation interface
+interface StickerAnim {
+  id: number;
+  name: string;
+  imageUrl: string;
+  userName: string;
+  key: number;
+  message: string;
+}
+
+// Sticker animation input (no key)
+interface StickerAnimInput {
+  id: number;
+  name: string;
+  imageUrl: string;
+  userName: string;
+  message: string;
+}
 
 @Component({
   selector: 'app-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, FormsModule]
 })
+
 export class GameComponent {
+  // For sticker recipient filter (radio buttons)
+  // component.ts
+stickerRecipient: string[] = [];
+isAllSelected = true; // ✅ default all selected
+
+toggleAll(event: Event) {
+  const checked = (event.target as HTMLInputElement).checked;
+  this.isAllSelected = checked;
+
+  if (checked) {
+    // Select all usernames
+    this.stickerRecipient = this.tablePlayers.map(p => p.username);
+  } else {
+    // Deselect everything
+    this.stickerRecipient = [];
+  }
+}
+
+togglePlayer(username: string, event: Event) {
+  const checked = (event.target as HTMLInputElement).checked;
+
+  if (checked) {
+    this.stickerRecipient.push(username);
+  } else {
+    this.stickerRecipient = this.stickerRecipient.filter(u => u !== username);
+  }
+
+  // If all individual boxes are selected, mark "All" checked again
+  if (this.stickerRecipient.length === this.tablePlayers.length) {
+    this.isAllSelected = true;
+  } else {
+    this.isAllSelected = false;
+  }
+}
+
+
+
+// sendSticker(stickerId: string) {
+//   console.log('Sending sticker', stickerId, 'to', this.stickerRecipient);
+//   // Add your sending logic here
+// }
+
+
   // ...existing code...
 
-  isSelectedStat(card: any, stat: any): boolean {
-    if (!card.selectedStat || !stat.label) return false;
-    return stat.label.replace(/\s/g, '').toLowerCase() === card.selectedStat.replace(/\s/g, '').toLowerCase();
+  // For animated stickers
+  stickerAnimations: StickerAnim[] = [];
+  private stickerAnimKey = 0;
+
+  sendSticker(selectedStickerId: number, message: string) {
+    if (!this.roomCode || (!selectedStickerId && !message)) return;
+    // Send stickerId as a query param
+    console.log('stickerRecipient:', this.stickerRecipient);
+    console.log('[Sticker] Sending stickerId:', selectedStickerId, 'to room:', this.roomCode);
+    console.log('[Sticker] Message:', this.message);
+    this.api.post(`/api/rooms/${this.roomCode}/stickers/send?id=${selectedStickerId}&recipients=${this.stickerRecipient.join(',')}&message=${message}`, null).subscribe({
+      next: (res: any) => {
+        console.log('[Sticker] Sticker sent successfully:', res, this.message);
+        this.message = ''; // Clear message input after sending
+      this.selectedStickerId = 0;
+      },
+      error: (err) => {
+        console.error('[Sticker] Failed to send sticker:', err);
+      },
+       // Clear selected sticker
+    });
   }
+  stickerSearch: string = '';
+  stickers: Array<{id:number, name: string; imageUrl: string }> = [];
+  showStickersPanel: boolean = false;
+  roomCode: string = '';
+  canLeaveGame: boolean = true;
+  canDeleteGame: boolean = true;
+  showWelcome: boolean = true;
+  showGoodLuck: boolean = false;
+  isAdmin: boolean = false;
+  gameWsSub: any = null;
+  message: string = '';
+  messages: Array<{ text: string; bottom: number; opacity: number }> = [];
   topCard: any = null;
   selectedCard: any = null;
   showCardList: boolean = false;
@@ -36,19 +131,13 @@ export class GameComponent {
   fullPlayers: any[] = [];
   gameState: GameStateDto | null = null;
   gameId: string = '';
-  roomInfo: RoomInfoDto | null = null;
+  myUsername: string = '';
+  roomInfo: GameInfo | null = null;
   myCards: any[] = [];
   currentTopCards: { [playerId: string]: any } = {};
   showSpinner: boolean;
-  showCards: boolean;
-  canLeaveGame: boolean;
-  canDeleteGame: boolean;
-  messages: any[];
-  isAdmin: boolean = false;
-  roomCode: string = '';
-  showWelcome = true;
-  showGoodLuck = false;
-  private gameWsSub: any = null;
+  usernames: string[] = [];
+  selectedStickerId: number = 0;
   constructor(
     private api: ApiService,
     private route: ActivatedRoute,
@@ -58,8 +147,18 @@ export class GameComponent {
   ) {
     // Set myUserId as early as possible using AuthService
     this.myUserId = this.auth.getUserId() || '';
+    this.api.get('/users/me').subscribe({
+      next: (userData: any) => {
+        console.log('Fetched user data:', userData);
+        this.myUsername = userData.username;
+        this.subscribetoSticker();
+        console.log('My UserId:', this.myUserId, 'My Username:', this.myUsername);
+
+      }
+    });
+    console.log('My UserId:', this.myUserId, 'My Username:', this.myUsername);
     this.showSpinner = true;
-    this.showCards = false;
+  this.showCardList = false;
     this.selectedStat = null;
     this.canLeaveGame = true;
     this.canDeleteGame = true;
@@ -104,10 +203,85 @@ export class GameComponent {
     }
     // Fallback: fetch room info from API only if not present
     if (!this.roomInfo && this.roomCode) {
-      this.fetchRoomInfo(this.roomCode);
+      this.fetchGameInfo(this.roomCode);
     }
     this.fetchMyCards();
     console.log('[GameComponent] Loaded roomInfo:', this.roomInfo);
+    // Optionally prefetch stickers
+    // this.fetchStickers();
+  }
+  fetchStickers() {
+    this.api.get('/api/rooms/stickers').subscribe((stickers: any) => {
+      this.stickers = stickers as Array<{ id:number, name: string; imageUrl: string }>;
+      this.showStickersPanel = true;
+      this.stickerSearch = '';
+    }, err => {
+      console.error('Error fetching stickers:', err);
+    });
+  }
+
+  get filteredStickers() {
+    if (!this.stickerSearch.trim()) return this.stickers;
+    const search = this.stickerSearch.trim().toLowerCase();
+    return this.stickers.filter(s => s.name.toLowerCase().includes(search));
+  }
+  closeStickersPanel() {
+    this.showStickersPanel = false;
+  }
+
+  // Returns the local player's username for 'You' display
+
+  // Group previous round cards by roundnumber and compute summary for each round
+  getGroupedRounds() {
+    if (!Array.isArray(this.previousRoundCards)) return [];
+    const grouped: { [round: number]: any[] } = {};
+    this.previousRoundCards.forEach(card => {
+      const rn = card.roundnumber;
+      if (!grouped[rn]) grouped[rn] = [];
+      grouped[rn].push(card);
+    });
+    // Sort rounds descending (latest first)
+    const roundNumbers = Object.keys(grouped).map(Number).sort((a, b) => b - a);
+    return roundNumbers.map(rn => ({
+      roundnumber: rn,
+      cards: grouped[rn],
+      ...this.getRoundSummaryFromCards(grouped[rn])
+    }));
+  }
+
+  // Compute winner/loser/tie summary for a round's cards
+  getRoundSummaryFromCards(cards: any[]) {
+    if (!cards.length) return { winner: null, winnerCount: 0, losers: [], tiePlayers: [] };
+    // Find winner username (all cards have same roundnumber)
+    const winner = cards.find(c => c.winner)?.winner || '';
+    // Find tiePlayersWinners (if any)
+    const tiePlayersWinners = cards[cards.length - 1].tiePlayersWinners || [];
+    // Count cards per user
+    const userCounts: { [user: string]: number } = {};
+    cards.forEach(card => {
+      const uname = card.userName || card.username;
+      if (!userCounts[uname]) userCounts[uname] = 0;
+      userCounts[uname]++;
+    });
+    if (winner) {
+      // There is a winner: show winner +count, all others as losers -count
+      const winnerCount = userCounts[winner] || 0;
+      const losers = Object.keys(userCounts)
+        .filter(u => u !== winner)
+        .map(u => ({ userName: u, count: userCounts[u] }));
+      return { winner, winnerCount: cards.length - winnerCount, losers, tiePlayers: [] };
+    } else if (tiePlayersWinners && tiePlayersWinners.length) {
+      // No winner, but tie
+      const tiePlayers = tiePlayersWinners.map((u: string) => ({ userName: u, count: userCounts[u] || 0 }));
+      const losers = Object.keys(userCounts)
+        .filter(u => !tiePlayersWinners.includes(u))
+        .map(u => ({ userName: u, count: userCounts[u] }));
+      return { winner: null, winnerCount: 0, losers, tiePlayers };
+    } else {
+      // No winner, no tie (should not happen, fallback)
+      const losers = Object.keys(userCounts).map(u => ({ userName: u, count: userCounts[u] }));
+      return { winner: null, winnerCount: 0, losers, tiePlayers: [] };
+    }
   }
   get arrangedFullPlayers() {
     console.log('[GameComponent] arrangedFullPlayers getter called', {
@@ -132,6 +306,10 @@ export class GameComponent {
       this.showTopCard = true;
       this.selectedStat = null;
     }
+  }
+  isSelectedStat(card: any, stat: any): boolean {
+    if (!card.selectedStat || !stat.label) return false;
+    return stat.label.replace(/\s/g, '').toLowerCase() === card.selectedStat.replace(/\s/g, '').toLowerCase();
   }
   // (removed duplicate import block and class definition)
 
@@ -256,20 +434,8 @@ export class GameComponent {
       console.error('[GameComponent] Error starting game:', err);
     });
   }
-  fetchPrevRoundCards() {
-    if (!this.roomCode) return;
-    const path = `/api/rooms/game/${this.roomCode}/prevRoundCards`;
-    this.api.get(path).subscribe({
-      next: (cards) => {
-        this.previousRoundCards = (cards as unknown as any[]) || [];
-        console.log('[GameComponent] previousRoundCards fetched on refresh:', this.previousRoundCards);
-      },
-      error: err => {
-        console.error('[GameComponent] Error fetching previous round cards:', err);
-      }
-    });
-  }
   ngOnInit() {
+    this.stickerRecipient = this.tablePlayers.map(p => p.username);
     // Show welcome for 1.5s, then good luck for 1.5s, then hide both
     setTimeout(() => {
       this.showWelcome = false;
@@ -283,12 +449,27 @@ export class GameComponent {
     if (this.myUserId) {
       const altGameTopic = `/topic/game/user/${this.myUserId}`;
       this.ws.connectAndSubscribe(altGameTopic);
+      const stickerTopic = `/topic/game/user/${this.myUsername}/stickers`;
+      console.log('[GameComponent] Subscribing to sticker topic for user:', this.myUsername, 'topic:', stickerTopic);
+      this.ws.connectAndSubscribe(stickerTopic);
     }
+ 
+
+    // Subscribe to stickers topic for this room
+    // if (this.roomCode) {
+    //   console.log('[GameComponent] Subscribing to stickers topic for room:', this.roomCode);
+    //   const stickerTopic = `/topic/rooms/${this.roomCode}/stickers`;
+    //   this.ws.connectAndSubscribe(stickerTopic);
+    //   this.ws..subscribe((msg) => {
+    //     console.log('[GameComponent] Received sticker message:', msg);
+    //     if (msg && msg.imageUrl && msg.userName) {
+    //       console.log('[Sticker] Received StickerDto:', msg);
+    //       this.showStickerAnimation(msg);
+    //     }
+    //   });
+    // }
 
     // On refresh/rejoin, fetch previous round cards from backend
-    if (this.roomCode) {
-      this.fetchPrevRoundCards();
-    }
   // Fetch previous round cards for this user/room
 
     // Subscribe to all WebSocket messages and update myCards and currentStatSelector on GameStateDto
@@ -365,6 +546,11 @@ export class GameComponent {
       ) {
         console.log('[GameComponent] StartGameDto:', msg);
       }
+      // Handle StickerDto messages (sticker animation)
+      if (msg && typeof msg.id === 'number' && typeof msg.imageUrl === 'string' && typeof msg.userName === 'string') {
+        console.log('[Sticker] Received StickerDto via WebSocket:', msg);
+        this.showStickerAnimation(msg);
+      }
     });
 
     // Log tablePlayers at init
@@ -372,7 +558,26 @@ export class GameComponent {
     // Force evaluation for debugging
     console.log('[GameComponent] arrangedFullPlayers (ngOnInit):', this.arrangedFullPlayers);
   }
+     subscribetoSticker(){
+    if(this.myUsername) {
+      const stickerTopic = `/topic/game/user/${this.myUsername}/stickers`;
+      console.log('[GameComponent] Subscribing to sticker topic for user:', this.myUsername, 'topic:', stickerTopic);
+      this.ws.connectAndSubscribe(stickerTopic);
+    }
+  }
+  selectSticker(id: number) {
+    this.selectedStickerId = id;
+  }
 
+  // Show sticker animation
+
+  showStickerAnimation(sticker: { id: number; name: string; imageUrl: string; userName: string; message: string }) {
+    const key = ++this.stickerAnimKey;
+    this.stickerAnimations.push({ ...sticker, key });
+    setTimeout(() => {
+      this.stickerAnimations = this.stickerAnimations.filter(s => s.key !== key);
+    }, 22000); // Animation duration (ms)
+  }
   ngOnDestroy() {
     if (this.gameWsSub) {
       this.gameWsSub.unsubscribe();
@@ -384,12 +589,15 @@ export class GameComponent {
     }
   }
 
-  fetchRoomInfo(roomCode: string) {
-    const path = `/api/rooms/${roomCode}/info`;
+  fetchGameInfo(roomCode: string) {
+    const path = `/api/rooms/${roomCode}/state`;
     console.log('API GET:', path);
     this.api.get(path).subscribe((info: any) => {
       console.log('Room info response:', info);
       this.roomInfo = info;
+      this.usernames=info.usernames
+      this.previousRoundCards =info.currentRoundCards || [];
+      this.currentStatSelector = info.currentStatSelector || '';
       // Set isAdmin if creatorId matches myUserId
       this.isAdmin = info && info.creatorId && this.myUserId && info.creatorId.toString() === this.myUserId;
       // DO NOT overwrite fullPlayers here; always use StartGameBundleDto data for fullPlayers
@@ -441,9 +649,9 @@ export class GameComponent {
       return arranged;
     }
     // Fallback to roomInfo if fullPlayers not available
-    if (!this.roomInfo || !this.roomInfo.joinedPlayers || !this.myUserId) return [];
-    const ids = this.roomInfo.joinedPlayers.map((id: any) => id.toString());
-    const names = this.roomInfo.joinedPlayersUsernames || [];
+    if (!this.roomInfo || !this.roomInfo.players || !this.myUserId) return [];
+    const ids = this.roomInfo.players.map((id: any) => id.toString());
+    const names = this.roomInfo.playersUsernames || [];
     const players = ids.map((id: string, i: number) => ({
       id,
       username: names[i] || id,
@@ -526,9 +734,7 @@ export class GameComponent {
     this.messages.push({ text: 'Hello!', bottom: 10, opacity: 1 });
   }
 
-  sendSticker() {
-    this.messages?.push({ text: '🎉', bottom: 10, opacity: 1 });
-  }
+
 
   togglePreviousRoundCards() {
     // Just toggle visibility. Data will be provided later.
