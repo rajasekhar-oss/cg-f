@@ -89,9 +89,12 @@ export class WebsocketService implements OnDestroy {
   }
 
   private _connectWithTokenAndSubscribeQueued(token: string): void {
+    // Prefer explicit wsUrl from environment if provided (avoids double-slash or wrong host)
+    const wsBase = (environment as any).wsUrl ? (environment as any).wsUrl.replace(/\/$/, '') : null;
     const base = environment.apiUrl.replace(/\/$/, '');
+    const brokerUrl = wsBase ? `${wsBase}?token=${encodeURIComponent(token)}` : `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`;
     this.stompClient = new Client({
-      brokerURL: `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`,
+      brokerURL: brokerUrl,
       reconnectDelay: 5000,
       debug: (msg: string) => console.log('[STOMP]', msg),
     });
@@ -128,10 +131,13 @@ export class WebsocketService implements OnDestroy {
   }
 
   private _connectWithTokenAndSubscribe(topic: string, token: string): void {
+    // Prefer explicit wsUrl from environment if provided
+    const wsBase = (environment as any).wsUrl ? (environment as any).wsUrl.replace(/\/$/, '') : null;
     const base = environment.apiUrl.replace(/\/$/, '');
+    const brokerUrl = wsBase ? `${wsBase}?token=${encodeURIComponent(token)}` : `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`;
     if (!this.stompClient) {
       this.stompClient = new Client({
-        brokerURL: `${base.replace(/^http/, 'ws')}/ws?token=${encodeURIComponent(token)}`,
+        brokerURL: brokerUrl,
         reconnectDelay: 5000,
         debug: (msg: string) => console.log('[STOMP]', msg),
       });
@@ -214,7 +220,9 @@ export class WebsocketService implements OnDestroy {
       let isValid = false;
       switch (messageType) {
         case 'start':
-          isValid = isGameStartMessage(messageWithTopic);
+          // Accept if isGameStartMessage OR if it has a 'message' property with value 'game started'
+          isValid = isGameStartMessage(messageWithTopic) ||
+                    (typeof messageWithTopic.message === 'string' && messageWithTopic.message.toLowerCase().includes('game started'));
           break;
         case 'state':
           isValid = isGameStateMessage(messageWithTopic);

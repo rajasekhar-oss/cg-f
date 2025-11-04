@@ -7,41 +7,48 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
 @Component({
   standalone: true,
   imports: [CommonModule, BottomNavComponent],
-  selector: 'app-cards',
-  templateUrl: './cards.component.html',
-  styleUrls: ['./cards.component.css']
+  selector: 'app-stored-cards',
+  templateUrl: './stored-cards.component.html',
+  styleUrls: ['./stored-cards.component.css']
 })
-export class CardsComponent {
-  cards: any[] = [];
-  totalPoints: number = 0;
+export class StoredCardsComponent {
+  allCards: any[] = [];
+  storedCards: any[] = [];
+  storedCardIds: Set<string> = new Set();
   isLoading: boolean = true;
   selectedCard: any = null;
 
-  constructor(private api: ApiService, private router: Router){
+  constructor(private api: ApiService, private router: Router) {
     this.reload();
   }
-  reload(){
+
+  reload() {
     this.isLoading = true;
-    // Fetch cards
-    this.api.get('/cards/my').subscribe((r:any)=> {
-      console.log('Fetched cards:', r);
-      this.cards = r;
+    // Fetch all cards
+    this.api.get('/cards/my').subscribe((r: any) => {
+      this.allCards = r;
       this.isLoading = false;
-    }, ()=> {
-      this.cards = [];
+    }, () => {
+      this.allCards = [];
       this.isLoading = false;
     });
-    // Fetch user points
-    this.api.get('/users/me').subscribe((user: any) => {
-      this.totalPoints = user.points || 0;
+    // Fetch only stored cards
+    this.api.get('/cards/stored').subscribe((r: any) => {
+      this.storedCards = r;
+      this.storedCardIds = new Set(r.map((c: any) => c.id));
     }, () => {
-      this.totalPoints = 0;
+      this.storedCards = [];
+      this.storedCardIds.clear();
     });
   }
-  arrange(){ this.router.navigate(['/cards/arrange']);}
 
-  add() { this.router.navigate(['/cards/add']); }
-  stored() { this.router.navigate(['/cards/stored']); }
+  toggleStored(card: any) {
+    const isStored = this.storedCardIds.has(card.id);
+    const url = isStored ? `/cards/unstore/${card.id}` : `/cards/store/${card.id}`;
+    this.api.post(url, {}).subscribe(() => {
+      this.reload();
+    });
+  }
 
   showCardDetails(card: any) {
     this.selectedCard = card;

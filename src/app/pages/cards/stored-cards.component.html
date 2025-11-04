@@ -1,0 +1,78 @@
+<div class="stored-cards-page-container">
+  <div class="stored-cards-header">
+    <h2>Stored Cards</h2>
+  </div>
+  <div *ngIf="isLoading" class="loading">Loading...</div>
+  <div *ngIf="!isLoading && storedCards.length === 0" class="empty">No stored cards.</div>
+  <div *ngIf="!isLoading && storedCards.length > 0">
+    <div class="section-title">Stored</div>
+    <div class="stored-cards-list">
+      <div *ngFor="let card of storedCards" class="stored-card-item stored">
+        <div class="card-image-container">
+          <img *ngIf="card.picture || card.imageUrl" [src]="card.picture || card.imageUrl" [alt]="card.name || card.title || 'Card'" class="card-image-full" />
+          <button class="info-btn" (click)="showCardDetails(card); $event.stopPropagation()" title="Info">ℹ️</button>
+          <div class="toggle-overlay" (click)="toggleStored(card)"></div>
+          <div class="stored-badge">Stored</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="!isLoading && allCards.length > 0">
+    <div class="section-title">All Cards</div>
+    <div class="stored-cards-list">
+      <div *ngFor="let card of allCards" class="stored-card-item" [class.stored]="storedCardIds.has(card.id)">
+        <div class="card-image-container">
+          <img *ngIf="card.picture || card.imageUrl" [src]="card.picture || card.imageUrl" [alt]="card.name || card.title || 'Card'" class="card-image-full" />
+          <button class="info-btn" (click)="showCardDetails(card); $event.stopPropagation()" title="Info">ℹ️</button>
+          <div class="toggle-overlay" (click)="toggleStored(card)"></div>
+          <div class="stored-badge" *ngIf="storedCardIds.has(card.id)">Stored</div>
+        </div>
+      </div>
+    </div>
+  </div>
+<!-- Card Details Modal -->
+<div *ngIf="selectedCard" class="card-details-modal">
+  <div class="card-details-content">
+    <button class="close-btn" (click)="closeCardDetails()">✖</button>
+    <div class="card-details-image">
+      <img *ngIf="selectedCard.picture || selectedCard.imageUrl" [src]="selectedCard.picture || selectedCard.imageUrl" [alt]="selectedCard.name || selectedCard.title || 'Card'" />
+    </div>
+    <div class="card-details-info">
+      <div *ngIf="selectedCard.totalFilms" class="stat-card">
+        <span class="stat-label">Total Films</span>
+        <span class="stat-value">{{ selectedCard.totalFilms }}</span>
+      </div>
+      <div *ngIf="selectedCard.yearsActive" class="stat-card">
+        <span class="stat-label">Years Active</span>
+        <span class="stat-value">{{ selectedCard.yearsActive }}</span>
+      </div>
+      <div *ngIf="selectedCard.highestGrossing" class="stat-card">
+        <span class="stat-label">Highest Grossing</span>
+        <span class="stat-value">{{ selectedCard.highestGrossing }}</span>
+      </div>
+      <div *ngIf="selectedCard.awardsWon" class="stat-card">
+        <span class="stat-label">Awards Won</span>
+        <span class="stat-value">{{ selectedCard.awardsWon }}</span>
+      </div>
+      <div *ngIf="selectedCard.followers" class="stat-card">
+        <span class="stat-label">Followers</span>
+        <span class="stat-value">{{ selectedCard.followers }}</span>
+      </div>
+      <div *ngIf="selectedCard.languages" class="stat-card">
+        <span class="stat-label">Languages</span>
+        <span class="stat-value">{{ selectedCard.languages }}</span>
+      </div>
+      <div *ngIf="selectedCard.professions" class="stat-card">
+        <span class="stat-label">Professions</span>
+        <span class="stat-value">{{ selectedCard.professions }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+  </div>
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [getIconForRoute]="getIconForRoute.bind(this)"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>

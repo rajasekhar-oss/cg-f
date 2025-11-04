@@ -157,28 +157,41 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       this.ws.connectToRoom(this.roomCode);
 
       // Subscribe to /start topic for all players
-      const startTopic = `/topic/rooms/${this.roomCode}/start`;
-      this.ws.connectAndSubscribe(startTopic);
-      if (this.wsStartSub) this.wsStartSub.unsubscribe && this.wsStartSub.unsubscribe();
-      this.wsStartSub = this.ws.filterMessagesByTopic(startTopic).subscribe((msg: any) => {
-        console.log('[WaitingRoom] StartGameBundleDto or new start message:', msg);
-        // Route to game for all players with the received message (old or new format)
-        if (Array.isArray(msg.players) && typeof msg.statSelectorId === 'string' && typeof msg.roomCode === 'string') {
+      const startTopics = `/topic/rooms/${this.roomCode}/start`;
+      this.ws.connectAndSubscribe(startTopics);
+      console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
+
+      // DEBUG: Log all WebSocket messages to verify receipt
+      this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
+  console.log('[WaitingRoom] WebSocket connection status:', connected);
+});
+      this.ws.messages$.subscribe((msg: any) => {
+        console.log('[WaitingRoom] (DEBUG) Raw WebSocket message:', msg);
+        if (msg.message === "game started" && this.roomCode) {
           // New format
-          this.router.navigate(['/game', this.roomCode], {
-            state: {
-              startGameBundle: msg
-            }
-          });
-        } else if (msg && msg.gameState && msg.roomInfo && msg.startGame) {
-          // Old StartGameBundleDto format
-          this.router.navigate(['/game', this.roomCode], {
-            state: {
-              startGameBundle: msg
-            }
-          });
+          console.log('[WaitingRoom] Navigating to game with roomCode:', this.roomCode);
+          this.router.navigate(['/game', this.roomCode],{ state: { roomCode: this.roomCode } });
         }
       });
+
+      // if (this.wsStartSub) this.wsStartSub.unsubscribe && this.wsStartSub.unsubscribe();
+      // this.wsStartSub = this.ws.filterMessagesByTopic(startTopics).subscribe((msg: any) => {
+      //   console.log('[WaitingRoom] StartGameBundleDto or new start message:', msg);
+      //   // Route to game for all players with the received message (old or new format)
+      //   if (msg.message === "game started") {
+      //     // New format
+      //     console.log('[WaitingRoom] Navigating to game with roomCode:', this.roomCode);
+      //     this.router.navigate(['/game', this.roomCode]);
+      //   }
+      //    else if (msg && msg.gameState && msg.roomInfo && msg.startGame) {
+      //     // Old StartGameBundleDto format
+      //     this.router.navigate(['/game', this.roomCode], {
+      //       state: {
+      //         startGameBundle: msg
+      //       }
+      //     });
+      //   }
+      // });
 
       // Subscribe to WebSocket connection status
       if (this.wsConnSub) this.wsConnSub.unsubscribe && this.wsConnSub.unsubscribe();

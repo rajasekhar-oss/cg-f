@@ -8,6 +8,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { CardsComponent } from './pages/cards/cards.component';
 import { ArrangeComponent } from './pages/arrange/arrange.component';
+import { StoredCardsComponent } from './pages/cards/stored-cards.component';
 import { AddCardsComponent } from './pages/cards/add-cards.component';
 import { WaitingRoomComponent } from './pages/gang-play/waiting-room.component';
 import { GameComponent } from './pages/game/game.component';
@@ -26,6 +27,7 @@ export const routes: Routes = [
   { path: 'profile', component: ProfileComponent },
   { path: 'cards', component: CardsComponent },
   { path: 'cards/arrange', component: ArrangeComponent },
+  { path: 'cards/stored', component: StoredCardsComponent },
   { path: 'cards/add', component: AddCardsComponent },
   { path: 'room/:code', component: WaitingRoomComponent },
   { path: 'game/:id', component: GameComponent },

@@ -1,3 +1,5 @@
+<!-- Animated card image overlay -->
+<img *ngIf="showCardAnimation" #animatedCard class="animated-card-image" [src]="animatedCardUrl" [ngStyle]="animatedCardStyle" />
 <div class="game-table-container">
   <!-- Sticker animation overlay -->
   <div class="sticker-anim-overlay">
@@ -13,10 +15,6 @@
     <button *ngIf="isAdmin" class="delete-btn" (click)="endGame()">End Game</button>
   </div>
 
-  <!-- Welcome and Good Luck messages -->
-  <div *ngIf="showWelcome" class="welcome-message">Welcome!</div>
-  <div *ngIf="showGoodLuck" class="good-luck-message">Good Luck!</div>
-
   <!-- Spinner for game start -->
   <div *ngIf="!currentStatSelector" class="spinner">
     <div class="spinner-graphic"></div>
@@ -29,13 +27,14 @@
     <ng-container *ngIf="arrangedFullPlayers.length > 0; else noPlayers">
       <ng-container *ngFor="let player of arrangedFullPlayers; let i = index">
         <div *ngIf="player" class="player-seat" [ngClass]="{'me': player.isMe}"
-          [ngStyle]="getCircularSeatStyle(i, arrangedFullPlayers.length)">
-          <div>
+          [ngStyle]="getCircularSeatStyle(i, arrangedFullPlayers.length)"
+          >          <div [ngClass]="{'disabled': (myUsername === player.username && myCards.length === 0) || !currentroundplayers.includes(player.username)}">
+
             <img
               [src]="(player.profilePicUrl !== null && player.profilePicUrl !== undefined && player.profilePicUrl !== '') ? player.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (player.username || 'Player') + '&background=random'"
               [alt]="player.username || player.id" class="player-avatar"
               [ngClass]="{'stat-selector-avatar': player.id?.toString() === currentStatSelector}" />
-            <div class="username">{{player.username }}</div>
+            <div class="username">{{this.myUsername==player.username?"you":player.username }}</div>
           </div>
 
 
@@ -43,19 +42,53 @@
       </ng-container>
     </ng-container>
     <ng-template #noPlayers>
-      <div style="color: red; text-align: center; font-weight: bold; margin-top: 40px;">No players found. Check your
-        data and console logs.</div>
+      <div style="color: #007bff; text-align: center; font-weight: bold; margin-top: 40px;">
+        Loading players...
+        <div class="spinner" style="margin: 20px auto 0; width: 40px; height: 40px;"></div>
+      </div>
     </ng-template>
-    <!-- Game Table center label -->
-    <!-- <div class="table-center">Game Table</div> -->
+    <!-- Game Table center: Winner/Tie display overlay -->
+    <div class="table-center-overlay" *ngIf="winner || isTie"
+      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none;">
+      <div class="center-result" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+        <ng-container *ngIf="winner && !isTie">
+          <div class="center-label winner-label username" style="margin-bottom: 0.5em; text-align: center;">Winner</div>
+          <div class="center-profiles" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1.5em;">
+            <ng-container *ngFor="let p of arrangedFullPlayers">
+              <ng-container *ngIf="winner===p.id">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <img [src]="(p.profilePicUrl !== null && p.profilePicUrl !== undefined && p.profilePicUrl !== '') ? p.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (p.username || 'Player') + '&background=random'"
+                    [alt]="p.username || p.id" class="player-avatar center-profile-avatar" style="margin-bottom: 0.25em;" />
+                  <div class="username">{{p.username === myUsername ? 'You' : p.username}}</div>
+                </div>
+              </ng-container>
+            </ng-container>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="isTie && !winner">
+          <div class="center-label tie-label username" style="margin-bottom: 0.5em; text-align: center;">Tie</div>
+          <div class="center-profiles" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1.5em;">
+            <ng-container *ngFor="let p of arrangedFullPlayers">
+              <ng-container *ngIf="currentroundplayers.includes(p.username)">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                  <img [src]="(p.profilePicUrl !== null && p.profilePicUrl !== undefined && p.profilePicUrl !== '') ? p.profilePicUrl : 'https://ui-avatars.com/api/?name=' + (p.username || 'Player') + '&background=random'"
+                    [alt]="p.username || p.id" class="player-avatar center-profile-avatar" style="margin-bottom: 0.25em;" />
+                  <div class="username">{{p.username === myUsername ? 'You' : p.username}}</div>
+                </div>
+              </ng-container>
+            </ng-container>
+          </div>
+        </ng-container>
+      </div>
+    </div>
   </div>
 
   <!-- Bottom bar: cards and messaging -->
   <div class="bottom-bar">
     <span class="cards-count">Cards: {{myCards.length}}</span>
-    <button class="game-action-btn cards-btn" (click)="showCardList = true">Cards</button>
-    <button class="game-action-btn next-card-btn" (click)="showNextCard()">Next Card</button>
-    <button class="game-action-btn message-btn" (click)="fetchStickers()">Stickers</button>
+    <button [disabled]="!myCards || myCards.length === 0" class="game-action-btn cards-btn" (click)="showCardList = true">Cards</button>
+    <button [disabled]="!myCards || myCards.length === 0"class="game-action-btn next-card-btn" (click)="showNextCard()">Next Card</button>
+    <button class="game-action-btn message-btn" (click)="displayStickers()">Stickers</button>
   </div>
   <!-- Stickers panel overlay -->
   <div class="stickers-panel-overlay" *ngIf="showStickersPanel">
@@ -64,18 +97,20 @@
       <!-- Sticker recipient filter radio buttons -->
       <div class="sticker-recipients-row">
         <!-- Select All -->
-        <label [class.selected-checkbox]="isAllSelected" [class.unselected-checkbox]="!isAllSelected">
+        <label *ngIf="usernames.length > 1" [class.selected-checkbox]="isAllSelected" [class.unselected-checkbox]="!isAllSelected">
           <input type="checkbox" [checked]="isAllSelected" (change)="toggleAll($event)" />
           All
         </label>
 
         <!-- Individual Players -->
-        <label *ngFor="let player of tablePlayers"
-          [class.selected-checkbox]="stickerRecipient.includes(player.username) && !isAllSelected"
-          [class.unselected-checkbox]="!stickerRecipient.includes(player.username) || isAllSelected">
-          <input type="checkbox" [checked]="stickerRecipient.includes(player.username)"
-            (change)="togglePlayer(player.username, ($event))" class="recipient-checkbox" />
-          {{ player.username }}
+        <label *ngFor="let username of usernames"
+          [class.selected-checkbox]="stickerRecipient.includes(username) && !isAllSelected"
+          [class.unselected-checkbox]="!stickerRecipient.includes(username) || isAllSelected">
+          <input type="checkbox" [checked]="stickerRecipient.includes(username)"
+            (change)="togglePlayer(username, ($event))" class="recipient-checkbox" 
+            
+            />
+          {{username }}
         </label>
       </div>
       <input type="text" class="sticker-search" [(ngModel)]="stickerSearch" placeholder="Search stickers by name..." />

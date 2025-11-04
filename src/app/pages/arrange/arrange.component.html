@@ -6,14 +6,32 @@
       <div class="cards-total">
         <div class="cards-total-label">Arrange Cards</div>
       </div>
+      <div class="arrange-mode-toggle">
+        <button [class.active]="arrangeMode==='drag'" (click)="setArrangeMode('drag')">Drag & Drop</button>
+        <button [class.active]="arrangeMode==='manual'" (click)="setArrangeMode('manual')">Manual Select</button>
+      </div>
     </div>
   </div>
   <div class="cards-actions">
     <button class="cards-action-btn arrange" (click)="save()">Set Order</button>
   </div>
-  <div class="cards-grid" cdkDropList [cdkDropListData]="cards" (cdkDropListDropped)="drop($event)">
+  <div *ngIf="arrangeMode==='drag'" class="cards-grid" cdkDropList [cdkDropListData]="cards" (cdkDropListDropped)="drop($event)" (cdkDragMoved)="onDragMoved($event)" (cdkDragEnded)="stopScroll()" style="overflow-y:auto; max-height:60vw;">
     <div *ngFor="let c of cards" class="card-tile" cdkDrag>
       <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+    </div>
+  </div>
+  <div *ngIf="arrangeMode==='manual'" class="manual-arrange-container">
+    <div class="manual-select-actions">
+      <button class="cards-action-btn" (click)="deselectAllManual()">Deselect All</button>
+      <button class="cards-action-btn" (click)="selectAllManual()">Select All</button>
+    </div>
+    <div class="manual-select-grid">
+      <div *ngFor="let c of cards" class="card-tile manual-selectable"
+        [class.selected]="getManualIndex(c) !== -1"
+        (click)="selectCardManual(c)">
+        <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+        <span *ngIf="getManualIndex(c) !== -1" class="manual-card-index selected">{{getManualIndex(c)+1}}</span>
+      </div>
     </div>
   </div>
 </div>

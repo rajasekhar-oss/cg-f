@@ -15,25 +15,32 @@ import { NotificationService } from '../../services/notification.service';
   styleUrls: ['./arrange.component.css']
 })
 export class ArrangeComponent {
-  cards:any[] = [];
+  cards: any[] = [];
   showNotification = false;
   notificationMessage = '';
   fromWaitingRoom = false;
   roomCode = '';
-  constructor(private api: ApiService, private router: Router, private notification: NotificationService){
+  // Mode: 'drag' or 'manual'
+  arrangeMode: 'drag' | 'manual' = 'drag';
+  // For manual selection
+  manualOrder: string[] = [];
+  scrollInterval: any = null;
+
+  constructor(private api: ApiService, private router: Router, private notification: NotificationService) {
     const nav = (this.router.getCurrentNavigation() as any);
     const state = nav?.extras?.state;
     if (state?.fromWaitingRoom) {
       this.fromWaitingRoom = true;
       this.roomCode = state.roomCode || '';
     }
-    this.api.get('/cards/my').subscribe((r:any)=> {
-      this.cards = r.sort((a: any, b: any)=>a.orderIndex-b.orderIndex);
-      console.log('ArrangeComponent loaded cards:', this.cards);
-    });
+    this.api.get('/cards/my').subscribe((r: any) => {
+        this.cards = r.sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+        this.manualOrder = this.cards.map(c => c.id); // Default: all selected in order
+      });
   }
   // Smart drop logic for grid: move to the index closest to pointer
   drop(event: CdkDragDrop<any[]>) {
+    if (this.arrangeMode !== 'drag') return;
     if (event.previousIndex === event.currentIndex) return;
     // Find the closest index based on pointer position
     const grid = document.querySelector('.cards-grid');
@@ -61,14 +68,72 @@ export class ArrangeComponent {
     }
     moveItemInArray(this.cards, event.previousIndex, bestIdx);
   }
-  save(){
-    const order = this.cards.map(c=>c.id);
-    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(()=> {
+
+  // Manual selection logic
+  selectCardManual(card: any) {
+    if (this.arrangeMode !== 'manual') return;
+    const idx = this.manualOrder.indexOf(card.id);
+    if (idx !== -1) {
+      // Deselect
+      this.manualOrder.splice(idx, 1);
+    } else {
+      // Reselect, add to end
+      this.manualOrder.push(card.id);
+    }
+  }
+  deselectAllManual() {
+    this.manualOrder = [];
+  }
+  selectAllManual() {
+    this.manualOrder = this.cards.map(c => c.id);
+  }
+  getManualIndex(card: any): number {
+    return this.manualOrder.indexOf(card.id);
+  }
+
+  // Edge-drag scrolling for drag-and-drop
+  onDragMoved(event: any) {
+    if (this.arrangeMode !== 'drag') return;
+    const grid = document.querySelector('.cards-grid');
+    if (!grid) return;
+    const rect = grid.getBoundingClientRect();
+    const y = event.pointerPosition ? event.pointerPosition.y : event.event?.clientY;
+    const scrollZone = 60; // px
+    const scrollStep = 24; // px per interval
+    if (y < rect.top + scrollZone) {
+      this.startScroll(grid, -scrollStep);
+    } else if (y > rect.bottom - scrollZone) {
+      this.startScroll(grid, scrollStep);
+    } else {
+      this.stopScroll();
+    }
+  }
+  startScroll(grid: Element, step: number) {
+    this.stopScroll();
+    this.scrollInterval = setInterval(() => {
+      (grid as HTMLElement).scrollTop += step;
+    }, 32);
+  }
+  stopScroll() {
+    if (this.scrollInterval) {
+      clearInterval(this.scrollInterval);
+      this.scrollInterval = null;
+    }
+  }
+  save() {
+    let order: string[];
+    if (this.arrangeMode === 'manual') {
+      // Only selected cards, in their order
+      order = [...this.manualOrder];
+    } else {
+      order = this.cards.map(c => c.id);
+    }
+    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(() => {
       this.notification.show('Order changed successfully');
       if (this.fromWaitingRoom) {
         window.history.back();
       }
-    }, (err: any)=> {
+    }, (err: any) => {
       this.notification.show('Error saving card order.');
     });
   }
@@ -96,5 +161,19 @@ export class ArrangeComponent {
   }
   navigate(route: string) {
     this.router.navigate([route]);
+  }
+
+  // Mode switch
+  setArrangeMode(mode: 'drag' | 'manual') {
+    this.arrangeMode = mode;
+    if (mode === 'manual') {
+      this.selectAllManual();
+    }
+    this.stopScroll();
+  }
+
+  // Clean up scroll interval
+  ngOnDestroy() {
+    this.stopScroll();
   }
 }

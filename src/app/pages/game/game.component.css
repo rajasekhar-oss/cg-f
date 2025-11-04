@@ -1,3 +1,13 @@
+/* Animated card image overlay */
+.animated-card-image {
+  position: fixed;
+  width: 80px;
+  height: 120px;
+  pointer-events: none;
+  z-index: 2003;
+  transition: all 0.7s cubic-bezier(0.4,1,0.6,1);
+  will-change: left, top;
+}
 /* Sticker recipient row layout */
 .sticker-recipients-row {
   display: flex;
@@ -362,7 +372,17 @@
   border: 3px solid #f59e42 !important; /* orange/yellow highlight */
   box-shadow: 0 0 8px #f59e42;
 }
-
+button:disabled {
+  background-color: #ccc;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.7;
+  border: 1px solid #aaa;
+}
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+}
 .select-card-btn-disabled {
   height: 5vh;
   font-size: 3vh;
@@ -806,7 +826,7 @@
 
 
 /* Welcome and Good Luck messages */
-.welcome-message,
+/* .welcome-message,
 .good-luck-message {
   font-size: 2.2rem;
   font-weight: 700;
@@ -822,7 +842,7 @@
   transform: translateX(-50%);
   animation: slideUpFade 1.5s cubic-bezier(0.4,0.0,0.2,1) 0s 1;
   z-index: 300;
-}
+} */
 
 @keyframes slideUpFade {
   0% {
