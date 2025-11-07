@@ -1,4 +1,5 @@
 import { JoinRoomComponent } from './pages/gang-play/join-room.component';
+import { FindStrangerComponent } from './pages/find-stranger/find-stranger.component';
 import { Routes } from '@angular/router';
 import { SignInComponent } from './pages/signin/signin.component';
 import { VerifyOtpComponent } from './pages/verify-otp/verify-otp.component';
@@ -11,7 +12,9 @@ import { ArrangeComponent } from './pages/arrange/arrange.component';
 import { StoredCardsComponent } from './pages/cards/stored-cards.component';
 import { AddCardsComponent } from './pages/cards/add-cards.component';
 import { WaitingRoomComponent } from './pages/gang-play/waiting-room.component';
+import { LeaveRoomGuard } from './guards/leave-room.guard';
 import { GameComponent } from './pages/game/game.component';
+import { LeaveGameGuard } from './guards/leave-game.guard';
 import { PlaceholderComponent } from './pages/placeholder.component';
 import { CreateRoomComponent } from './pages/gang-play/create-room.component';
 import { RankingsComponent } from './pages/leaderboard/rankings.component';
@@ -29,15 +32,15 @@ export const routes: Routes = [
   { path: 'cards/arrange', component: ArrangeComponent },
   { path: 'cards/stored', component: StoredCardsComponent },
   { path: 'cards/add', component: AddCardsComponent },
-  { path: 'room/:code', component: WaitingRoomComponent },
-  { path: 'game/:id', component: GameComponent },
+  { path: 'room/:code', component: WaitingRoomComponent, canDeactivate: [LeaveRoomGuard] },
+  { path: 'game/:id', component: GameComponent, canDeactivate: [LeaveGameGuard] },
   // New routes for game modes and features
   { path: 'notifications', component: PlaceholderComponent },
   { path: 'gang-play', component: PlaceholderComponent },
   { path: 'gang-play/create', component: CreateRoomComponent },
   { path: 'gang-play/join', component: JoinRoomComponent },
-  { path: 'gang-play/waiting/:roomCode', component: WaitingRoomComponent },
-  { path: 'stranger-play', component: PlaceholderComponent },
+  { path: 'gang-play/waiting/:roomCode', component: WaitingRoomComponent, canDeactivate: [LeaveRoomGuard] },
+  { path: 'stranger-play', component: FindStrangerComponent },
   { path: 'temporary-play', component: PlaceholderComponent },
   { path: 'play-code', component: PlaceholderComponent },
   { path: 'leaderboard', component: RankingsComponent },

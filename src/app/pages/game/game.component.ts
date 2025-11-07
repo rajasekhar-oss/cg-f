@@ -1,4 +1,5 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -25,6 +26,136 @@ interface StickerAnim {
 })
 
 export class GameComponent {
+  // Returns the username of the winner, or undefined if not found
+  get winnerUsername(): string | undefined {
+    if (!this.winner || !this.arrangedFullPlayers) return undefined;
+    const winnerPlayer = this.arrangedFullPlayers.find(p => p.id === this.winner || p.username === this.winner);
+    return winnerPlayer?.username;
+  }
+
+  // Unified handler for leave/end game top-controls buttons
+  onLeaveOrEndGameClick(type: 'leave' | 'end') {
+    if (type === 'end') {
+      this.requestLeaveConfirmation(
+        'Are you sure you want to end the game for all players?',
+        'End Game',
+        () => this.onEndGameFromModal(),
+        () => {} // No-op on cancel
+      );
+    } else {
+      this.requestLeaveConfirmation(
+        'Are you sure you want to leave the game?',
+        'Leave Game',
+        () => this.onLeaveGameFromModal(),
+        () => {} // No-op on cancel
+      );
+    }
+  }
+  gameEnded = false;
+  // Modal state for custom confirmation
+  showConfirmModal = false;
+  confirmMessage = '';
+  confirmTitle = '';
+  confirmAction: (() => void) | null = null;
+  confirmReject: (() => void) | null = null;
+  pendingNavigation: (() => void) | null = null;
+  showGameEndedModal = false;
+
+
+  // Called by guard to trigger modal
+  requestLeaveConfirmation(message: string, title: string, onConfirm: () => void, onCancel: () => void) {
+    const onlyTwoPlayers = this.arrangedFullPlayers && this.arrangedFullPlayers.length === 2;
+
+  // If only two players, force "End Game" message for everyone
+  if (onlyTwoPlayers) {
+    message = 'There are only two players in the game. Leaving will end the game for both. Do you want to end the game?';
+    title = 'End Game';
+  }
+    this.confirmMessage = message;
+    this.confirmTitle = title;
+    this.showConfirmModal = true;
+    if (this.isAdmin) {
+      // For creator, store both actions
+      this.confirmAction = () => {
+        this.showConfirmModal = false;
+        onConfirm(); // Default to leaveGame if needed
+      };
+      this.confirmReject = () => {
+        this.showConfirmModal = false;
+        onCancel();
+      };
+      // End/Leave handled by separate modal buttons
+    } else {
+      this.confirmAction = () => {
+        this.showConfirmModal = false;
+        onConfirm();
+      };
+      this.confirmReject = () => {
+        this.showConfirmModal = false;
+        onCancel();
+      };
+    }
+  }
+
+  // For creator: End Game from modal
+  onEndGameFromModal() {
+    this.showConfirmModal = false;
+    this.showGameEndedModal = false;
+    this.gameEnded = true;
+    this.endGame();
+    this.router.navigate(['/']);
+  }
+  // For creator: Leave Game from modal
+  onLeaveGameFromModal() {
+    this.showConfirmModal = false;
+    this.showGameEndedModal = false;
+    this.gameEnded = true;
+    this.leaveGame();
+    this.router.navigate(['/']);
+  }
+
+  onConfirmLeave() {
+    this.showGameEndedModal = false;
+    this.showConfirmModal = false;
+    if (this.confirmAction) this.confirmAction();
+  }
+  onCancelLeave() {
+    this.showGameEndedModal = false;
+    this.showConfirmModal = false;
+    if (this.confirmReject) this.confirmReject();
+  }
+
+  // Game ended modal logic
+  onAcknowledgeGameEnded() {
+    this.showGameEndedModal = false;
+    this.router.navigate(['/']);
+  }
+  // Listen for browser/tab close or reload
+  @HostListener('window:beforeunload', ['$event'])
+  handleBeforeUnload(event: BeforeUnloadEvent) {
+    if (!this.canLeaveGame) return;
+    // If only 2 players, always ask to end game
+    const onlyTwoPlayers = this.arrangedFullPlayers && this.arrangedFullPlayers.length === 2;
+    let message = '';
+    if (onlyTwoPlayers) {
+      message = 'Do you want to end the game?';
+    } else {
+      const isCreator = this.isAdmin;
+      message = isCreator ? 'Do you want to end the game?' : 'Do you want to leave the game?';
+    }
+    event.preventDefault();
+    event.returnValue = message;
+    return message;
+  }
+
+  // For mobile PWA/webview: listen for visibility change (optional, best effort)
+  @HostListener('document:visibilitychange', [])
+  onVisibilityChange() {
+    if (document.visibilityState === 'hidden' && this.canLeaveGame) {
+      // Optionally, show a dialog or handle as needed
+      // This is a best-effort for mobile webviews
+    }
+  }
   @ViewChild('animatedCard', { static: false }) animatedCardRef!: ElementRef;
   showCardAnimation = false;
   animatedCardUrl = '';
@@ -92,6 +223,12 @@ export class GameComponent {
   myUserId: string = '';
   players: PlayerInfo[] = [];
   fullPlayers: any[] = [];
+  showErrorModal = false;
+  errorModalMessage = '';
+  onAcknowledgeError() {
+    this.showErrorModal = false;
+    this.router.navigate(['/']);
+  }
   myUsername: string = '';
   roomInfo: GameInfo | null = null;
   myCards: any[] = [];
@@ -105,12 +242,21 @@ export class GameComponent {
     private api: ApiService,
     private ws: WebsocketService,
     private router: Router,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {
+    // Restore original logic: prefer router state if present, else use route param
     const nav = this.router.getCurrentNavigation();
     this.storedroomcode = nav?.extras?.state?.['roomCode'];
-    if (this.storedroomcode != null && this.storedroomcode != "" && this.players.length == 0 && this.roomCode == "") {
+    // If coming from waiting room or other, only assign if players.length == 0 and roomCode is empty
+    if (this.storedroomcode != null && this.storedroomcode !== "" && this.players.length == 0 && this.roomCode == "") {
       this.roomCode = this.storedroomcode;
+    } else {
+      // Fallback to route param
+      const code = this.route.snapshot.paramMap.get('id');
+      if (code && this.roomCode === "") {
+        this.roomCode = code;
+      }
     }
     if (this.roomCode) {
       this.fetchGameInfo(this.roomCode);
@@ -126,12 +272,6 @@ export class GameComponent {
     this.canLeaveGame = true;
   }
   ngOnInit() {
-    if (this.myUserId && this.roomCode) {
-      this.fetchuserInfo();
-      this.fetchGameInfo(this.roomCode);
-      this.fetchMyCards();
-      this.fetchStickers();
-    }
     this.stickerRecipient = this.tablePlayers.map(p => p.username);
     if (this.myUserId) {
       const altGameTopic = `/topic/game/user/${this.myUserId}`;
@@ -141,11 +281,7 @@ export class GameComponent {
       const roomInfoTopic = `/topic/endGame/${this.myUserId}`;
       this.ws.connectAndSubscribe(roomInfoTopic);
     }
-    if (this.myUsername) {
-      const stickerTopic = `/topic/game/user/${this.myUsername}/stickers`;
-      this.ws.connectAndSubscribe(stickerTopic);
-    }
-
+    // Removed gottheusername from ngOnInit. It will be a class method and called after username is set.
     const wsSub = this.ws.messages$.subscribe((msg: any) => {
       if (!msg) return;
       if (msg.currentStatSelector) {
@@ -162,8 +298,17 @@ export class GameComponent {
         }
       }
       if (msg.type === 'Gameended') {
-        this.router.navigate(['/']);
-        alert('The game has ended. You are being redirected to the home page.');
+        this.gameEnded = true;
+        // Always close any open confirmation modal
+        this.showConfirmModal = false;
+        this.showGameEndedModal = true;
+        setTimeout(() => {
+          if (this.showGameEndedModal) {
+            this.showGameEndedModal = false;
+            this.showConfirmModal = false;
+            this.router.navigate(['/']);
+          }
+        }, 3000); // 3 seconds
       }
     });
     this.subscriptions.push(wsSub);
@@ -197,10 +342,22 @@ export class GameComponent {
   fetchuserInfo() {
     this.api.get('/users/me').subscribe({
       next: (userData: any) => {
+        console.log("username after fetching userinfo", this.myUsername);
         this.myUsername = userData.username;
         this.myImage = userData.imageUrl;
+        this.gottheusername();
+        console.log("username after fetching userinfo", this.myUsername);
       }
     });
+  }
+
+  // Subscribe to sticker topic after username is available
+  gottheusername() {
+    if (this.myUsername) {
+      const stickerTopic = `/topic/game/user/${this.myUsername}/stickers`;
+      this.ws.connectAndSubscribe(stickerTopic);
+      console.log("sticker subscribed", stickerTopic);
+    }
   }
   showNextCard() {
     if (this.myCards && this.myCards.length) {
@@ -504,12 +661,18 @@ export class GameComponent {
     }
     this.api.post(`/api/rooms/${this.roomCode}/end-game`, {}).subscribe({
       next: (res: any) => {
-        console.log('[GameComponent] Ended game successfully:', res);
-
+        this.gameEnded = true;
+        this.showConfirmModal = false;
+        this.showGameEndedModal = false;
         this.router.navigate(['/']);
       },
       error: (err) => {
-        console.error('[GameComponent] Failed to end game:', err);
+        if (err && err.error && (err.error.message?.includes('not exist') || err.error.message?.includes('deleted'))) {
+          this.errorModalMessage = 'This game no longer exists or has already ended.';
+          this.showErrorModal = true;
+        } else {
+          console.error('[GameComponent] Failed to end game:', err);
+        }
       }
     });
   }
@@ -521,10 +684,18 @@ export class GameComponent {
     }
     this.api.post(`/api/rooms/${this.roomCode}/leave-game`, {}).subscribe({
       next: (res: any) => {
+        this.gameEnded = true;
+        this.showConfirmModal = false;
+        this.showGameEndedModal = false;
         this.router.navigate(['/']);
       },
       error: (err) => {
-        console.error('[GameComponent] Failed to leave game:', err);
+        if (err && err.error && (err.error.message?.includes('not exist') || err.error.message?.includes('deleted'))) {
+          this.errorModalMessage = 'This game no longer exists or has already ended.';
+          this.showErrorModal = true;
+        } else {
+          console.error('[GameComponent] Failed to leave game:', err);
+        }
       }
     });
   }

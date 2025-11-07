@@ -1,0 +1,15 @@
+<div class="find-stranger-container">
+  <h2>Play with a Stranger</h2>
+  <button (click)="findMatch()" [disabled]="status === 'searching'">Play Now</button>
+  <div class="status-message">
+    <span *ngIf="status === 'searching'">
+      <i class="fa fa-spinner fa-spin"></i> {{ message }}
+    </span>
+    <span *ngIf="status === 'matched'">
+      <i class="fa fa-check-circle"></i> {{ message }}
+    </span>
+    <span *ngIf="status === 'timeout'" class="timeout-highlight">
+      <i class="fa fa-times-circle"></i> {{ message }}
+    </span>
+  </div>
+</div>

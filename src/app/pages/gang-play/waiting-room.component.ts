@@ -1,3 +1,4 @@
+
 import { RoomInfoDto } from '../../models/room-info.model';
 import { RoomResponse } from '../../models/room-response.model';
 import { environment } from '../../../environments/environment';
@@ -16,6 +17,38 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
   imports: [CommonModule, NgClass],
   styleUrls: ['./waiting-room.component.css'],
   template: `
+    <!-- Custom Confirmation Modal -->
+    <div class="custom-modal-overlay" *ngIf="showConfirmModal">
+      <div class="custom-modal">
+        <div class="custom-modal-title">{{ confirmTitle }}</div>
+        <div class="custom-modal-message">{{ confirmMessage }}</div>
+        <div class="custom-modal-actions">
+          <ng-container *ngIf="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayersUsernames.length) === 2">
+            <button class="modal-btn confirm" (click)="confirmAction && confirmAction()">End Room</button>
+            <button class="modal-btn cancel" (click)="confirmReject && confirmReject()">Cancel</button>
+          </ng-container>
+          <ng-container *ngIf="(roomInfo?.joinedPlayersUsernames?.length || joinedPlayersUsernames.length) !== 2">
+            <ng-container *ngIf="isCreator; else playerConfirmBtns">
+              <button class="modal-btn confirm" (click)="confirmAction && confirmAction()">End Room</button>
+              <button class="modal-btn confirm" (click)="confirmReject && confirmReject()">Leave Room</button>
+              <button class="modal-btn cancel" (click)="showConfirmModal = false">Cancel</button>
+            </ng-container>
+            <ng-template #playerConfirmBtns>
+              <button class="modal-btn confirm" (click)="confirmAction && confirmAction()">Yes</button>
+              <button class="modal-btn cancel" (click)="confirmReject && confirmReject()">No</button>
+            </ng-template>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Room Deleted Modal -->
+    <div class="custom-modal-overlay" *ngIf="showRoomDeletedModal">
+      <div class="custom-modal">
+        <div class="custom-modal-title">Room Deleted</div>
+        <div class="custom-modal-message">The room has been deleted. You will be redirected to the home page.</div>
+      </div>
+    </div>
     <div class="waiting-room-container">
       <div class="room-info">
         <div class="room-code">Room Code: <span>{{ roomInfo?.roomCode || roomCode }}</span></div>
@@ -41,6 +74,52 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 })
 
 export class WaitingRoomComponent implements OnInit, OnDestroy {
+  showRoomDeletedModal = false;
+  roomEnded: boolean = false;
+
+  /**
+   * Shows the leave/end room modal and returns a Promise that resolves to true if the user confirms, false otherwise.
+   * Optionally, pass nextUrl to allow special handling (e.g., skip modal for /game).
+   */
+  showLeaveOrEndRoomModal(nextUrl?: string): Promise<boolean> {
+    // If navigating to game, skip modal
+    if (nextUrl && nextUrl.startsWith('/game')) {
+      return Promise.resolve(true);
+    }
+    return new Promise(resolve => {
+      const onlyTwoPlayers = (this.roomInfo?.joinedPlayersUsernames?.length || this.joinedPlayersUsernames.length) === 2;
+      if (onlyTwoPlayers || this.isCreator) {
+        this.confirmTitle = 'End Room';
+        this.confirmMessage = 'Do you want to end the room for all players?';
+        this.showConfirmModal = true;
+        this.confirmAction = () => {
+          this.showConfirmModal = false;
+          this.deleteRoomConfirmed(() => resolve(true));
+        };
+        this.confirmReject = () => {
+          this.showConfirmModal = false;
+          // If creator and more than 2 players, allow leave as alternative
+          // if (!onlyTwoPlayers && this.isCreator) {
+          //   this.leaveRoomConfirmed(() => resolve(true));
+          // } else {
+          //   resolve(false);
+          // }
+        };
+      } else {
+        this.confirmTitle = 'Leave Room';
+        this.confirmMessage = 'Are you sure you want to leave the room?';
+        this.showConfirmModal = true;
+        this.confirmAction = () => {
+          this.showConfirmModal = false;
+          this.leaveRoomConfirmed(() => resolve(true));
+        };
+        this.confirmReject = () => {
+          this.showConfirmModal = false;
+          resolve(false);
+        };
+      }
+    });
+  }
   private wasGameStartState: boolean = false;
   private wsStartSub: any = null;
   // Removed showOptions, not needed for individual buttons
@@ -54,39 +133,41 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   joinedPlayersUsernames: string[] = [];
   isCreator: boolean = false;
   currentUserId: string | number | null = null;
-  private wsSub: any = null;
-  private wsConnSub: any = null;
+  public wsSub: any = null;
+  public wsConnSub: any = null;
+  // Make api, ws, and router public for guard access
+  // Make api, ws, and router public for guard access
 
-    constructor(
-      private router: Router,
-      private route: ActivatedRoute,
-      private api: ApiService,
-      private ws: WebsocketService,
-      private cd: ChangeDetectorRef,
-      private ngZone: NgZone,
-      private auth: AuthService
-    ) {
-      // Get current user id from JWT with safer parsing and detailed logs
-      const token = this.auth.getAccessToken();
-      try {
-        // Log token presence (truncate long tokens)
-        console.log('[WaitingRoom] access token:', token ? (typeof token === 'string' && token.length > 48 ? token.slice(0, 48) + '...' : token) : token);
-        const payload = this.getJwtPayload(token as any);
-        console.log('[WaitingRoom] jwt payload:', payload);
-        if (payload) {
-          // support multiple possible claim names commonly used
-          const id = payload.id || payload.userId || payload.sub || payload.user_id || payload.uid;
-          if (id) {
-            this.currentUserId = id;
-            console.log('[WaitingRoom] resolved currentUserId:', this.currentUserId);
-          } else {
-            console.warn('[WaitingRoom] Could not find user id claim in JWT payload. Available keys:', Object.keys(payload));
-          }
+  constructor(
+    public router: Router,
+    private route: ActivatedRoute,
+    public api: ApiService,
+    public ws: WebsocketService,
+    private cd: ChangeDetectorRef,
+    private ngZone: NgZone,
+    private auth: AuthService
+  ) {
+    // Get current user id from JWT with safer parsing and detailed logs
+    const token = this.auth.getAccessToken();
+    try {
+      // Log token presence (truncate long tokens)
+      console.log('[WaitingRoom] access token:', token ? (typeof token === 'string' && token.length > 48 ? token.slice(0, 48) + '...' : token) : token);
+      const payload = this.getJwtPayload(token as any);
+      console.log('[WaitingRoom] jwt payload:', payload);
+      if (payload) {
+        // support multiple possible claim names commonly used
+        const id = payload.id || payload.userId || payload.sub || payload.user_id || payload.uid;
+        if (id) {
+          this.currentUserId = id;
+          console.log('[WaitingRoom] resolved currentUserId:', this.currentUserId);
+        } else {
+          console.warn('[WaitingRoom] Could not find user id claim in JWT payload. Available keys:', Object.keys(payload));
         }
-      } catch (e) {
-        console.error('[WaitingRoom] Error parsing token for user id:', e);
       }
+    } catch (e) {
+      console.error('[WaitingRoom] Error parsing token for user id:', e);
     }
+  }
 
   // Helper: parse JWT payload (supports window.decodeJwt if present, otherwise base64-decodes)
   private getJwtPayload(token: string | null | undefined): any {
@@ -156,10 +237,15 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       // Always connect to WebSocket for live updates
       this.ws.connectToRoom(this.roomCode);
 
-      // Subscribe to /start topic for all players
-      const startTopics = `/topic/rooms/${this.roomCode}/start`;
-      this.ws.connectAndSubscribe(startTopics);
-      console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
+  // Subscribe to /start topic for all players
+  const startTopics = `/topic/rooms/${this.roomCode}/start`;
+  this.ws.connectAndSubscribe(startTopics);
+  console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
+
+  // Subscribe to room-level topic for room events (e.g., room_deleted)
+  const roomTopic = `/topic/rooms/${this.roomCode}`;
+  this.ws.connectAndSubscribe(roomTopic);
+  console.log('[WaitingRoom] Subscribed to WebSocket topic for room events:', roomTopic);
 
       // DEBUG: Log all WebSocket messages to verify receipt
       this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
@@ -204,12 +290,16 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       this.wsSub = this.ws.messages$.subscribe((msg: any) => {
         console.log('[WaitingRoom] WebSocket message received:', msg);
         this.ngZone.run(() => {
+          if ((msg.Type === 'room_deleted' || msg.type === 'room_deleted' || msg.message === 'deleted')) {
+            this.roomEnded = true;
+            this.showRoomDeletedModal = true;
+            setTimeout(() => {
+              this.showRoomDeletedModal = false;
+              this.router.navigateByUrl('/', { replaceUrl: true });
+            }, 5000);
+            return;
+          }
           if (msg && 'creatorId' in msg) {
-            if(msg.eventType === 'ROOM_DELETED') {
-              alert('The room has been deleted by the creator. You will be redirected to the home page.');
-              this.router.navigate(['/']);
-              return;
-            }
             this.roomInfo = msg as RoomInfoDto;
             this.requiredPlayers = msg.requiredPlayers || this.requiredPlayers;
             this.joinedPlayersUsernames = msg.joinedPlayersUsernames || [];
@@ -278,39 +368,49 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     // TODO: Implement invite/search logic
   }
 
+  showConfirmModal = false;
+  confirmMessage = '';
+  confirmTitle = '';
+  confirmAction: (() => void) | null = null;
+  confirmReject: (() => void) | null = null;
+
   leaveRoom() {
-    if (!this.roomCode) {
-      this.error = 'No room code to leave';
-      return;
-    }
-    const ok = window.confirm('Are you sure you want to leave the room?');
-    if (!ok) return;
+    // Just trigger navigation, guard will handle confirmation
+    this.router.navigate(['/']);
+  }
+
+  leaveRoomConfirmed(cb?: () => void) {
     this.isLoading = true;
     const path = `/api/rooms/${this.roomCode}/leave`;
     const sub = this.api.post(path, {}).subscribe({
       next: (res: any) => {
         console.log('[WaitingRoom] leaveRoom response:', res);
         this.isLoading = false;
-        // disconnect websocket and navigate away
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }
+        this.roomEnded = true;
         this.router.navigate(['/']);
+        if (cb) cb();
       },
       error: (err: any) => {
         console.error('[WaitingRoom] leaveRoom error:', err);
         this.error = err?.error?.error || err?.message || 'Failed to leave room';
         this.isLoading = false;
+        if (cb) cb();
       }
     });
     this.subscriptions.push(sub);
   }
-
   deleteRoom() {
+    // Just trigger navigation, guard will handle confirmation
+    this.router.navigate(['/']);
+  }
+
+  deleteRoomConfirmed(cb?: () => void) {
     if (!this.roomCode) {
       this.error = 'No room code to delete';
+      if (cb) cb();
       return;
     }
-    const ok = window.confirm('Are you sure you want to DELETE this room? This cannot be undone.');
-    if (!ok) return;
     this.isLoading = true;
     const path = `/api/rooms/${this.roomCode}/delete`;
     const sub = this.api.post(path, {}).subscribe({
@@ -318,12 +418,15 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         console.log('[WaitingRoom] deleteRoom response:', res);
         this.isLoading = false;
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }
-        this.router.navigate(['/']);
+        this.roomEnded = true;
+        this.router.navigateByUrl('/', { replaceUrl: true });
+        if (cb) cb();
       },
       error: (err: any) => {
         console.error('[WaitingRoom] deleteRoom error:', err);
         this.error = err?.error?.error || err?.message || 'Failed to delete room';
         this.isLoading = false;
+        if (cb) cb();
       }
     });
     this.subscriptions.push(sub);
