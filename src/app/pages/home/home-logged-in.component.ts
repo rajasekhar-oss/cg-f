@@ -4,26 +4,37 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { GameRequestService, GameRequest } from '../../services/game-request.service';
 import { UserDto, ProfileDto } from '../../models/auth';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { TopNavComponent } from '../../shared/top-nav/top-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, RouterModule, BottomNavComponent],
+  imports: [CommonModule, RouterModule, BottomNavComponent, TopNavComponent, ErrorNotificationComponent],
   selector: 'app-home-logged-in',
   templateUrl: './home-logged-in.component.html',
   styleUrls: ['./home-logged-in.component.css']
 })
 export class HomePageLoggedInComponent implements OnInit {
+  showNotification = false;
+  notificationMessage = '';
   // User data from API
   profile: UserDto | null = null;
   isLoading = true;
   isAdmin = false;
+
+  // Subscription for joinGame
+  sub?: import('rxjs').Subscription;
   
   // Computed properties based on real data
   username = 'Player';
   userInitials = 'PL';
-  notificationCount = 0; // This should come from notifications API
+
+  // For mobile nav game requests
+  mobileRequests: GameRequest[] = [];
+  showMobileRequests = false;
   
   userStats = {
     points: 0,
@@ -44,12 +55,6 @@ export class HomePageLoggedInComponent implements OnInit {
       route: '/stranger-play'
     },
     {
-      title: 'Temporary Play',
-      description: 'Quick games without saving progress',
-      icon: '⚡',
-      route: '/temporary-play'
-    },
-    {
       title: 'Play with Code',
       description: 'Join a game using a room code',
       icon: '🔢',
@@ -65,10 +70,40 @@ export class HomePageLoggedInComponent implements OnInit {
     { label: 'Profile', route: '/profile' }
   ];
 
-  constructor(private router: Router, private auth: AuthService, private api: ApiService) {}
+  onNotificationsClick = () => {
+    this.navigate('/notifications');
+  };
+
+  constructor(
+    private router: Router,
+    private auth: AuthService,
+    private api: ApiService,
+    private gameRequestService: GameRequestService
+  ) {}
 
   ngOnInit() {
     this.loadUserData();
+    this.gameRequestService.requests$.subscribe(requests => {
+      this.mobileRequests = requests;
+    });
+    this.gameRequestService.fetchRequests();
+  }
+  joinGame(request: GameRequest) {
+     if (this.sub) this.sub.unsubscribe && this.sub.unsubscribe();
+    this.sub = this.api.post(`/api/rooms/${request.roomCode}/join`, {}).subscribe({
+      next: (res: any) => {
+        if (res && res.errorMessage) {
+          // Optionally show error in UI
+          alert(res.errorMessage);
+          return;
+        }
+        // Navigate to waiting room on success
+        this.router.navigate(['/gang-play/waiting', request.roomCode], { state: { roomInfo: res } });
+      },
+      error: (e: any) => {
+        alert("Joining game failed: " + (e?.error?.errorMessage || 'Error joining game'));
+      }
+    });
   }
 
   private loadUserData() {
@@ -76,18 +111,21 @@ export class HomePageLoggedInComponent implements OnInit {
     // Load user profile data from the correct endpoint
     this.api.get('/users/me').subscribe({
       next: (userData: any) => {
-        console.log('User data received:', userData);
+        if (userData && userData.errorMessage) {
+          this.showError(userData.errorMessage);
+          this.isLoading = false;
+          return;
+        }
         this.profile = userData as UserDto;
         this.auth.user$.next(userData);
         this.updateUserInfo();
         const role = this.auth.getUserRole();
         this.isAdmin = role === 'ADMIN';
-        console.log(role);
-        console.log('Console userData:', userData);
-        // All profile data is loaded from /users/me
       },
       error: (error) => {
-        console.error('Failed to load user data:', error);
+        if (error?.error?.errorMessage) {
+          this.showError(error.error.errorMessage);
+        }
         // Fall back to basic user info from auth service
         this.auth.user$.subscribe(user => {
           if (user) {
@@ -95,12 +133,20 @@ export class HomePageLoggedInComponent implements OnInit {
             this.userInitials = this.getInitials(this.username);
             const role = this.auth.getUserRole();
             this.isAdmin = role === 'ADMIN';
-            console.log('Console userData (auth fallback):', user);
           }
         });
         this.isLoading = false;
       }
     });
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   // Removed loadProfilePicture() - all profile data comes from /users/me

@@ -4,13 +4,15 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   selector: 'app-add-cards',
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent],
+  imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   template: `
-    <div class="add-cards-page">
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+  <div class="add-cards-page">
       <div class="add-cards-header">
         <div class="add-cards-total">Total Cards: {{ totalCards }}</div>
         <div class="add-cards-points">Total Points: {{ totalPoints }}</div>
@@ -107,6 +109,8 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
   `]
 })
 export class AddCardsComponent implements OnInit {
+  showNotification = false;
+  notificationMessage = '';
   totalCards = 0;
   totalPoints = 0;
   pointsToSpend = 0;
@@ -129,16 +133,33 @@ export class AddCardsComponent implements OnInit {
     this.isLoading = true;
     // Fetch cards
     this.api.get('/cards/my').subscribe((cards: any) => {
+      if (cards && cards.errorMessage) {
+        this.showError(cards.errorMessage);
+        this.totalCards = 0;
+        this.isLoading = false;
+        return;
+      }
       this.totalCards = Array.isArray(cards) ? cards.length : 0;
       this.isLoading = false;
-    }, () => {
+    }, (err) => {
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
       this.totalCards = 0;
       this.isLoading = false;
     });
     // Fetch user points
     this.api.get('/users/me').subscribe((user: any) => {
+      if (user && user.errorMessage) {
+        this.showError(user.errorMessage);
+        this.totalPoints = 0;
+        return;
+      }
       this.totalPoints = user.points || 0;
-    }, () => {
+    }, (err) => {
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
       this.totalPoints = 0;
     });
   }
@@ -149,26 +170,52 @@ export class AddCardsComponent implements OnInit {
 
   addCards() {
     if (!this.canAdd()) return;
-  const payload = { pointsToSpend: Number(this.pointsToSpend) };
-  console.log('Sending payload to /cards/add:', payload);
+    const payload = { pointsToSpend: Number(this.pointsToSpend) };
     this.api.post('/cards/add', payload).subscribe({
       next: (res: any) => {
+        if (res && res.errorMessage) {
+          this.showError(res.errorMessage);
+          return;
+        }
         this.addMsg = 'Cards Added';
         // Refresh points and cards count
         this.api.get('/users/me').subscribe((user: any) => {
+          if (user && user.errorMessage) {
+            this.showError(user.errorMessage);
+            this.totalPoints = 0;
+            return;
+          }
           this.totalPoints = user.points || 0;
         });
         this.api.get('/cards/my').subscribe((cards: any) => {
+          if (cards && cards.errorMessage) {
+            this.showError(cards.errorMessage);
+            this.totalCards = 0;
+            return;
+          }
           this.totalCards = Array.isArray(cards) ? cards.length : 0;
         });
         this.pointsToSpend = 0;
         setTimeout(() => this.addMsg = '', 2000);
       },
       error: (err) => {
-        this.addMsg = err?.error?.message || 'Failed to add cards';
+        if (err?.error?.errorMessage) {
+          this.showError(err.error.errorMessage);
+        } else {
+          this.showError('Failed to add cards');
+        }
         setTimeout(() => this.addMsg = '', 2000);
       }
     });
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   buyPoints() {

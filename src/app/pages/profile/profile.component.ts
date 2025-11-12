@@ -7,17 +7,21 @@ import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { UserDto, UpdateProfileRequest, ResponseDto } from '../../models/auth';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { TopNavComponent } from '../../shared/top-nav/top-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 
 @Component({
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, BottomNavComponent],
+    imports: [CommonModule, FormsModule, RouterModule, BottomNavComponent, TopNavComponent, ErrorNotificationComponent],
     selector: 'app-profile',
     templateUrl: './profile.component.html',
     styleUrls: ['./profile.component.css']
 })
 
 export class ProfileComponent implements OnInit {
+    showNotification = false;
+    notificationMessage = '';
     constructor(
         private api: ApiService,
         private auth: AuthService,
@@ -77,13 +81,23 @@ export class ProfileComponent implements OnInit {
         this.usernameMessage = '';
         this.api.put('/users/me/username', { newUsername: this.newUsername }).subscribe({
             next: (res: any) => {
+                if (res && res.errorMessage) {
+                    this.showError(res.errorMessage);
+                    this.usernameSuccess = false;
+                    this.isUpdatingUsername = false;
+                    return;
+                }
                 this.usernameMessage = res.message || 'Username updated successfully!';
                 this.usernameSuccess = true;
                 this.isUpdatingUsername = false;
                 this.loadProfile();
             },
             error: (err: any) => {
-                this.usernameMessage = err?.error?.message || 'Failed to update username.';
+                if (err?.error?.errorMessage) {
+                    this.showError(err.error.errorMessage);
+                } else {
+                    this.usernameMessage = err?.error?.message || 'Failed to update username.';
+                }
                 this.usernameSuccess = false;
                 this.isUpdatingUsername = false;
             }
@@ -100,6 +114,12 @@ export class ProfileComponent implements OnInit {
         this.passwordMessage = '';
         this.api.put('/users/me/password', { oldPassword: this.oldPassword, newPassword: this.newPassword }).subscribe({
             next: (res: any) => {
+                if (res && res.errorMessage) {
+                    this.showError(res.errorMessage);
+                    this.passwordSuccess = false;
+                    this.isUpdatingPassword = false;
+                    return;
+                }
                 this.passwordMessage = res.message || 'Password updated successfully!';
                 this.passwordSuccess = true;
                 this.isUpdatingPassword = false;
@@ -107,7 +127,9 @@ export class ProfileComponent implements OnInit {
                 this.newPassword = '';
             },
             error: (err: any) => {
-                if (err?.status === 403) {
+                if (err?.error?.errorMessage) {
+                    this.showError(err.error.errorMessage);
+                } else if (err?.status === 403) {
                     this.passwordMessage = 'Forbidden: Either your current password is incorrect or your session has expired. Please check your password and login again if needed.';
                 } else {
                     this.passwordMessage = err?.error?.message || 'Failed to update password.';
@@ -149,10 +171,18 @@ export class ProfileComponent implements OnInit {
         this.userRank = null;
         this.api.get('/users/me/rank').subscribe({
             next: (data: any) => {
+                if (data && data.errorMessage) {
+                    this.showError(data.errorMessage);
+                    return;
+                }
                 this.userRank = data.rank;
             },
             error: (err: any) => {
-                this.rankError = err?.error?.message || 'Could not fetch rank.';
+                if (err?.error?.errorMessage) {
+                    this.showError(err.error.errorMessage);
+                } else {
+                    this.rankError = err?.error?.message || 'Could not fetch rank.';
+                }
             }
         });
     }
@@ -161,13 +191,14 @@ export class ProfileComponent implements OnInit {
         this.isLoading = true;
         this.error = '';
 
-        console.log('Loading profile from:', `${this.api.base}/users/me`);
-        console.log('JWT Token available:', !!this.auth.getAccessToken());
-
         // Load profile data - single API call that returns everything
         this.api.get('/users/me').subscribe({
             next: (profileData: any) => {
-                console.log('Profile data received:', profileData);
+                if (profileData && profileData.errorMessage) {
+                    this.showError(profileData.errorMessage);
+                    this.isLoading = false;
+                    return;
+                }
                 this.profile = profileData as UserDto;
                 // Initialize form with current profile data
                 this.updateForm = {
@@ -176,18 +207,18 @@ export class ProfileComponent implements OnInit {
                 this.isLoading = false;
             },
             error: (error) => {
-                console.error('Failed to load profile:', error);
-                console.error('Error status:', error.status);
-                console.error('Error message:', error.message);
-                console.error('Error url:', error.url);
-                if (error.status === 0) {
-                    this.error = 'Cannot connect to server. Please check if the backend is running on port 8081.';
-                } else if (error.status === 401) {
-                    this.error = 'Authentication failed. Please login again.';
-                } else if (error.status === 403) {
-                    this.error = 'Access forbidden. Please check your permissions.';
+                if (error?.error?.errorMessage) {
+                    this.showError(error.error.errorMessage);
                 } else {
-                    this.error = `Failed to load profile: ${error.status} ${error.statusText}`;
+                    if (error.status === 0) {
+                        this.error = 'Cannot connect to server.';
+                    } else if (error.status === 401) {
+                        this.error = 'Authentication failed. Please login again.';
+                    } else if (error.status === 403) {
+                        this.error = 'Access forbidden. Please check your permissions.';
+                    } else {
+                        this.error = `Failed to load profile: ${error.status} ${error.statusText}`;
+                    }
                 }
                 this.isLoading = false;
             }
@@ -207,6 +238,12 @@ export class ProfileComponent implements OnInit {
         }
         this.api.put('/users/me/profile', formData).subscribe({
             next: (response: any) => {
+                if (response && response.errorMessage) {
+                    this.showError(response.errorMessage);
+                    this.updateSuccess = false;
+                    this.isUpdating = false;
+                    return;
+                }
                 if (response.accessToken && response.refreshToken) {
                     this.auth.setAccessToken(response.accessToken);
                     this.auth.setRefreshToken(response.refreshToken);
@@ -222,11 +259,24 @@ export class ProfileComponent implements OnInit {
                 }, 2000);
             },
             error: (error: any) => {
-                this.updateMessage = error?.error?.message || 'Failed to update profile. Please try again.';
+                if (error?.error?.errorMessage) {
+                    this.showError(error.error.errorMessage);
+                } else {
+                    this.updateMessage = error?.error?.message || 'Failed to update profile. Please try again.';
+                }
                 this.updateSuccess = false;
                 this.isUpdating = false;
             }
         });
+    }
+    showError(msg: string) {
+        this.notificationMessage = msg;
+        this.showNotification = true;
+    }
+
+    onNotificationClosed() {
+        this.showNotification = false;
+        this.notificationMessage = '';
     }
 
     resetForm() {

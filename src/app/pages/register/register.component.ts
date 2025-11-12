@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent],
+  imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   selector: 'app-register',
   templateUrl: './register.component.html'
 })
@@ -15,52 +16,62 @@ export class RegisterComponent {
   username = '';
   password = '';
   email = '';
-  msg = '';
-  isError = true;
-  
+  showNotification = false;
+  notificationMessage = '';
+
   constructor(private auth: AuthService, private router: Router) {
     // Get email from navigation state
     this.email = history.state?.email || '';
     console.log('Register component - Email:', this.email);
   }
-  register(){
+
+  register() {
     if (!this.email) {
-      this.msg = 'Email is required';
-      this.isError = true;
+      this.showError('Email is required');
       return;
     }
-    
     if (!this.username.trim()) {
-      this.msg = 'Username is required';
-      this.isError = true;
+      this.showError('Username is required');
       return;
     }
-    
     if (!this.password.trim()) {
-      this.msg = 'Password is required';
-      this.isError = true;
+      this.showError('Password is required');
       return;
     }
-    
     this.auth.register({
-      username: this.username, 
-      email: this.email, 
+      username: this.username,
+      email: this.email,
       password: this.password
     }).subscribe({
-      next: (response) => {
-        console.log('Registration successful', response);
-        this.msg = 'Registration successful! Redirecting to login...';
-        this.isError = false;
+      next: (response: any) => {
+        if (response && response.errorMessage) {
+          this.showError(response.errorMessage);
+          return;
+        }
+        this.notificationMessage = 'Registration successful! Redirecting to login...';
+        this.showNotification = true;
         setTimeout(() => {
           this.router.navigate(['/login']);
         }, 2000);
       },
       error: (e: any) => {
-        console.error('Registration failed', e);
-        this.msg = e?.error?.message || e?.message || 'Register failed';
-        this.isError = true;
+        if (e?.error?.errorMessage) {
+          this.showError(e.error.errorMessage);
+        } else {
+          this.showError(e?.error?.message || e?.message || 'Register failed');
+        }
       }
     });
+  }
+
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
   // Bottom nav logic
   bottomNavItems = [

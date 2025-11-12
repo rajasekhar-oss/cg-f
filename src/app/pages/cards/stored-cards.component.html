@@ -1,3 +1,9 @@
+<app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+<app-top-nav
+  [topNavItems]="bottomNavItems"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-top-nav>
 <div class="stored-cards-page-container">
   <div class="stored-cards-header">
     <h2>Stored Cards</h2>

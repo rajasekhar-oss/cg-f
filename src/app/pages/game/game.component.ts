@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
@@ -22,10 +23,12 @@ interface StickerAnim {
   selector: 'app-game',
   templateUrl: './game.component.html',
   styleUrls: ['./game.component.css'],
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent]
 })
 
 export class GameComponent {
+  showNotification = false;
+  notificationMessage = '';
   // Returns the username of the winner, or undefined if not found
   get winnerUsername(): string | undefined {
     if (!this.winner || !this.arrangedFullPlayers) return undefined;
@@ -342,11 +345,18 @@ export class GameComponent {
   fetchuserInfo() {
     this.api.get('/users/me').subscribe({
       next: (userData: any) => {
-        console.log("username after fetching userinfo", this.myUsername);
+        if (userData && userData.errorMessage) {
+          this.showError(userData.errorMessage);
+          return;
+        }
         this.myUsername = userData.username;
         this.myImage = userData.imageUrl;
         this.gottheusername();
-        console.log("username after fetching userinfo", this.myUsername);
+      },
+      error: (err) => {
+        if (err?.error?.errorMessage) {
+          this.showError(err.error.errorMessage);
+        }
       }
     });
   }
@@ -483,9 +493,17 @@ export class GameComponent {
   }
   fetchStickers() {
     this.api.get('/api/rooms/stickers').subscribe((stickers: any) => {
+      if (stickers && stickers.errorMessage) {
+        this.showError(stickers.errorMessage);
+        this.stickers = [];
+        return;
+      }
       this.stickers = stickers as Array<{ id: number, name: string; imageUrl: string }>;
     }, err => {
-      console.error('Error fetching stickers:', err);
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
+      this.stickers = [];
     });
   }
   get filteredStickers() {
@@ -518,11 +536,17 @@ export class GameComponent {
     if (!this.roomCode || (!selectedStickerId && !message)) return;
     this.api.post(`/api/rooms/${this.roomCode}/stickers/send?id=${selectedStickerId}&recipients=${this.stickerRecipient.join(',')}&message=${message}`, null).subscribe({
       next: (res: any) => {
+        if (res && res.errorMessage) {
+          this.showError(res.errorMessage);
+          return;
+        }
         this.message = '';
         this.selectedStickerId = 0;
       },
       error: (err) => {
-        console.error('[Sticker] Failed to send sticker:', err);
+        if (err?.error?.errorMessage) {
+          this.showError(err.error.errorMessage);
+        }
       },
     });
   }
@@ -550,6 +574,10 @@ export class GameComponent {
   fetchGameInfo(roomCode: string) {
     const path = `/api/rooms/${roomCode}/state`;
     this.api.get(path).subscribe((info: any) => {
+      if (info && info.errorMessage) {
+        this.showError(info.errorMessage);
+        return;
+      }
       this.usernames = Array.isArray(info.usernames)
         ? info.usernames.filter((uname: string) => uname !== this.myUsername)
         : [];
@@ -572,17 +600,36 @@ export class GameComponent {
       }
       this.isAdmin = info && info.creatorId && this.myUserId && info.creatorId.toString() === this.myUserId;
     }, err => {
-      console.error('Error fetching room info:', err);
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
     });
   }
 
   fetchMyCards() {
     const path = '/cards/my';
     this.api.get(path).subscribe((cards: any) => {
+      if (cards && cards.errorMessage) {
+        this.showError(cards.errorMessage);
+        this.myCards = [];
+        return;
+      }
       this.myCards = cards;
     }, err => {
-      console.error('Error fetching cards:', err);
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
+      this.myCards = [];
     });
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
   displayStickers() {
     if (this.stickers) {

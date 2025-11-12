@@ -4,7 +4,7 @@
   <input [(ngModel)]="username" placeholder="Username" />
   <input [(ngModel)]="password" placeholder="Password" type="password"/>
   <button (click)="register()">Register</button>
-  <div *ngIf="msg" [style.color]="isError ? 'red' : 'green'">{{msg}}</div>
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 </div>
 
 <app-bottom-nav

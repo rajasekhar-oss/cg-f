@@ -1,5 +1,6 @@
 import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { ApiService } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { AuthService } from '../../services/auth.service';
@@ -9,9 +10,11 @@ import { Router } from '@angular/router';
   selector: 'app-find-stranger',
   templateUrl: './find-stranger.component.html',
   styleUrls: ['./find-stranger.component.css'],
-  imports: [CommonModule]
+  imports: [CommonModule, ErrorNotificationComponent]
 })
 export class FindStrangerComponent implements OnDestroy {
+  showNotification = false;
+  notificationMessage = '';
   status: 'idle' | 'searching' | 'matched' | 'timeout' = 'idle';
   message = '';
   private wsSub: any = null;
@@ -35,13 +38,32 @@ export class FindStrangerComponent implements OnDestroy {
     console.log('[FindStranger] Access token before matchmaking:', token);
     this.status = 'searching';
     this.message = 'Searching for a stranger to play with...';
-  this.api.post('/api/matchmaking/find', null).subscribe({
-      next: () => {},
-      error: () => {
+    this.api.post('/api/matchmaking/find', null).subscribe({
+      next: (res: any) => {
+        if (res && res.errorMessage) {
+          this.showError(res.errorMessage);
+          this.status = 'idle';
+          this.message = '';
+          return;
+        }
+      },
+      error: (err) => {
+        if (err?.error?.errorMessage) {
+          this.showError(err.error.errorMessage);
+        }
         this.status = 'idle';
         this.message = 'Failed to start matchmaking.';
       }
     });
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   subscribeToMatchTopic() {

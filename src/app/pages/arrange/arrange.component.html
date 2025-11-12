@@ -1,5 +1,9 @@
-
-<button *ngIf="showNotification" class="notification-anim-btn">{{ notificationMessage }}</button>
+<app-top-nav
+  [topNavItems]="bottomNavItems"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-top-nav>
+<app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 <div class="cards-page-container">
   <div class="cards-header">
     <div class="cards-header-main">

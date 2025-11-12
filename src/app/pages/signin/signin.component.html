@@ -1,7 +1,7 @@
 <div>
   <h2>Sign In</h2>
   <input [(ngModel)]="email" placeholder="Enter email" [disabled]="loading" />
-  <div *ngIf="error" style="color:red">{{error}}</div>
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
   <div *ngIf="loading" style="color:blue">Sending OTP...</div>
 
   <button (click)="send()" [disabled]="loading">

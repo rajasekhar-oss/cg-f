@@ -1,8 +1,8 @@
+<app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 
 <div class="login-container">
   <h3 class="login-title">Login</h3>
   <input [(ngModel)]="username" placeholder="Email or Username" class="login-input" />
   <input [(ngModel)]="password" placeholder="Password" type="password" class="login-input" />
   <button (click)="login()" class="login-btn">Login</button>
-  <div *ngIf="err" class="login-error">{{err}}</div>
 </div>

@@ -4,10 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent],
+  imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   selector: 'app-verify-otp',
   templateUrl: './verify-otp.component.html'
 })
@@ -15,35 +16,51 @@ export class VerifyOtpComponent {
   otp = '';
   email = '';
   emailInput = '';
-  err = '';
-  
+  showNotification = false;
+  notificationMessage = '';
+
   constructor(private auth: AuthService, private router: Router) {
     // Try to get email from router state
     this.email = history.state?.email || '';
     console.log('Email from navigation state:', this.email);
   }
-  
-  verify(){
+
+  verify() {
     const emailToUse = this.email || this.emailInput;
     if (!emailToUse) {
-      this.err = 'Email is required';
+      this.showError('Email is required');
       return;
     }
-    
     this.auth.verifyOtp(emailToUse, this.otp).subscribe({
-      next: (response) => {
-        console.log('OTP verified successfully', response);
-        this.router.navigate(['/register'], { 
-          state: { 
+      next: (response: any) => {
+        if (response && response.errorMessage) {
+          this.showError(response.errorMessage);
+          return;
+        }
+        this.router.navigate(['/register'], {
+          state: {
             email: emailToUse
-          } 
+          }
         });
       },
       error: (e: any) => {
-        console.error('OTP verification failed', e);
-        this.err = 'Invalid OTP';
+        if (e?.error?.errorMessage) {
+          this.showError(e.error.errorMessage);
+        } else {
+          this.showError('Invalid OTP');
+        }
       }
     });
+  }
+
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
   // Bottom nav logic
   bottomNavItems = [

@@ -1,0 +1,36 @@
+<div class="top-nav">
+  <div class="top-nav-content">
+    <div class="top-nav-left">
+      <h1 class="top-nav-title" (click)="navigate('/')" style="cursor:pointer;">CardGame</h1>
+    </div>
+    <div class="top-nav-right">
+      <div class="top-nav-items">
+        <button 
+          *ngFor="let item of topNavItems"
+          (click)="navigate(item.route)"
+          [class.active]="isActiveRoute(item.route)">
+          {{ item.label }}
+        </button>
+      </div>
+      <div class="top-nav-game-request-wrapper" style="position:relative;">
+        <button class="top-nav-notification-btn" (click)="toggleDropdown()">
+          🎮
+          <span class="top-nav-notification-badge" *ngIf="requestCount > 0">{{ requestCount }}</span>
+        </button>
+        <div class="game-request-dropdown" *ngIf="showDropdown" style="position:absolute; right:0; top:40px; background:white; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); min-width:260px; z-index:100;">
+          <div *ngIf="requestCount === 0" style="padding:16px; color:#6b7280; text-align:center;">No game requests</div>
+          <div *ngFor="let req of requests" class="game-request-item" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #f3f4f6;">
+            <img *ngIf="req.imageUrl" [src]="req.imageUrl" alt="profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #e5e7eb;" />
+            <div *ngIf="!req.imageUrl" style="width:36px; height:36px; border-radius:50%; background:#e0e7ff; display:flex; align-items:center; justify-content:center; font-weight:700; color:#6366f1;">
+              {{ req.username ? req.username.charAt(0).toUpperCase() : '?' }}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600; color:#1f2937;">{{ req.username }}</div>
+            </div>
+            <button (click)="joinGame(req)" style="background:#3b82f6; color:white; border:none; border-radius:6px; padding:6px 12px; font-size:14px; cursor:pointer;">Join Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

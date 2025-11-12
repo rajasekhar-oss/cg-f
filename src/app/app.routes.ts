@@ -19,7 +19,6 @@ import { PlaceholderComponent } from './pages/placeholder.component';
 import { CreateRoomComponent } from './pages/gang-play/create-room.component';
 import { RankingsComponent } from './pages/leaderboard/rankings.component';
 import { adminRoutes } from './pages/admin/admin.routes';
-import { userTodoRoutes } from './pages/user-todo/user-todo.routes';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -46,6 +45,5 @@ export const routes: Routes = [
   { path: 'leaderboard', component: RankingsComponent },
   { path: 'friends', component: PlaceholderComponent },
   ...adminRoutes,
-  ...userTodoRoutes,
   { path: '**', redirectTo: '' }
 ];

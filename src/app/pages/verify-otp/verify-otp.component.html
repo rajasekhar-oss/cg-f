@@ -4,7 +4,7 @@
   <input [(ngModel)]="emailInput" placeholder="Email" *ngIf="!email"/>
   <input [(ngModel)]="otp" placeholder="123456"/>
   <button (click)="verify()">Verify</button>
-  <div *ngIf="err" style="color:red">{{err}}</div>
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 </div>
 
 <app-bottom-nav

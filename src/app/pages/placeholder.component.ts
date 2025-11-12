@@ -1,13 +1,18 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-  import { BottomNavComponent } from '../shared/bottom-nav.component';
-
+import { BottomNavComponent } from '../shared/bottom-nav.component';
+// import { TopNavComponent } from '../shared/top-nav/top-nav.component';
+import { TopNavComponent } from '../shared/top-nav/top-nav.component';
 @Component({
   standalone: true,
-  imports: [CommonModule, BottomNavComponent],
+  imports: [CommonModule, BottomNavComponent, TopNavComponent],
   selector: 'app-placeholder',
   template: `
+  <app-top-nav
+      [topNavItems]="bottomNavItems"
+      [isActiveRoute]="isActiveRoute.bind(this)"
+      [navigate]="navigate.bind(this)"
+    ></app-top-nav>
     <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
       <div class="text-center">
         <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">{{ title }}</h1>
@@ -29,6 +34,7 @@ import { CommonModule } from '@angular/common';
 })
 export class PlaceholderComponent {
   title = 'Page';
+
   
   constructor() {
     // Set title based on current route

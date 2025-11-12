@@ -117,10 +117,16 @@
   .bottom-nav {
     display: block !important;
   }
+  .mobile-nav-bar{
+    display: block !important;
+  }
 }
 
 @media (min-width: 1025px) {
   .bottom-nav {
+    display: none !important;
+  }
+  .mobile-nav-bar{
     display: none !important;
   }
 }
@@ -128,6 +134,9 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .bottom-nav {
+    display: block !important;
+  }
+  .mobile-nav-bar{
     display: block !important;
   }
   

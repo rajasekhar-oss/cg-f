@@ -4,12 +4,14 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ApiService } from '../../services/api.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { TopNavComponent } from '../../shared/top-nav/top-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { Router } from '@angular/router';
 import { NotificationService } from '../../services/notification.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, DragDropModule, BottomNavComponent],
+  imports: [CommonModule, DragDropModule, BottomNavComponent, TopNavComponent, ErrorNotificationComponent],
   selector: 'app-arrange',
   templateUrl: './arrange.component.html',
   styleUrls: ['./arrange.component.css']
@@ -33,10 +35,39 @@ export class ArrangeComponent {
       this.fromWaitingRoom = true;
       this.roomCode = state.roomCode || '';
     }
-    this.api.get('/cards/my').subscribe((r: any) => {
-        this.cards = r.sort((a: any, b: any) => a.orderIndex - b.orderIndex);
-        this.manualOrder = this.cards.map(c => c.id); // Default: all selected in order
-      });
+    this.api.get('/cards/my').subscribe(
+      (r: any) => {
+        if (r && r.errorMessage) {
+          this.showError(r.errorMessage);
+          this.cards = [];
+          this.manualOrder = [];
+          return;
+        }
+        if (Array.isArray(r)) {
+          this.cards = r.sort((a: any, b: any) => a.orderIndex - b.orderIndex);
+          this.manualOrder = this.cards.map(c => c.id);
+        } else {
+          this.showError('Error loading cards.');
+          this.cards = [];
+          this.manualOrder = [];
+        }
+      },
+      (err: any) => {
+        this.showError('Error loading cards.');
+        this.cards = [];
+        this.manualOrder = [];
+      }
+    );
+  }
+
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
   // Smart drop logic for grid: move to the index closest to pointer
   drop(event: CdkDragDrop<any[]>) {
@@ -128,14 +159,25 @@ export class ArrangeComponent {
     } else {
       order = this.cards.map(c => c.id);
     }
-    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(() => {
-      this.notification.show('Order changed successfully');
-      if (this.fromWaitingRoom) {
-        window.history.back();
+    this.api.post('/cards/arrange', { cardOrder: order }).subscribe(
+      (r: any) => {
+        if (r && r.errorMessage) {
+          this.showError(r.errorMessage);
+          return;
+        }
+        this.notification.show('Order changed successfully');
+        if (this.fromWaitingRoom) {
+          window.history.back();
+        }
+      },
+      (err: any) => {
+        if (err?.error?.errorMessage) {
+          this.showError(err.error.errorMessage);
+        } else {
+          this.showError('Error saving card order.');
+        }
       }
-    }, (err: any) => {
-      this.notification.show('Error saving card order.');
-    });
+    );
   }
 
   // Bottom nav logic

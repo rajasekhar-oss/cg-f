@@ -1,24 +1,11 @@
+<app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
           <!-- Remove duplicate file upload input -->
 <!-- Navigation Bar -->
-<nav class="nav fixed-nav">
-  <div class="container nav-content">
-    <div>
-      <h1 class="nav-brand">CardGame</h1>
-    </div>
-    <div class="nav-actions">
-      <button 
-        (click)="goBack()"
-        class="btn btn-secondary nav-btn">
-        ← Back
-      </button>
-      <button 
-        (click)="logout()"
-        class="btn btn-primary nav-btn logout-btn">
-        Logout
-      </button>
-    </div>
-  </div>
-</nav>
+ <app-top-nav
+  [topNavItems]="bottomNavItems"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-top-nav>
 
 <!-- Main Content -->
 <div class="main-content">
@@ -169,3 +156,10 @@
           </div>
         </form>
       </div>
+<div class="logout-container" style="display: flex; justify-content: flex-end; margin: 16px 0;">
+  <button 
+    (click)="logout()"
+    class="btn btn-primary logout-btn">
+    Logout
+  </button>
+</div>

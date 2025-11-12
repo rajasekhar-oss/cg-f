@@ -1,15 +1,17 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-join-room',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent],
   template: `
-    <div class="join-room-container">
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+  <div class="join-room-container">
       <h2>Join Game Room</h2>
       <div *ngIf="error" class="error-banner">{{ error }}</div>
       <div class="input-section">
@@ -75,6 +77,8 @@ import { Router } from '@angular/router';
   `]
 })
 export class JoinRoomComponent implements OnDestroy {
+  showNotification = false;
+  notificationMessage = '';
   roomCode: string = '';
   roomInfo: any = null;
   isLoading = false;
@@ -93,6 +97,11 @@ export class JoinRoomComponent implements OnDestroy {
     if (this.sub) this.sub.unsubscribe && this.sub.unsubscribe();
     this.sub = this.api.post(`/api/rooms/${this.roomCode}/join`, {}).subscribe({
       next: (res: any) => {
+        if (res && res.errorMessage) {
+          this.showError(res.errorMessage);
+          this.isLoading = false;
+          return;
+        }
         this.roomInfo = res;
         this.isLoading = false;
         this.joinedUsernames = res.joinedPlayersUsernames || [];
@@ -105,10 +114,23 @@ export class JoinRoomComponent implements OnDestroy {
         }
       },
       error: (e: any) => {
-        this.error = 'Error joining room';
+        if (e?.error?.errorMessage) {
+          this.showError(e.error.errorMessage);
+        } else {
+          this.showError('Error joining room');
+        }
         this.isLoading = false;
       }
     });
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   ngOnDestroy() {

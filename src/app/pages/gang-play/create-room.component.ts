@@ -1,15 +1,17 @@
 import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-create-room',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent],
   template: `
-    <div class="create-room-container">
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+  <div class="create-room-container">
       <h2>Create Gang Play Room</h2>
       <div class="input-section">
         <label for="numPlayers">Number of People</label>
@@ -33,6 +35,8 @@ import { Router } from '@angular/router';
   `]
 })
 export class CreateRoomComponent implements OnDestroy {
+  showNotification = false;
+  notificationMessage = '';
   numPlayers: number = 2;
   isLoading = false;
   error = '';
@@ -46,6 +50,11 @@ export class CreateRoomComponent implements OnDestroy {
     this.error = '';
     const sub = this.api.post('/api/rooms/create', { requiredPlayers: this.numPlayers }).subscribe({
       next: (res: any) => {
+        if (res && res.errorMessage) {
+          this.showError(res.errorMessage);
+          this.isLoading = false;
+          return;
+        }
         this.roomInfo = res;
         this.isLoading = false;
         const code = res?.roomCode || '';
@@ -53,11 +62,24 @@ export class CreateRoomComponent implements OnDestroy {
         this.router.navigate(['/gang-play/waiting', code], { state: { roomInfo: res } });
       },
       error: (e) => {
-        this.error = e?.error?.error || e?.message || 'Error creating game';
+        if (e?.error?.errorMessage) {
+          this.showError(e.error.errorMessage);
+        } else {
+          this.showError(e?.error?.error || e?.message || 'Error creating game');
+        }
         this.isLoading = false;
       }
     });
     this.subscriptions.push(sub);
+  }
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   ngOnDestroy() {

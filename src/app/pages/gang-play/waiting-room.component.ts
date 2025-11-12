@@ -3,7 +3,8 @@ import { RoomInfoDto } from '../../models/room-info.model';
 import { RoomResponse } from '../../models/room-response.model';
 import { environment } from '../../../environments/environment';
 import { Component, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
@@ -14,7 +15,7 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 @Component({
   selector: 'app-waiting-room',
   standalone: true,
-  imports: [CommonModule, NgClass],
+  imports: [CommonModule, FormsModule],
   styleUrls: ['./waiting-room.component.css'],
   template: `
     <!-- Custom Confirmation Modal -->
@@ -49,6 +50,37 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
         <div class="custom-modal-message">The room has been deleted. You will be redirected to the home page.</div>
       </div>
     </div>
+
+    <!-- Error Modal -->
+    <div class="custom-modal-overlay" *ngIf="showErrorModal">
+      <div class="custom-modal">
+        <div class="custom-modal-title">Error</div>
+        <div class="custom-modal-message">{{ error }}</div>
+        <div class="custom-modal-actions">
+          <button class="modal-btn confirm" (click)="closeErrorModal()">OK</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invite/Search Modal -->
+    <div class="custom-modal-overlay" *ngIf="showInviteModal">
+      <div class="custom-modal">
+        <div class="custom-modal-title">Invite Players</div>
+        <input type="text" [(ngModel)]="inviteSearch" (input)="filterInviteUsers()" placeholder="Search username..." class="invite-search-bar" />
+        <div *ngIf="isInviteLoading" class="modal-loading">Loading...</div>
+        <div *ngIf="!isInviteLoading && filteredInviteUsers.length === 0" class="modal-empty">No users found.</div>
+        <div *ngIf="!isInviteLoading && filteredInviteUsers.length > 0" class="invite-list">
+          <div class="invite-user" *ngFor="let user of filteredInviteUsers">
+            <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
+            <span class="invite-user-name">{{ user.userName }}</span>
+            <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
+          </div>
+        </div>
+        <div class="custom-modal-actions">
+          <button class="modal-btn cancel" (click)="showInviteModal = false">Close</button>
+        </div>
+      </div>
+    </div>
     <div class="waiting-room-container">
       <div class="room-info">
         <div class="room-code">Room Code: <span>{{ roomInfo?.roomCode || roomCode }}</span></div>
@@ -76,6 +108,13 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 export class WaitingRoomComponent implements OnInit, OnDestroy {
   showRoomDeletedModal = false;
   roomEnded: boolean = false;
+
+  // Invite/Search modal state
+  showInviteModal = false;
+  inviteUsers: Array<{ userName: string; pictureUrl: string }> = [];
+  filteredInviteUsers: Array<{ userName: string; pictureUrl: string }> = [];
+  isInviteLoading = false;
+  inviteSearch: string = '';
 
   /**
    * Shows the leave/end room modal and returns a Promise that resolves to true if the user confirms, false otherwise.
@@ -124,6 +163,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   private wsStartSub: any = null;
   // Removed showOptions, not needed for individual buttons
   error: string = '';
+  showErrorModal: boolean = false;
+  private errorModalTimeout: any = null;
   isLoading: boolean = false;
   roomInfo: RoomInfoDto | null = null;
   roomResponse: RoomResponse | null = null;
@@ -195,6 +236,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.showErrorModal = false;
+    if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
     console.log('[WaitingRoom] ngOnInit called');
     const nav = this.router.getCurrentNavigation();
     let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
@@ -216,15 +259,30 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         const apiPath = `/api/rooms/${this.roomCode}/info`;
         const sub = this.api.get(apiPath).subscribe({
           next: (res: any) => {
+            if( res && res.errorMessage) {
+              this.showErrorModal = true;
+              this.roomEnded=true;
+              if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
+              this.errorModalTimeout = setTimeout(() => {
+                this.showErrorModal = false;
+              }, 5000);
+              this.router.navigateByUrl('/', { replaceUrl: true });
+            }
             this.roomInfo = res;
             this.requiredPlayers = res.requiredPlayers;
             this.joinedPlayersUsernames = res.joinedPlayersUsernames || [];
             this.isLoading = false;
             this.isCreator = res.creatorId === this.currentUserId;
+            this.error=res.message;
             console.log('[WaitingRoom] Fetched roomInfo from API:', this.roomInfo);
           },
           error: (e: any) => {
             this.error = e?.error?.error || e?.message || 'Error fetching room info';
+            this.showErrorModal = true;
+            if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
+            this.errorModalTimeout = setTimeout(() => {
+              this.showErrorModal = false;
+            }, 5000);
             this.isLoading = false;
           }
         });
@@ -237,20 +295,20 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       // Always connect to WebSocket for live updates
       this.ws.connectToRoom(this.roomCode);
 
-  // Subscribe to /start topic for all players
-  const startTopics = `/topic/rooms/${this.roomCode}/start`;
-  this.ws.connectAndSubscribe(startTopics);
-  console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
+      // Subscribe to /start topic for all players
+      const startTopics = `/topic/rooms/${this.roomCode}/start`;
+      this.ws.connectAndSubscribe(startTopics);
+      console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
 
-  // Subscribe to room-level topic for room events (e.g., room_deleted)
-  const roomTopic = `/topic/rooms/${this.roomCode}`;
-  this.ws.connectAndSubscribe(roomTopic);
-  console.log('[WaitingRoom] Subscribed to WebSocket topic for room events:', roomTopic);
+      // Subscribe to room-level topic for room events (e.g., room_deleted)
+      const roomTopic = `/topic/rooms/${this.roomCode}`;
+      this.ws.connectAndSubscribe(roomTopic);
+      console.log('[WaitingRoom] Subscribed to WebSocket topic for room events:', roomTopic);
 
       // DEBUG: Log all WebSocket messages to verify receipt
       this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
-  console.log('[WaitingRoom] WebSocket connection status:', connected);
-});
+        console.log('[WaitingRoom] WebSocket connection status:', connected);
+      });
       this.ws.messages$.subscribe((msg: any) => {
         console.log('[WaitingRoom] (DEBUG) Raw WebSocket message:', msg);
         if (msg.message === "game started" && this.roomCode) {
@@ -312,6 +370,10 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       });
     });
   }
+  closeErrorModal() {
+    this.showErrorModal = false;
+    if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
+  }
 
   fetchRoomInfo(roomCode: string) {
     console.log('[WaitingRoom] Fetching room info for:', roomCode);
@@ -365,7 +427,54 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   openInvite() {
-    // TODO: Implement invite/search logic
+    this.showInviteModal = true;
+    this.isInviteLoading = true;
+    this.inviteSearch = '';
+    this.api.get('/request').subscribe({
+      next: (users: any) => {
+        this.inviteUsers = users;
+        this.filterInviteUsers();
+        this.isInviteLoading = false;
+      },
+      error: () => {
+        this.inviteUsers = [];
+        this.filteredInviteUsers = [];
+        this.isInviteLoading = false;
+      }
+    });
+  }
+
+  filterInviteUsers() {
+    const search = this.inviteSearch.trim().toLowerCase();
+    if (!search) {
+      this.filteredInviteUsers = this.inviteUsers.slice();
+    } else {
+      this.filteredInviteUsers = this.inviteUsers.filter(u => u.userName.toLowerCase().includes(search));
+    }
+  }
+
+  inviteUser(user: { userName: string; pictureUrl: string }) {
+    if (!user || !user.userName || !this.roomCode) return;
+    this.isInviteLoading = true;
+    this.api.post(`/request/${user.userName}/${this.roomCode}`, {}).subscribe({
+      next: (res: any) => {
+        this.showInviteModal = false;
+        this.isInviteLoading = false;
+        if (res && res.message !== "Request sent successfully") {
+          this.error = res && res.message ? res.message : 'Failed to send invite.';
+          this.showErrorModal = true;
+        } else {
+          // Optionally show a success message in the UI, e.g. with a temporary banner or modal
+          // For now, do nothing or you can set a success property if you want to show a message
+        }
+      },
+      error: (err: any) => {
+        this.showInviteModal = false;
+        this.isInviteLoading = false;
+        this.error = err?.error?.message || err?.message || 'Unknown error';
+        this.showErrorModal = true;
+      }
+    });
   }
 
   showConfirmModal = false;
@@ -415,6 +524,10 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     const path = `/api/rooms/${this.roomCode}/delete`;
     const sub = this.api.post(path, {}).subscribe({
       next: (res: any) => {
+        if( res && res.errorMessage && res.errorMessage=="Only creator can delete the room") {
+          this.showErrorModal = true;
+          return;
+        }
         console.log('[WaitingRoom] deleteRoom response:', res);
         this.isLoading = false;
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }

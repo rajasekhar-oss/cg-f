@@ -5,12 +5,20 @@ import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { PlayerRankDto } from '../../interfaces/player-rank-dto';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
+import { TopNavComponent } from '../../shared/top-nav/top-nav.component';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   selector: 'app-rankings',
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent],
+  imports: [CommonModule, FormsModule, BottomNavComponent, TopNavComponent, ErrorNotificationComponent],
   template: `
+  <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+  <app-top-nav
+      [topNavItems]="bottomNavItems"
+      [isActiveRoute]="isActiveRoute.bind(this)"
+      [navigate]="navigate.bind(this)"
+    ></app-top-nav>
     <div class="rankings-page">
       <input class="rankings-search" [(ngModel)]="search" placeholder="Search players by name..." />
       <div class="rankings-header-row">
@@ -46,6 +54,14 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
           <span class="rankings-rank">{{player.rank}}</span>
           <span class="rankings-cards">{{player.cardsCount}}</span>
         </div>
+      </div>
+      <div class="rankings-pagination">
+        <button class="pagination-button" *ngIf="hasPrevPage" (click)="prevPage()">
+          &#8592; Previous
+        </button>
+        <button class="pagination-button" *ngIf="hasNextPage" (click)="nextPage()">
+          Next &#8594;
+        </button>
       </div>
     </div>
     <app-bottom-nav
@@ -188,12 +204,36 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
       font-size: 2vw;
       text-align: center;
     }
+    .rankings-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 2vw 0;
+    }
+    .pagination-button {
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 1vw;
+      padding: 1vw 2vw;
+      font-size: 2vw;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .pagination-button:hover {
+      background: #4f46e5;
+    }
   `]
 })
 export class RankingsComponent implements OnInit {
+  showNotification = false;
+  notificationMessage = '';
+  notificationCount = 0;
+  onNotificationsClick = () => {
+    this.navigate('/notifications');
+  };
   players: PlayerRankDto[] = [];
   search: string = '';
-
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
@@ -201,18 +241,71 @@ export class RankingsComponent implements OnInit {
     { label: 'Person', route: '/friends' },
     { label: 'Profile', route: '/profile' }
   ];
+  page = 0;
+  size = 10;
+  hasNextPage = false;
+  hasPrevPage = false;
+  totalLoaded = 0;
 
   constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit() {
-    this.api.get('/api/players/ranks').subscribe((data: any) => {
+    this.loadPage(0);
+  }
+
+  loadPage(page: number) {
+    this.api.get(`/api/players/ranks?page=${page}&size=${this.size}`).subscribe((data: any) => {
+      if (data && data.errorMessage) {
+        this.showError(data.errorMessage);
+        this.players = [];
+        this.hasNextPage = false;
+        this.hasPrevPage = page > 0;
+        return;
+      }
       this.players = data;
+      this.page = page;
+      this.hasPrevPage = page > 0;
+      this.hasNextPage = Array.isArray(data) && data.length === this.size;
+      this.totalLoaded = page * this.size;
+    }, (err) => {
+      if (err?.error?.errorMessage) {
+        this.showError(err.error.errorMessage);
+      }
+      this.players = [];
+      this.hasNextPage = false;
+      this.hasPrevPage = page > 0;
     });
+  }
+
+  nextPage() {
+    if (this.hasNextPage) {
+      this.loadPage(this.page + 1);
+    }
+  }
+
+  prevPage() {
+    if (this.hasPrevPage) {
+      this.loadPage(this.page - 1);
+    }
+  }
+
+  showError(msg: string) {
+    this.notificationMessage = msg;
+    this.showNotification = true;
+  }
+
+  onNotificationClosed() {
+    this.showNotification = false;
+    this.notificationMessage = '';
   }
 
   filteredPlayers() {
     if (!this.search) return this.players;
     return this.players.filter(p => p.username?.toLowerCase().includes(this.search.toLowerCase()));
+  }
+
+  getRankForIndex(i: number): number {
+    return this.page * this.size + i + 1;
   }
 
   getIconForRoute(route: string): string {
