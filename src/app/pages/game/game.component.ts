@@ -319,6 +319,12 @@ export class GameComponent {
   updateGameState(msg: any) {
     this.players = msg.players;
     this.myCards = msg.myCards;
+    if(this.myCards.length <1) {
+      this.showError("You have no cards left! You are out of the game.");
+      setTimeout(() => {
+        this.leaveGame();
+      }, 1500); // Wait 1.5 seconds so user sees the error
+    }
     this.currentroundplayers = msg.currentRoundPlays;
     this.previousRoundCards = msg.currentRoundCards;
     if (this.winnerTimeout) {
@@ -615,6 +621,12 @@ export class GameComponent {
         return;
       }
       this.myCards = cards;
+      if(cards.length <1) {
+        this.showError("You have no cards left! You are out of the game.");
+        setTimeout(() => {
+        this.leaveGame();
+      }, 1500); 
+      }
     }, err => {
       if (err?.error?.errorMessage) {
         this.showError(err.error.errorMessage);
