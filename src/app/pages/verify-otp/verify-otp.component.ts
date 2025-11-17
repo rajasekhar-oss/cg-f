@@ -10,7 +10,8 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
   standalone: true,
   imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   selector: 'app-verify-otp',
-  templateUrl: './verify-otp.component.html'
+  templateUrl: './verify-otp.component.html',
+  styleUrls: ['./verify-otp.component.css']
 })
 export class VerifyOtpComponent {
   otp = '';

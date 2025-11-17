@@ -1,62 +1,57 @@
 <!-- Navigation Bar -->
-<nav class="nav">
+<nav class="nav" style="background: var(--bg-1, #fff); box-shadow: none; border-bottom: 1px solid var(--border-1, #e5e7eb);">
   <div class="container nav-content">
     <!-- Left: Game Name -->
     <div>
-      <h1 class="nav-brand">CardGame</h1>
+      <h1 class="nav-brand" style="color: var(--blue-2, #2563eb);">CardGame</h1>
     </div>
-    
     <!-- Right: Empty for not logged in users -->
-    <div class="nav-actions">
-      <!-- No notifications button when not logged in -->
-    </div>
+    <div class="nav-actions"></div>
   </div>
 </nav>
 
 <!-- Main Content -->
-<div class="main-content">
+<div class="main-content" style="background: var(--bg-1, #fff);">
   <div class="container">
-    
     <!-- Main Section -->
     <div class="text-center mb-8">
-      <h2 style="font-size: 2.5rem; font-weight: bold; margin-bottom: 2rem; color: #111827;">
+      <h2 style="font-size: 2.5rem; font-weight: bold; margin-bottom: 2rem; color: var(--text-1, #111827);">
         Login or Sign In to Play
       </h2>
-      
       <!-- Auth Buttons -->
       <div class="flex justify-center space-x-4">
         <button 
           (click)="navigate('/login')"
-          class="btn btn-primary">
+          class="btn btn-primary"
+          style="background: var(--blue-2); color: var(--text-on-primary, #fff); border-radius: 8px; border: none; font-weight: 600;">
           Login
         </button>
         <button 
           (click)="navigate('/signin')"
-          class="btn btn-success">
+          class="btn btn-success"
+          style="background: var(--green-2, #10b981); color: var(--text-on-primary, #fff); border-radius: 8px; border: none; font-weight: 600;">
           Sign In
         </button>
       </div>
     </div>
-
     <!-- Game Mode Cards -->
-    <div class="grid grid-cols-4">
+    <!-- <div class="grid grid-cols-4">
       <div 
         *ngFor="let mode of gameModes" 
         class="card disabled text-center">
-        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: #e5e7eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: var(--bg-3, #e5e7eb); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-2, #374151);">
           {{ mode.icon }}
         </div>
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #374151;">{{ mode.title }}</h3>
-        <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">{{ mode.description }}</p>
-        <div class="text-error" style="font-size: 12px; font-weight: 500;">Login Required</div>
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-2, #374151);">{{ mode.title }}</h3>
+        <p style="font-size: 14px; color: var(--text-3, #6b7280); margin-bottom: 16px;">{{ mode.description }}</p>
+        <div class="text-error" style="font-size: 12px; font-weight: 500; color: var(--error);">Login Required</div>
       </div>
-    </div>
-
+    </div> -->
     <!-- Info Section -->
-    <div style="margin-top: 4rem; text-align: center;">
-      <p style="color: #6b7280; font-size: 18px;">
+    <!-- <div style="margin-top: 4rem; text-align: center;">
+      <p style="color: var(--text-3, #6b7280); font-size: 18px;">
         Join thousands of players and experience the ultimate card game!
       </p>
-    </div>
+    </div> -->
   </div>
 </div>

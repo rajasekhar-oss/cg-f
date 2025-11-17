@@ -21,13 +21,16 @@ import { Router } from '@angular/router';
       <button  [disabled]="roomCode.length !== 6" class="join-btn" (click)="joinRoom()">Join Room</button>
   `,
   styles: [`
-    .join-room-container { max-width: 420px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; text-align: center; }
+    .join-room-container { max-width: 420px; margin: 40px auto; background: var(--bg-1, #fff); border-radius: 16px; box-shadow: none; padding: 32px; text-align: center; border: 1px solid var(--border-1, #e5e7eb); }
+    .join-room-container:hover { box-shadow: 0 4px 24px var(--shadow-1, rgba(0,0,0,0.08)); }
     .input-section { margin-bottom: 18px; }
-    label { font-weight: 600; color: #374151; margin-bottom: 8px; display: block; }
-    input[type=text] { padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; font-size: 1.1rem; width: 100%; margin-top: 4px; }
-    .join-btn { margin-top: 12px; padding: 12px 0; font-size: 1.1rem; border-radius: 10px; background: linear-gradient(90deg, #8b5cf6 60%, #3b82f6 100%); color: white; border: none; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; width: 100%; }
-    .room-info { margin-top: 24px; background: #f3f4f6; border-radius: 8px; padding: 16px; }
-    .info-item { font-size: 1.1rem; color: #1f2937; margin-bottom: 8px; }
+    label { font-weight: 600; color: var(--text-2, #374151); margin-bottom: 8px; display: block; }
+    input[type=text] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-1, #d1d5db); font-size: 1.1rem; width: 100%; margin-top: 4px; background: var(--bg-2, #fff); color: var(--text-1, #111827); }
+    .join-btn { margin-top: 12px; padding: 12px 0; font-size: 1.1rem; border-radius: 10px; background: linear-gradient(90deg, var(--blue-3, #8b5cf6) 60%, var(--blue-2, #3b82f6) 100%); color: var(--text-on-primary, #fff); border: none; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; width: 100%; box-shadow: none; transition: box-shadow 0.2s; }
+    .join-btn:hover:not(:disabled) { box-shadow: 0 2px 8px var(--shadow-1, rgba(0,0,0,0.08)); }
+    .join-btn:disabled { background: var(--bg-3, #ccc); color: var(--text-3, #666); cursor: not-allowed; opacity: 0.6; box-shadow: none; }
+    .room-info { margin-top: 24px; background: var(--bg-3, #f3f4f6); border-radius: 8px; padding: 16px; }
+    .info-item { font-size: 1.1rem; color: var(--text-1, #1f2937); margin-bottom: 8px; }
     .joined-cards {
       display: flex;
       flex-wrap: wrap;
@@ -35,43 +38,35 @@ import { Router } from '@angular/router';
       margin-top: 10px;
       justify-content: center;
     }
-      .join-btn:disabled {
-  background-color: #ccc;   /* dull gray */
-  color: #666;              /* text muted */
-  cursor: not-allowed;      /* show the “nah” cursor */
-  opacity: 0.6;             /* make it look sleepy */
-  box-shadow: none;         /* remove glow or shadow if any */
-}
-
     .joined-card {
-      background: #f3f4f6;
-      color: #374151;
+      background: var(--bg-3, #f3f4f6);
+      color: var(--text-2, #374151);
       border-radius: 8px;
       padding: 12px 0;
       font-size: 1.08rem;
       font-weight: 500;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      box-shadow: none;
       min-width: 120px;
       max-width: 120px;
       text-align: center;
       letter-spacing: 0.5px;
       transition: box-shadow 0.15s;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--border-1, #e5e7eb);
       margin-bottom: 2px;
     }
     .joined-card:hover {
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      background: #e5e7eb;
+      box-shadow: 0 4px 16px var(--shadow-1, rgba(0,0,0,0.08));
+      background: var(--bg-2, #e5e7eb);
     }
-    .error { color: #dc2626; font-weight: 500; margin-top: 12px; }
+    .error { color: var(--error, #dc2626); font-weight: 500; margin-top: 12px; }
     .error-banner {
-      background: #fee2e2;
-      color: #b91c1c;
+      background: var(--error-bg, #fee2e2);
+      color: var(--error-dark, #b91c1c);
       font-weight: 600;
       padding: 12px 0;
       border-radius: 8px;
       margin-bottom: 18px;
-      box-shadow: 0 2px 8px rgba(220,38,38,0.08);
+      box-shadow: none;
       letter-spacing: 0.5px;
     }
   `]
@@ -105,10 +100,10 @@ export class JoinRoomComponent implements OnDestroy {
         this.roomInfo = res;
         this.isLoading = false;
         this.joinedUsernames = res.joinedPlayersUsernames || [];
-        if (!res.error || res.error === 'successfully joined in to the room' || res.error === "You have already joined") {
+        if (!res.error || res.error === 'successfully joined in to the Game' || res.error === "You have already joined") {
           this.router.navigate(['/gang-play/waiting', this.roomCode], { state: { roomInfo: res } });
         }
-        if (res.error && (res.error !== 'successfully joined in to the room' && res.error !== "You have already joined")) {
+        if (res.error && (res.error !== 'successfully joined in to the Game' && res.error !== "You have already joined")) {
           this.error = res.error;
           this.roomCode="";
         }

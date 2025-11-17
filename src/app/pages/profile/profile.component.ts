@@ -161,9 +161,29 @@ export class ProfileComponent implements OnInit {
         this.selectedFile = input.files[0];
     }
 
+    isDarkMode = false;
+
     ngOnInit() {
         this.loadProfile();
         this.getRank();
+        // Load dark mode preference
+        this.isDarkMode = localStorage.getItem('theme') === 'dark';
+        this.applyTheme();
+    }
+
+    toggleDarkMode(event: Event) {
+        this.isDarkMode = (event.target as HTMLInputElement).checked;
+        localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
+        this.applyTheme();
+    }
+
+    applyTheme() {
+        const root = document.documentElement;
+        if (this.isDarkMode) {
+            root.classList.add('dark');
+        } else {
+            root.classList.remove('dark');
+        }
     }
 
     getRank() {

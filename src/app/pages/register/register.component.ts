@@ -10,7 +10,8 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
   standalone: true,
   imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   selector: 'app-register',
-  templateUrl: './register.component.html'
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
   username = '';

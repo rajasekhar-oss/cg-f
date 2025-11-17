@@ -88,17 +88,17 @@
       </ng-container>
     </ng-container>
     <ng-template #noPlayers>
-      <div style="color: #007bff; text-align: center; font-weight: bold; margin-top: 40px;">
+      <div style="color: var(--blue-1); text-align: center; font-weight: bold; margin-top: 40px;">
         Loading players...
         <div class="spinner" style="margin: 20px auto 0; width: 40px; height: 40px;"></div>
       </div>
     </ng-template>
     <!-- Game Table center: Winner/Tie display overlay -->
     <div class="table-center-overlay" *ngIf="winner || isTie"
-      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none;">
+      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; background: var(--overlay-bg, rgba(0,0,0,0.08));">
       <div class="center-result" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
         <ng-container *ngIf="winner && !isTie">
-          <div class="center-label winner-label username" style="margin-bottom: 0.5em; text-align: center;">{{winnerUsername === myUsername ? 'You' : winnerUsername || 'winner'}}</div>
+          <div class="center-label winner-label username" style="margin-bottom: 0.5em; text-align: center; color: var(--success);">{{winnerUsername === myUsername ? 'You' : winnerUsername || 'winner'}}</div>
           <div class="center-profiles" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1.5em;">
             <ng-container *ngFor="let p of arrangedFullPlayers">
               <ng-container *ngIf="winner===p.id">
@@ -112,7 +112,7 @@
           </div>
         </ng-container>
         <ng-container *ngIf="isTie && !winner">
-          <div class="center-label tie-label username" style="margin-bottom: 0.5em; text-align: center;">Tie</div>
+          <div class="center-label tie-label username" style="margin-bottom: 0.5em; text-align: center; color: var(--tie);">Tie</div>
           <div class="center-profiles" style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1.5em;">
             <ng-container *ngFor="let p of arrangedFullPlayers">
               <ng-container *ngIf="currentroundplayers.includes(p.username)">
@@ -241,7 +241,7 @@
     <div class="card-grid">
       <div *ngFor="let card of myCards" class="card-item" (click)="showCardDetails(card)">
         <img [src]="card.picture || card.imageUrl" [alt]="card.title" class="card-image-thumb" />
-        <div class="card-title">{{card.title}}</div>
+        <div class="card-title" style="color: var(--text-1);">{{card.title}}</div>
       </div>
     </div>
     <button class="close-btn" (click)="showCardList = false">✖</button>
@@ -254,7 +254,7 @@
       <div class="card-details-image">
         <img [src]="topCard?.picture || topCard?.imageUrl" [alt]="topCard?.title" class="top-card-image" />
       </div>
-      <div class="card-title">{{topCard?.title}}</div>
+      <div class="card-title" style="color: var(--text-1);">{{topCard?.title}}</div>
       <div *ngIf="topCard?.description" class="card-description">{{topCard.description}}</div>
 
       <div class="card-details-info">
@@ -283,7 +283,7 @@
         <img [src]="selectedCard?.picture || selectedCard?.imageUrl" [alt]="selectedCard?.title"
           class="card-image-thumb top-card-image not-top-card-image" />
       </div>
-      <div class="card-title">{{selectedCard?.title}}</div>
+      <div class="card-title" style="color: var(--text-1);">{{selectedCard?.title}}</div>
       <div *ngIf="selectedCard?.description" class="card-description">{{selectedCard.description}}</div>
 
       <div class="card-details-info">

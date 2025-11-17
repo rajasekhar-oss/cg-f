@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { NotificationService } from '../../services/notification.service';
 import { WebsocketService } from '../../services/websocket.service';
 import { NgZone } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
@@ -66,14 +67,31 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
     <div class="custom-modal-overlay" *ngIf="showInviteModal">
       <div class="custom-modal">
         <div class="custom-modal-title">Invite Players</div>
-        <input type="text" [(ngModel)]="inviteSearch" (input)="filterInviteUsers()" placeholder="Search username..." class="invite-search-bar" />
-        <div *ngIf="isInviteLoading" class="modal-loading">Loading...</div>
-        <div *ngIf="!isInviteLoading && filteredInviteUsers.length === 0" class="modal-empty">No users found.</div>
-        <div *ngIf="!isInviteLoading && filteredInviteUsers.length > 0" class="invite-list">
-          <div class="invite-user" *ngFor="let user of filteredInviteUsers">
-            <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
-            <span class="invite-user-name">{{ user.userName }}</span>
-            <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
+        <!-- Already Played With Section -->
+        <div style="margin-bottom: 1.2em;">
+          <div style="font-weight:600; color:#1976d2; margin-bottom:0.5em;">Already Played With</div>
+          <div *ngIf="isPlayedWithLoading" class="modal-loading">Loading...</div>
+          <div *ngIf="!isPlayedWithLoading && playedWithUsers.length === 0" class="modal-empty">No players found.</div>
+          <div *ngIf="!isPlayedWithLoading && playedWithUsers.length > 0" class="invite-list">
+            <div class="invite-user" *ngFor="let user of playedWithUsers">
+              <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
+              <span class="invite-user-name">{{ user.userName }}</span>
+              <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
+            </div>
+          </div>
+        </div>
+        <!-- Search New Players Section -->
+        <div style="margin-bottom: 1.2em;">
+          <div style="font-weight:600; color:#1976d2; margin-bottom:0.5em;">Search New Players</div>
+          <input type="text" [(ngModel)]="inviteSearch" (input)="filterInviteUsers()" placeholder="Search username..." class="invite-search-bar" />
+          <div *ngIf="isInviteLoading" class="modal-loading">Loading...</div>
+          <div *ngIf="!isInviteLoading && filteredInviteUsers.length === 0 && inviteSearch.trim()" class="modal-empty">No users found.</div>
+          <div *ngIf="!isInviteLoading && filteredInviteUsers.length > 0" class="invite-list">
+            <div class="invite-user" *ngFor="let user of filteredInviteUsers">
+              <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
+              <span class="invite-user-name">{{ user.userName }}</span>
+              <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
+            </div>
           </div>
         </div>
         <div class="custom-modal-actions">
@@ -111,6 +129,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
 
   // Invite/Search modal state
   showInviteModal = false;
+  playedWithUsers: Array<{ userName: string; pictureUrl: string }> = [];
+  isPlayedWithLoading = false;
   inviteUsers: Array<{ userName: string; pictureUrl: string }> = [];
   filteredInviteUsers: Array<{ userName: string; pictureUrl: string }> = [];
   isInviteLoading = false;
@@ -186,7 +206,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     public ws: WebsocketService,
     private cd: ChangeDetectorRef,
     private ngZone: NgZone,
-    private auth: AuthService
+    private auth: AuthService,
+    private notification: NotificationService
   ) {
     // Get current user id from JWT with safer parsing and detailed logs
     const token = this.auth.getAccessToken();
@@ -261,23 +282,25 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           next: (res: any) => {
             if( res && res.errorMessage) {
               this.showErrorModal = true;
-              this.roomEnded=true;
+              this.roomEnded = true;
               if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
               this.errorModalTimeout = setTimeout(() => {
                 this.showErrorModal = false;
               }, 5000);
               this.router.navigateByUrl('/', { replaceUrl: true });
+              this.isLoading = false;
+              return;
             }
             this.roomInfo = res;
             this.requiredPlayers = res.requiredPlayers;
             this.joinedPlayersUsernames = res.joinedPlayersUsernames || [];
             this.isLoading = false;
             this.isCreator = res.creatorId === this.currentUserId;
-            this.error=res.message;
+            this.error = res.message || '';
             console.log('[WaitingRoom] Fetched roomInfo from API:', this.roomInfo);
           },
           error: (e: any) => {
-            this.error = e?.error?.error || e?.message || 'Error fetching room info';
+            this.error = e?.error?.error || e?.error?.message || e?.message || 'Error fetching room info';
             this.showErrorModal = true;
             if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
             this.errorModalTimeout = setTimeout(() => {
@@ -412,12 +435,17 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   startGame() {
-    // console.log('[WaitingRoom] Start Game clicked');
     // Only trigger the backend to start the game; all players are already subscribed in ngOnInit
     this.api.post(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse: any) => {
+      if (roomResponse && roomResponse.errorMessage) {
+        this.notification.show(roomResponse.errorMessage);
+        return;
+      }
       console.log('[WaitingRoom] RoomResponse:', roomResponse);
     }, (err: any) => {
-      this.error = err?.error?.error || err?.message || 'Failed to start game';
+      const msg = err?.error?.error || err?.message || 'Failed to start game';
+      this.notification.show(msg);
+      this.error = msg;
       console.error('[WaitingRoom] Failed to start game:', err);
     });
   }
@@ -428,29 +456,68 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
 
   openInvite() {
     this.showInviteModal = true;
-    this.isInviteLoading = true;
+    this.isPlayedWithLoading = true;
+    this.isInviteLoading = false;
     this.inviteSearch = '';
-    this.api.get('/request').subscribe({
+    // Fetch played-with users first
+    const userId = this.currentUserId?.toString().trim();
+    this.api.get(`/request/played-with?userId=${userId}`).subscribe({
       next: (users: any) => {
-        this.inviteUsers = users;
-        this.filterInviteUsers();
+        if (users && (users.errorMessage || users.error)) {
+          // this.showerror
+          this.notification.show(users.errorMessage || users.error);
+          this.error = users.errorMessage || users.error || 'Failed to fetch played-with users.';
+          this.showErrorModal = true;
+          this.playedWithUsers = [];
+          this.isPlayedWithLoading = false;
+          return;
+        }
+        console.log('[WaitingRoom] Fetched played-with users:', users);
+        this.playedWithUsers = users || [];
+        this.isPlayedWithLoading = false;
+      },
+      error: (err:any) => {
+        console.log('[WaitingRoom] Failed to fetch played-with users:', err, "k",userId);
+        this.playedWithUsers = [];
+        this.isPlayedWithLoading = false;
+      }
+    });
+    // Clear new user search results
+    this.inviteUsers = [];
+    this.filteredInviteUsers = [];
+  }
+
+  filterInviteUsers() {
+    const search = this.inviteSearch.trim();
+    if (!search) {
+      this.filteredInviteUsers = [];
+      return;
+    }
+    this.isInviteLoading = true;
+    // Fetch new users matching search string (not already played with)
+    this.api.get(`/request/${encodeURIComponent(search)}`).subscribe({
+      next: (users: any) => {
+        if (users && users.errorMessage) {
+          this.notification.show(users.errorMessage);
+          this.inviteUsers = [];
+          this.filteredInviteUsers = [];
+          this.isInviteLoading = false;
+          return;
+        }
+        // Remove users already in playedWithUsers
+        const playedWithNames = new Set(this.playedWithUsers.map(u => u.userName));
+        this.inviteUsers = (users || []).filter((u: any) => !playedWithNames.has(u.userName));
+        this.filteredInviteUsers = this.inviteUsers;
         this.isInviteLoading = false;
       },
-      error: () => {
+      error: (err: any) => {
+        const msg = err?.error?.error || err?.message || 'Failed to fetch users';
+        this.notification.show(msg);
         this.inviteUsers = [];
         this.filteredInviteUsers = [];
         this.isInviteLoading = false;
       }
     });
-  }
-
-  filterInviteUsers() {
-    const search = this.inviteSearch.trim().toLowerCase();
-    if (!search) {
-      this.filteredInviteUsers = this.inviteUsers.slice();
-    } else {
-      this.filteredInviteUsers = this.inviteUsers.filter(u => u.userName.toLowerCase().includes(search));
-    }
   }
 
   inviteUser(user: { userName: string; pictureUrl: string }) {
@@ -460,19 +527,19 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         this.showInviteModal = false;
         this.isInviteLoading = false;
+        if (res && res.errorMessage) {
+          this.notification.show(res.errorMessage);
+          return;
+        }
         if (res && res.message !== "Request sent successfully") {
-          this.error = res && res.message ? res.message : 'Failed to send invite.';
-          this.showErrorModal = true;
-        } else {
-          // Optionally show a success message in the UI, e.g. with a temporary banner or modal
-          // For now, do nothing or you can set a success property if you want to show a message
+          this.notification.show(res && res.message ? res.message : 'Failed to send invite.');
         }
       },
       error: (err: any) => {
         this.showInviteModal = false;
         this.isInviteLoading = false;
-        this.error = err?.error?.message || err?.message || 'Unknown error';
-        this.showErrorModal = true;
+        const msg = err?.error?.message || err?.message || 'Unknown error';
+        this.notification.show(msg);
       }
     });
   }
@@ -493,6 +560,11 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     const path = `/api/rooms/${this.roomCode}/leave`;
     const sub = this.api.post(path, {}).subscribe({
       next: (res: any) => {
+        if( res && res.errorMessage) {
+          this.notification.show(res.errorMessage);
+          this.showErrorModal = true;
+          return;
+        }
         console.log('[WaitingRoom] leaveRoom response:', res);
         this.isLoading = false;
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }
@@ -524,7 +596,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     const path = `/api/rooms/${this.roomCode}/delete`;
     const sub = this.api.post(path, {}).subscribe({
       next: (res: any) => {
-        if( res && res.errorMessage && res.errorMessage=="Only creator can delete the room") {
+        if( res && res.errorMessage) {
+          this.notification.show(res.errorMessage);
           this.showErrorModal = true;
           return;
         }

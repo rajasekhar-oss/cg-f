@@ -5,8 +5,11 @@
 	left: 0;
 	width: 100vw;
 	z-index: 100;
-	background: #fff;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	background: var(--bg-1, #fff);
+	box-shadow: none;
+}
+.fixed-nav:hover {
+	box-shadow: 0 2px 8px var(--shadow-1, rgba(0,0,0,0.04));
 }
 .main-content {
 	margin-top: 80px;
@@ -21,7 +24,7 @@
 .nav-brand {
 	font-size: 28px;
 	font-weight: bold;
-	color: #2563eb;
+	color: var(--blue-2, #2563eb);
 	margin: 0;
 }
 .nav-actions {
@@ -34,12 +37,12 @@
 	padding: 8px 18px;
 }
 .logout-btn {
-	background: #ef4444;
-	color: #fff;
+	background: var(--error, #ef4444);
+	color: var(--text-on-error, #fff);
 	border: none;
 	font-weight: 600;
 	transition: background 0.2s;
 }
 .logout-btn:hover {
-	background: #dc2626;
+	background: var(--error-dark, #dc2626);
 }

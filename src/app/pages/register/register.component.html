@@ -1,9 +1,9 @@
-<div>
-  <h3>Register</h3>
-  <p *ngIf="email">Email: {{email}}</p>
-  <input [(ngModel)]="username" placeholder="Username" />
-  <input [(ngModel)]="password" placeholder="Password" type="password"/>
-  <button (click)="register()">Register</button>
+<div class="container">
+  <h3 class="register-title">Register</h3>
+  <p class="register-info" *ngIf="email">Email: {{email}}</p>
+  <input class="register-input" [(ngModel)]="username" placeholder="Username" />
+  <input class="register-input" [(ngModel)]="password" placeholder="Password" type="password"/>
+  <button class="register-btn" (click)="register()">Register</button>
   <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 </div>
 

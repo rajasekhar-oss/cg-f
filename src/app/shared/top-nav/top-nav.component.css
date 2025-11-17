@@ -1,7 +1,7 @@
 .top-nav {
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border-1);
+  box-shadow: var(--shadow-sm);
   width: 100%;
   display: block;
   margin-bottom: 0;
@@ -22,7 +22,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text-1);
 }
 .top-nav-right {
   flex: 1 1 auto;
@@ -40,15 +40,15 @@
   border: none;
   font-size: 16px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-3);
   cursor: pointer;
   padding: 8px 16px;
   border-radius: 6px;
   transition: background 0.2s, color 0.2s;
 }
 .top-nav button.active {
-  color: #3b82f6;
-  background: #e0e7ff;
+  color: var(--blue-1);
+  background: var(--bg-4);
 }
 .top-nav-notification-btn {
   position: relative;
@@ -56,15 +56,15 @@
   border: none;
   cursor: pointer;
   font-size: 20px;
-  color: #6b7280;
+  color: var(--text-3);
   padding: 8px;
 }
 .top-nav-notification-badge {
   position: absolute;
   top: 0;
   right: 0;
-  background: #dc2626;
-  color: white;
+  background: var(--error);
+  color: var(--btn-primary-text);
   font-size: 12px;
   border-radius: 50%;
   width: 20px;
@@ -79,10 +79,10 @@
 
 .game-request-dropdown {
   min-width: 260px;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: var(--bg-2);
+  border: 1px solid var(--border-1);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-md);
   z-index: 100;
   margin-top: 8px;
 }
@@ -91,7 +91,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--bg-1);
 }
 .game-request-item:last-child {
   border-bottom: none;

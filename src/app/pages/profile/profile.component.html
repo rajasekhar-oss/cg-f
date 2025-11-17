@@ -12,13 +12,14 @@
   <div class="container">
     
     <!-- Loading State -->
+
     <div *ngIf="isLoading" class="text-center" style="padding: 48px 0;">
-      <div style="font-size: 18px; color: #6b7280;">Loading profile...</div>
+      <div style="font-size: 18px; color: var(--text-4);">Loading profile...</div>
     </div>
 
     <!-- Error State -->
     <div *ngIf="error && !isLoading" class="text-center" style="padding: 48px 0;">
-      <div style="color: #dc2626; font-size: 18px; margin-bottom: 16px;">{{ error }}</div>
+      <div style="color: var(--error); font-size: 18px; margin-bottom: 16px;">{{ error }}</div>
       <button (click)="loadProfile()" class="btn btn-primary">Retry</button>
     </div>
 
@@ -42,31 +43,31 @@
             </div>
           </div>
           <div class="profile-info">
-            <h2 class="profile-name">{{ getDisplayName() }}</h2>
-            <p class="profile-email">{{ profile.email }}</p>
-            <p class="profile-member-since">Member since {{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</p>
+            <h2 class="profile-name" style="color: var(--card-title-text);">{{ getDisplayName() }}</h2>
+            <p class="profile-email" style="color: var(--text-4);">{{ profile.email }}</p>
+            <p class="profile-member-since" style="color: var(--text-4);">Member since {{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</p>
           </div>
         </div>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-value points">
+          <div class="stat-card" style="background: var(--bg-2);">
+            <div class="stat-value points" style="color: var(--blue-1);">
               {{ profile.points || 0 }}
             </div>
-            <div class="stat-label">TOTAL POINTS</div>
+            <div class="stat-label" style="color: var(--text-4);">TOTAL POINTS</div>
           </div>
-          <div class="stat-card">
-            <div class="stat-value rank">
+          <div class="stat-card" style="background: var(--bg-2);">
+            <div class="stat-value rank" style="color: var(--success);">
               <ng-container *ngIf="userRank !== null; else rankLoading">
                 #{{ userRank }}
               </ng-container>
               <ng-template #rankLoading>
-                <span *ngIf="rankError; else loading">N/A</span>
-                <ng-template #loading>Loading...</ng-template>
+                <span *ngIf="rankError; else loading" style="color: var(--text-4);">N/A</span>
+                <ng-template #loading><span style="color: var(--text-4);">Loading...</span></ng-template>
               </ng-template>
             </div>
-            <div class="stat-label">GLOBAL RANK</div>
+            <div class="stat-label" style="color: var(--text-4);">GLOBAL RANK</div>
           </div>
         </div>
       </div>
@@ -79,30 +80,33 @@
       </app-bottom-nav>
 
       <!-- Edit Profile Section -->
-      <div class="card">
-        <h3 class="section-title">Edit Profile Image</h3>
+      <div class="card" style="background: var(--card-bg);">
+        <h3 class="section-title" style="color: var(--card-title-text);">Edit Profile Image</h3>
         <form (ngSubmit)="updateProfile()" class="profile-form">
           <div class="form-group">
-            <label class="form-label">Upload Profile Image</label>
-            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input" />
+            <label class="form-label" style="color: var(--text-2);">Upload Profile Image</label>
+            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
           </div>
           <div *ngIf="updateMessage" 
                class="message"
                [class.message-success]="updateSuccess"
-               [class.message-error]="!updateSuccess">
+               [class.message-error]="!updateSuccess"
+               [ngStyle]="updateSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
             {{ updateMessage }}
           </div>
           <div class="form-actions">
             <button 
               type="button"
               (click)="resetForm()"
-              class="btn btn-secondary">
+              class="btn btn-secondary"
+              style="background: var(--bg-1); color: var(--text-2); border: 1px solid var(--border-1);">
               Reset
             </button>
             <button 
               type="submit"
               [disabled]="isUpdating"
-              class="btn btn-primary">
+              class="btn btn-primary"
+              style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
               {{ isUpdating ? 'Updating...' : 'Update Image' }}
             </button>
           </div>
@@ -110,21 +114,22 @@
       </div>
 
       <!-- Username Update Section -->
-      <div class="card" style="margin-top: 24px;">
-        <h3 class="section-title">Change Username</h3>
+      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
+        <h3 class="section-title" style="color: var(--card-title-text);">Change Username</h3>
         <form (ngSubmit)="updateUsername()" #usernameForm="ngForm" class="profile-form">
           <div class="form-group">
-            <label class="form-label">New Username</label>
-            <input type="text" name="newUsername" [(ngModel)]="newUsername" required class="form-input" />
+            <label class="form-label" style="color: var(--text-2);">New Username</label>
+            <input type="text" name="newUsername" [(ngModel)]="newUsername" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
           </div>
           <div *ngIf="usernameMessage" 
                class="message"
                [class.message-success]="usernameSuccess"
-               [class.message-error]="!usernameSuccess">
+               [class.message-error]="!usernameSuccess"
+               [ngStyle]="usernameSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
             {{ usernameMessage }}
           </div>
           <div class="form-actions">
-            <button type="submit" [disabled]="isUpdatingUsername" class="btn btn-primary">
+            <button type="submit" [disabled]="isUpdatingUsername" class="btn btn-primary" style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
               {{ isUpdatingUsername ? 'Updating...' : 'Update Username' }}
             </button>
           </div>
@@ -132,34 +137,40 @@
       </div>
 
       <!-- Password Update Section -->
-      <div class="card" style="margin-top: 24px;">
-        <h3 class="section-title">Change Password</h3>
+      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
+        <h3 class="section-title" style="color: var(--card-title-text);">Change Password</h3>
         <form (ngSubmit)="updatePassword()" #passwordForm="ngForm" class="profile-form">
           <div class="form-group">
-            <label class="form-label">Current Password</label>
-            <input type="password" name="oldPassword" [(ngModel)]="oldPassword" required class="form-input" />
+            <label class="form-label" style="color: var(--text-2);">Current Password</label>
+            <input type="password" name="oldPassword" [(ngModel)]="oldPassword" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
           </div>
           <div class="form-group">
-            <label class="form-label">New Password</label>
-            <input type="password" name="newPassword" [(ngModel)]="newPassword" required class="form-input" />
+            <label class="form-label" style="color: var(--text-2);">New Password</label>
+            <input type="password" name="newPassword" [(ngModel)]="newPassword" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
           </div>
           <div *ngIf="passwordMessage" 
                class="message"
                [class.message-success]="passwordSuccess"
-               [class.message-error]="!passwordSuccess">
+               [class.message-error]="!passwordSuccess"
+               [ngStyle]="passwordSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
             {{ passwordMessage }}
           </div>
           <div class="form-actions">
-            <button type="submit" [disabled]="isUpdatingPassword" class="btn btn-primary">
+            <button type="submit" [disabled]="isUpdatingPassword" class="btn btn-primary" style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
               {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
             </button>
           </div>
         </form>
       </div>
-<div class="logout-container" style="display: flex; justify-content: flex-end; margin: 16px 0;">
-  <button 
-    (click)="logout()"
-    class="btn btn-primary logout-btn">
-    Logout
-  </button>
+
+      <!-- Dark Mode Toggle -->
+      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
+        <h3 class="section-title" style="color: var(--card-title-text);">Theme</h3>
+        <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
+          <label for="darkModeToggle" style="color: var(--text-2); font-weight: 500;">Dark Mode</label>
+          <input id="darkModeToggle" type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode($event)" />
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

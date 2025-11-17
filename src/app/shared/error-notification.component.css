@@ -3,11 +3,11 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: #f44336;
-  color: #fff;
+  background: var(--error);
+  color: var(--btn-primary-text);
   padding: 16px 32px;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-md);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -15,17 +15,17 @@
   font-size: 1.1rem;
 }
 .error-notification button {
-  background: #fff;
-  color: #f44336;
+  background: var(--btn-primary-text);
+  color: var(--error);
   border: none;
   border-radius: 4px;
   padding: 4px 16px;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.2s, color 0.2s, border 0.2s;
 }
 .error-notification button:hover {
-  background: #f44336;
-  color: #fff;
-  border: 1px solid #fff;
+  background: var(--error);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-text);
 }

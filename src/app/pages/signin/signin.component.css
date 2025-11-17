@@ -1,0 +1,94 @@
+/* Sign In Page - Modern Card & Navigation Design using Design Tokens */
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg-1);
+}
+
+.container {
+  background: var(--card-bg);
+  border-radius: 18px;
+  box-shadow: var(--card-shadow), 0 -2px 0 0 oklch(0.97 0.02 var(--hue-blue) / 0.08) inset;
+  margin: 48px auto 0 auto;
+  padding: 40px 32px 32px 32px;
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h3, h2, h1 {
+  color: var(--card-title-text);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 18px;
+  letter-spacing: -0.5px;
+}
+
+p {
+  color: var(--card-subtitle-text);
+  font-size: 1rem;
+  margin-bottom: 18px;
+}
+
+input {
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: 0 1.5px 0 0 oklch(0.97 0.02 var(--hue-blue) / 0.10) inset;
+}
+input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-shadow);
+}
+
+button {
+  width: 100%;
+  padding: 12px 0;
+  border-radius: 10px;
+  border: none;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  font-weight: 600;
+  font-size: 1.1rem;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  margin-bottom: 18px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+button:hover {
+  background: var(--btn-primary-bg-hover);
+  box-shadow: var(--shadow-md-hover);
+}
+
+/* Card shadow on hover for depth */
+.container:hover {
+  box-shadow: var(--shadow-lg-hover), 0 -2px 0 0 oklch(0.97 0.02 var(--hue-blue) / 0.10) inset;
+}
+
+/* Bottom nav styling for depth */
+app-bottom-nav {
+  margin-top: auto;
+  box-shadow: 0 -2px 12px 0 oklch(0.50 0.03 var(--hue-blue) / .18);
+  background: var(--bg-2);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container {
+    padding: 24px 8px 18px 8px;
+    margin-top: 24px;
+  }
+}

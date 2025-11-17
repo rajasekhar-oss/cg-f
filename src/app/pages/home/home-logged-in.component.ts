@@ -9,6 +9,7 @@ import { UserDto, ProfileDto } from '../../models/auth';
 import { BottomNavComponent } from '../../shared/bottom-nav.component';
 import { TopNavComponent } from '../../shared/top-nav/top-nav.component';
 import { ErrorNotificationComponent } from '../../shared/error-notification.component';
+import { WebsocketService } from '../../services/websocket.service';
 
 @Component({
   standalone: true,
@@ -56,7 +57,7 @@ export class HomePageLoggedInComponent implements OnInit {
     },
     {
       title: 'Play with Code',
-      description: 'Join a game using a room code',
+      description: 'Join a game using a Game code',
       icon: '🔢',
       route: '/gang-play/join'
     }
@@ -78,7 +79,8 @@ export class HomePageLoggedInComponent implements OnInit {
     private router: Router,
     private auth: AuthService,
     private api: ApiService,
-    private gameRequestService: GameRequestService
+    private gameRequestService: GameRequestService,
+  private ws: WebsocketService
   ) {}
 
   ngOnInit() {
@@ -92,9 +94,11 @@ export class HomePageLoggedInComponent implements OnInit {
      if (this.sub) this.sub.unsubscribe && this.sub.unsubscribe();
     this.sub = this.api.post(`/api/rooms/${request.roomCode}/join`, {}).subscribe({
       next: (res: any) => {
-        if (res && res.errorMessage) {
+        if (res && (res.error=="Game not found" || res.error=="Game is full" || res.error=="You need at least one card to join the Game")) {
+          this.showError(res.error);
+          this.gameRequestService.fetchRequests();
           // Optionally show error in UI
-          alert(res.errorMessage);
+          // alert(res.error);
           return;
         }
         // Navigate to waiting room on success
@@ -121,24 +125,47 @@ export class HomePageLoggedInComponent implements OnInit {
         this.updateUserInfo();
         const role = this.auth.getUserRole();
         this.isAdmin = role === 'ADMIN';
+        this.username=userData.username;
+        if(this.username){
+          this.getReq();
+          console.log('Subscribed to game requests for user:', this.username);  
+        }
       },
       error: (error) => {
         if (error?.error?.errorMessage) {
           this.showError(error.error.errorMessage);
         }
         // Fall back to basic user info from auth service
-        this.auth.user$.subscribe(user => {
-          if (user) {
-            this.username = user.username || 'Player';
-            this.userInitials = this.getInitials(this.username);
-            const role = this.auth.getUserRole();
-            this.isAdmin = role === 'ADMIN';
-          }
-        });
+        // this.auth.user$.subscribe(user => {
+        //   if (user) {
+        //     console.log('Using auth service user data as fallback:', user);
+        //     this.username = user.username || 'Player';
+        //     if(this.username){
+        //       this.getReq();
+        //       console.log('Subscribed to game requests for user:', this.username);
+        //     }
+        //     this.userInitials = this.getInitials(this.username);
+        //     const role = this.auth.getUserRole();
+        //     this.isAdmin = role === 'ADMIN';
+        //   }
+        // });
         this.isLoading = false;
       }
     });
   }
+      getReq() {
+        if (this.username) {
+          console.log('Setting up game request subscription for user:', this.username);
+          const topic = `/topic/Game/Request/${this.username.trim()}`;
+          this.ws.connectAndSubscribe(topic);
+          this.ws.messages$.subscribe((msg: any) => {
+            if (msg && msg._wsTopic === topic) {
+              console.log('Received game request update for user:', this.username);
+              this.gameRequestService.fetchRequests();
+            }
+          });
+        }
+      }
   showError(msg: string) {
     this.notificationMessage = msg;
     this.showNotification = true;

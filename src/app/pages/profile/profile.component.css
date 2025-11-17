@@ -89,13 +89,13 @@
 }
 
 .profile-email {
-  color: #6b7280;
+  color: var(--text-4);
   font-size: 16px;
   margin: 0 0 4px 0;
 }
 
 .profile-member-since {
-  color: #6b7280;
+  color: var(--text-4);
   font-size: 14px;
   margin: 0;
 }
@@ -121,15 +121,15 @@
 }
 
 .stat-value.points {
-  color: #3b82f6;
+  color: var(--blue-1);
 }
 
 .stat-value.rank {
-  color: #10b981;
+  color: var(--success);
 }
 
 .stat-label {
-  color: #6b7280;
+  color: var(--text-4);
   font-size: 14px;
   font-weight: 500;
 }

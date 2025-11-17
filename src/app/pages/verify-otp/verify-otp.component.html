@@ -1,9 +1,9 @@
-<div>
-  <h3>Enter OTP</h3>
-  <p *ngIf="email">OTP sent to: {{email}}</p>
-  <input [(ngModel)]="emailInput" placeholder="Email" *ngIf="!email"/>
-  <input [(ngModel)]="otp" placeholder="123456"/>
-  <button (click)="verify()">Verify</button>
+<div class="container">
+  <h3 class="verify-title">Enter OTP</h3>
+  <p class="verify-info" *ngIf="email">OTP sent to: {{email}}</p>
+  <input class="verify-input" [(ngModel)]="emailInput" placeholder="Email" *ngIf="!email"/>
+  <input class="verify-input" [(ngModel)]="otp" placeholder="123456"/>
+  <button class="verify-btn" (click)="verify()">Verify</button>
   <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 </div>
 

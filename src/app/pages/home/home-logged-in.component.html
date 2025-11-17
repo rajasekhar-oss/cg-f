@@ -1,27 +1,27 @@
 <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 <!-- Mobile Nav Bar: Only visible on medium and below -->
 <div class="mobile-nav-bar">
-  <nav style="background: #fff; border-bottom: 1px solid #e5e7eb; padding: 0; margin: 0;">
+  <nav style="background: var(--bg-1, #fff); border-bottom: 1px solid var(--border-1, #e5e7eb); padding: 0; margin: 0;">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; max-width: 100%; margin: 0;">
-      <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: #1f2937;">CardGame</h1>
+      <h1 style="margin: 0; font-size: 24px; font-weight: 700; color: var(--text-1, #1f2937);">CardGame</h1>
       <div style="position:relative;">
-        <button (click)="showMobileRequests = !showMobileRequests" style="position: relative; padding: 8px; background: none; border: none; cursor: pointer; color: #6b7280; font-size:20px;">
+        <button (click)="showMobileRequests = !showMobileRequests" style="position: relative; padding: 8px; background: none; border: none; cursor: pointer; color: var(--text-3, #6b7280); font-size:20px;">
           🎮
-          <span *ngIf="mobileRequests.length > 0" style="position: absolute; top: 0; right: 0; background: #dc2626; color: white; font-size: 12px; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight:700;">
+          <span *ngIf="mobileRequests.length > 0" style="position: absolute; top: 0; right: 0; background: var(--error, #dc2626); color: var(--text-on-error, #fff); font-size: 12px; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-weight:700;">
             {{ mobileRequests.length }}
           </span>
         </button>
-        <div *ngIf="showMobileRequests" style="position:absolute; right:0; top:40px; background:white; border:1px solid #e5e7eb; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.08); min-width:260px; z-index:100;">
-          <div *ngIf="!mobileRequests || mobileRequests.length === 0" style="padding:16px; color:#6b7280; text-align:center;">No game requests</div>
-          <div *ngFor="let req of mobileRequests" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #f3f4f6;">
-            <img *ngIf="req.imageUrl" [src]="req.imageUrl" alt="profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid #e5e7eb;" />
-            <div *ngIf="!req.imageUrl" style="width:36px; height:36px; border-radius:50%; background:#e0e7ff; display:flex; align-items:center; justify-content:center; font-weight:700; color:#6366f1;">
+        <div *ngIf="showMobileRequests" style="position:absolute; right:0; top:40px; background:var(--bg-1, #fff); border:1px solid var(--border-1, #e5e7eb); border-radius:8px; box-shadow:none; min-width:260px; z-index:100;">
+          <div *ngIf="!mobileRequests || mobileRequests.length === 0" style="padding:16px; color:var(--text-3, #6b7280); text-align:center;">No game requests</div>
+          <div *ngFor="let req of mobileRequests" style="display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--bg-3, #f3f4f6);">
+            <img *ngIf="req.imageUrl" [src]="req.imageUrl" alt="profile" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:1px solid var(--border-1, #e5e7eb);" />
+            <div *ngIf="!req.imageUrl" style="width:36px; height:36px; border-radius:50%; background:var(--blue-1, #e0e7ff); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--blue-2, #6366f1);">
               {{ req.username ? req.username.charAt(0).toUpperCase() : '?' }}
             </div>
             <div style="flex:1;">
-              <div style="font-weight:600; color:#1f2937;">{{ req.username }}</div>
+              <div style="font-weight:600; color:var(--text-1, #1f2937);">{{ req.username }}</div>
             </div>
-            <button (click)="joinGame(req)" style="background:#3b82f6; color:white; border:none; border-radius:6px; padding:6px 12px; font-size:14px; cursor:pointer;">Join Game</button>
+            <button (click)="joinGame(req)" style="background:var(--blue-2, #3b82f6); color:var(--text-on-primary, #fff); border:none; border-radius:6px; padding:6px 12px; font-size:14px; cursor:pointer;">Join Game</button>
           </div>
         </div>
       </div>
@@ -45,11 +45,11 @@
 </div> -->
 
 <!-- Main Content -->
-<div style="padding: 20px; padding-bottom: 80px;">
+<div style="padding: 20px; padding-bottom: 80px; background: var(--bg-1, #fff);">
   <div style="max-width: 1200px; margin: 0 auto;">
     <!-- Admin Buttons (visible for admin users only) -->
     <div *ngIf="isAdmin" style="margin-bottom: 32px; text-align: center;">
-      <button (click)="navigate('/admin')" style="margin: 0 12px 12px 0; padding: 12px 32px; font-size: 16px; border-radius: 8px; background: #3b82f6; color: white; border: none; cursor: pointer;">Admin Dashboard</button>
+      <button (click)="navigate('/admin')" style="margin: 0 12px 12px 0; padding: 12px 32px; font-size: 16px; border-radius: 8px; background: var(--blue-2, #3b82f6); color: var(--text-on-primary, #fff); border: none; cursor: pointer;">Admin Dashboard</button>
     </div>
 
     <!-- Game Mode Cards: always show after loading spinner -->
@@ -59,12 +59,12 @@
         (click)="navigate(mode.route)"
         class="card"
         style="cursor: pointer; text-align: center;">
-        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+        <div style="width: 64px; height: 64px; margin: 0 auto 16px; background: linear-gradient(135deg, var(--blue-2), var(--blue-3)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--text-on-primary, #fff);">
           {{ mode.icon }}
         </div>
-        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">{{ mode.title }}</h3>
-        <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">{{ mode.description }}</p>
-        <div style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; background: #d1fae5; color: #065f46;">
+        <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-1, #1f2937);">{{ mode.title }}</h3>
+        <p style="font-size: 14px; color: var(--text-3, #6b7280); margin-bottom: 16px;">{{ mode.description }}</p>
+        <div style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; background: var(--green-1, #d1fae5); color: var(--green-2, #065f46);">
           Available
         </div>
       </div>

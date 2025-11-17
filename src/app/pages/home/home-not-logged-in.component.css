@@ -1,3 +1,4 @@
 :host {
   display: block;
+  background: var(--bg-1, #fff);
 }

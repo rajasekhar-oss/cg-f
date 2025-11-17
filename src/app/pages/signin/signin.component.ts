@@ -10,7 +10,8 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
   standalone: true,
   imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
   selector: 'app-signin',
-  templateUrl: './signin.component.html'
+  templateUrl: './signin.component.html',
+  styleUrls: ['./signin.component.css']
 })
 export class SignInComponent {
   email = '';

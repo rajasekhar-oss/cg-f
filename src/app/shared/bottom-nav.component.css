@@ -3,11 +3,11 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: white;
-  border-top: 1px solid #e5e7eb;
+  background: var(--bg-2);
+  border-top: 1px solid var(--border-1);
   display: none;
   z-index: 100;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.04);
+  box-shadow: var(--shadow-sm);
 }
 @media (max-width: 1024px) {
   .bottom-nav {
