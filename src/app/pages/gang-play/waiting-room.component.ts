@@ -141,8 +141,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
    * Optionally, pass nextUrl to allow special handling (e.g., skip modal for /game).
    */
   showLeaveOrEndRoomModal(nextUrl?: string): Promise<boolean> {
-    // If navigating to game, skip modal
-    if (nextUrl && nextUrl.startsWith('/game')) {
+    // If navigating to game or arrange cards, skip modal
+    if (nextUrl && (nextUrl.startsWith('/game') || nextUrl.startsWith('/cards/arrange'))) {
       return Promise.resolve(true);
     }
     return new Promise(resolve => {
@@ -531,8 +531,12 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           this.notification.show(res.errorMessage);
           return;
         }
-        if (res && res.message !== "Request sent successfully") {
-          this.notification.show(res && res.message ? res.message : 'Failed to send invite.');
+        if (res && res.message === "Request sent successfully") {
+          this.notification.show("Request sent successfully");
+        } else if (res && res.message) {
+          this.notification.show(res.message);
+        } else {
+          this.notification.show('Invite request processed.');
         }
       },
       error: (err: any) => {

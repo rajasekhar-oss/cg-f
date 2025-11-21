@@ -1,12 +1,12 @@
 .card-name {
-	width: 100%;
-	text-align: center;
-	font-size: 2vw;
-	font-weight: 600;
-	color: #1f2937;
-	margin-top: 0.5vw;
-	margin-bottom: 1vw;
-	word-break: break-word;
+  width: 100%;
+  text-align: center;
+  font-size: 2vw;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-top: 0.5vw;
+  margin-bottom: 1vw;
+  word-break: break-word;
 }
 /* Cards Page Layout */
 .cards-page-container {
@@ -28,21 +28,21 @@
 	justify-content: space-between;
 }
 .cards-total, .cards-points {
-	background: #f3f4f6;
+	background: var(--bg-3);
 	border-radius: 1.5vw;
 	padding: 2vw 4vw;
 	text-align: center;
 	min-width: 18vw;
 }
 .cards-total-label, .cards-points-label {
-	color: #6b7280;
+	color: var(--text-3);
 	font-size: 2.5vw;
 	font-weight: 500;
 }
 .cards-total-value, .cards-points-value {
 	font-size: 4vw;
 	font-weight: 700;
-	color: #1f2937;
+	color: var(--text-1);
 	margin-top: 0.5vw;
 }
 .cards-actions {
@@ -58,20 +58,25 @@
 	border-radius: 1vw;
 	font-size: 2vw;
 	font-weight: 600;
-	border: none;
+	border: 2px solid var(--btn-outline-border);
 	cursor: pointer;
-	background: #e0e7ff;
-	color: #3730a3;
+	background: var(--btn-primary-bg);
+	color: var(--btn-primary-text);
 	transition: background 0.2s;
 	min-width: 12vw;
 	min-height: 5vw;
+	box-shadow: var(--shadow-md);
 }
-.cards-action-btn.arrange { background: #fbbf24; color: #92400e; }
-.cards-action-btn.add { background: #4ade80; color: #065f46; }
-.cards-action-btn.stored { background: #a5b4fc; color: #3730a3; }
+/* All action buttons use the same primary style */
+.cards-action-btn.arrange,
+.cards-action-btn.add,
+.cards-action-btn.stored {
+	background: var(--btn-primary-bg);
+	color: var(--btn-primary-text);
+}
 .cards-action-btn:hover { filter: brightness(0.95); }
 .cards-empty {
-	color: #9ca3af;
+	color: var(--text-4);
 	font-size: 2.5vw;
 	text-align: center;
 	margin: 4vw 0;
@@ -84,9 +89,10 @@
 	margin-left: 2vw;
 }
 .card-tile {
-	background: #fff;
+	background: var(--card-bg);
 	border-radius: 1.5vw;
-	box-shadow: 0 2px 8px #e5e7eb;
+	box-shadow: var(--card-shadow);
+	border: 2px solid var(--card-border);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -98,7 +104,7 @@
 	position: relative;
 }
 .card-tile.cdk-drag-preview {
-	box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+	box-shadow: var(--card-shadow);
 	opacity: 0.98;
 	z-index: 1000;
 	position: fixed !important;
@@ -109,8 +115,9 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: #fff;
+	background: var(--card-bg);
 	border-radius: 1.5vw;
+	border: 2px solid var(--card-border);
 	transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s;
 	will-change: transform;
 }
@@ -143,7 +150,7 @@
 	height: 100%;
 	object-fit: cover;
 	border-radius: 1.5vw;
-	background: #fff;
+	background: var(--card-bg);
 }
 
 .card-details-modal {
@@ -159,9 +166,10 @@
 	z-index: 9999;
 }
 .card-details-content {
-	background: #fff;
+	background: var(--card-bg);
 	border-radius: 2vw;
-	box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+	box-shadow: var(--card-shadow);
+	border: 2px solid var(--card-border);
 	padding: 3vw 4vw 2vw 4vw;
 	min-width: 320px;
 	max-width: 90vw;
@@ -174,8 +182,8 @@
 	position: absolute;
 	top: 1vw;
 	right: 1vw;
-	background: #ef4444;
-	color: #fff;
+	background: var(--error);
+	color: var(--btn-primary-text);
 	border: none;
 	border-radius: 50%;
 	width: 2.5vw;
@@ -192,7 +200,7 @@
 	height: 180px;
 	object-fit: cover;
 	border-radius: 1.5vw;
-	border: 2px solid #e5e7eb;
+	border: 2px solid var(--card-border);
 	margin-bottom: 2vw;
 }
 /* ...existing code... */
@@ -208,22 +216,22 @@
 	flex-direction: row;
 	align-items: center;
 	justify-content: space-between;
-	background: #f3f4f6;
-	border: 2px solid #e5e7eb;
+	background: var(--bg-3);
+	border: 2px solid var(--card-border);
 	border-radius: 1vw;
 	padding: 1vw 2vw;
 	font-size: 1.25rem;
 	font-weight: 500;
-	color: #1f2937;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+	color: var(--text-1);
+	box-shadow: var(--shadow-sm);
 }
 .stat-label {
-	color: #6b7280;
+	color: var(--text-3);
 	font-size: 1.1rem;
 	font-weight: 500;
 }
 .stat-value {
-	color: #1f2937;
+	color: var(--text-1);
 	font-size: 1.3rem;
 	font-weight: 700;
 	margin-left: 2vw;

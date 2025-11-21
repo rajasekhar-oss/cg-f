@@ -31,12 +31,14 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
         <button class="buy-points-btn" [disabled]="!rupeesToBuy || rupeesToBuy < 1" (click)="buyPoints()">Buy Points</button>
       </div>
     </div>
+    <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
       [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
+    </div>
   `,
   styles: [`
     .add-cards-page {
@@ -55,7 +57,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       font-weight: 600;
     }
     .add-cards-section, .buy-points-section {
-      background: #f3f4f6;
+      background: var(--bg-3);
       border-radius: 1.5vw;
       margin: 0 4vw 4vw 4vw;
       padding: 3vw 4vw;
@@ -66,44 +68,63 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
     .add-cards-label, .buy-points-label {
       font-size: 2vw;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--text-1);
     }
     .add-cards-input, .buy-points-input {
       font-size: 2vw;
       padding: 1vw 2vw;
       border-radius: 1vw;
-      border: 1px solid #d1d5db;
+      border: 1.5px solid var(--input-border);
+      background: var(--bg-2);
+      color: var(--text-1);
       width: 100%;
+      box-shadow: var(--shadow-sm);
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+    .add-cards-input:focus, .buy-points-input:focus {
+      border-color: var(--input-focus-border);
+      box-shadow: var(--shadow-md);
     }
     .add-cards-btn, .buy-points-btn {
       font-size: 2vw;
       padding: 1.5vw 0;
       border-radius: 1vw;
       font-weight: 700;
-      border: none;
-      background: #4ade80;
-      color: #065f46;
+      border: 2px solid var(--btn-outline-border);
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
       cursor: pointer;
-      transition: background 0.2s;
+      transition: background 0.2s, color 0.2s, box-shadow 0.2s;
       margin-top: 1vw;
+      box-shadow: var(--shadow-md);
+      min-width: 110px;
+      white-space: normal;
+      word-break: break-word;
+      text-align: center;
     }
     .add-cards-btn[disabled], .buy-points-btn[disabled] {
-      background: #d1d5db;
-      color: #6b7280;
+      background: var(--btn-primary-bg-disabled);
+      color: var(--btn-primary-text-disabled);
+      border: 2px solid var(--btn-outline-border-disabled);
       cursor: not-allowed;
+      opacity: 0.7;
+    }
+    .add-cards-btn:hover:not([disabled]), .buy-points-btn:hover:not([disabled]) {
+      background: var(--btn-primary-bg-hover);
+      box-shadow: var(--shadow-lg-hover);
     }
     .add-cards-error {
-      color: #dc2626;
+      color: var(--error);
       font-size: 1.5vw;
       font-weight: 500;
     }
     .add-cards-success {
-      color: #059669;
+      color: var(--success);
       font-size: 1.5vw;
       font-weight: 500;
     }
     .buy-points-info {
-      color: #6b7280;
+      color: var(--text-3);
       font-size: 1.5vw;
     }
   `]

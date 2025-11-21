@@ -30,9 +30,9 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       <div class="rankings-list">
         <div *ngFor="let player of filteredPlayers(); let i = index"
              [ngClass]="{'rankings-row': true, 'local-user-row': i === 0}"
-             [style.background]="i === 0 ? 'linear-gradient(90deg, var(--yellow-1, #fef9c3) 0%, var(--bg-2) 100%)' : 'var(--bg-2)'"
-             [style.borderColor]="i === 0 ? 'var(--yellow-2, #facc15)' : 'var(--border-1)'"
-             [style.color]="i === 0 ? 'var(--text-1)' : null">
+             [style.background]="i === 0 ? 'var(--card-bg)' : 'var(--bg-2)'"
+             [style.borderColor]="i === 0 ? 'var(--card-border)' : 'var(--border-1)'"
+             [style.color]="i === 0 ? 'var(--btn-primary-text)' : null">
           <div class="rankings-usercell">
             <ng-container *ngIf="player.pictureUrl; else noPic">
               <img [src]="player.pictureUrl" class="rankings-avatar" [alt]="player.username"
@@ -40,7 +40,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
             </ng-container>
             <ng-template #noPic>
               <span class="rankings-avatar avatar-initial"
-                [style.background]="'linear-gradient(135deg, var(--blue-1) 0%, var(--bg-2) 100%)'"
+                [style.background]="'var(--blue-1)'"
                 [style.color]="'var(--blue-2)'">
                 {{ (i === 0 ? 'Y' : (player.username ? player.username.charAt(0).toUpperCase() : '?')) }}
               </span>
@@ -48,13 +48,13 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
             <span class="rankings-username" [style.color]="'var(--text-1)'">
               {{ i === 0 ? 'You' : player.username }}
               <ng-container *ngIf="player.rank === 1">
-                <span class="rank-crown" title="Top 1" [style.color]="'var(--orange-1, #f59e42)'">👑</span>
+                <span class="rank-crown" title="Top 1" [style.color]="'var(--orange-1)'">👑</span>
               </ng-container>
               <ng-container *ngIf="player.rank === 2">
-                <span class="rank-medal silver" title="Top 2" [style.color]="'var(--gray-2, #a3a3a3)'">🥈</span>
+                <span class="rank-medal silver" title="Top 2" [style.color]="'var(--gray-2)'">🥈</span>
               </ng-container>
               <ng-container *ngIf="player.rank === 3">
-                <span class="rank-medal bronze" title="Top 3" [style.color]="'var(--orange-2, #b45309)'">🥉</span>
+                <span class="rank-medal bronze" title="Top 3" [style.color]="'var(--orange-2)'">🥉</span>
               </ng-container>
             </span>
           </div>
@@ -64,21 +64,23 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       </div>
       <div class="rankings-pagination">
         <button class="pagination-button" *ngIf="hasPrevPage" (click)="prevPage()"
-          [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary, #fff)'">
+          [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
           &#8592; Previous
         </button>
         <button class="pagination-button" *ngIf="hasNextPage" (click)="nextPage()"
-          [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary, #fff)'">
+          [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
           Next &#8594;
         </button>
       </div>
     </div>
+    <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
       [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
+    </div>
   `,
   styles: [`
     .rankings-page {
@@ -105,7 +107,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       gap: 2vw;
       font-weight: 700;
       color: var(--text-2);
-      background: linear-gradient(90deg, var(--blue-1) 0%, var(--bg-2) 100%);
+      background: var(--blue-3);
       padding: 1.5vw 4vw;
       border-radius: 1vw;
       margin: 0 2vw 2vw 2vw;
@@ -145,27 +147,30 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       border: 1px solid var(--border-1);
     }
     .rankings-row:hover {
-      box-shadow: 0 4px 18px var(--shadow-2, var(--blue-2));
+      box-shadow: 0 4px 18px var(--shadow-2);
       transform: translateY(-2px) scale(1.01);
       background: var(--bg-3);
     }
     .local-user-row {
-      background: linear-gradient(90deg, var(--yellow-1, #fef9c3) 0%, var(--bg-2) 100%) !important;
-      border: 2px solid var(--yellow-2, #facc15);
-      box-shadow: none;
+      background: var(--card-bg) !important;
+      border: 2px solid var(--card-border);
+      box-shadow: var(--card-shadow);
+      font-weight: 700;
+      color: var(--btn-primary-text);
+      transition: box-shadow 0.2s, background 0.2s, color 0.2s;
     }
     .local-user-row:hover {
-      box-shadow: 0 4px 18px var(--yellow-3, #fde68a);
-      font-weight: 700;
+      background: var(--btn-primary-bg);
+      box-shadow: var(--shadow-md-hover);
+      color: var(--btn-primary-text);
       font-size: 2.2vw;
-      color: var(--text-1);
     }
     .rank-crown {
       margin-left: 0.5vw;
       font-size: 2.2vw;
-      color: var(--orange-1, #f59e42);
+      color: var(--orange-1);
       vertical-align: middle;
-      filter: drop-shadow(0 1px 2px var(--orange-2, #fbbf24));
+      filter: drop-shadow(0 1px 2px var(--orange-2));
     }
     .rank-medal {
       margin-left: 0.5vw;
@@ -173,12 +178,12 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       vertical-align: middle;
     }
     .rank-medal.silver {
-      color: var(--gray-2, #a3a3a3);
-      filter: drop-shadow(0 1px 2px var(--border-2, #d1d5db));
+      color: var(--gray-2);
+      filter: drop-shadow(0 1px 2px var(--border-2));
     }
     .rank-medal.bronze {
-      color: var(--orange-2, #b45309);
-      filter: drop-shadow(0 1px 2px var(--yellow-3, #fde68a));
+      color: var(--orange-2);
+      filter: drop-shadow(0 1px 2px var(--yellow-3));
     }
     .rankings-usercell {
       display: flex;
@@ -206,7 +211,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       text-transform: uppercase;
     }
     .avatar-initial {
-      background: linear-gradient(135deg, var(--blue-1) 0%, var(--bg-2) 100%);
+      background: var(--blue-1);
       color: var(--blue-2);
     }
     .rankings-username {
@@ -236,7 +241,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
     }
     .pagination-button {
       background: var(--blue-2);
-      color: var(--text-on-primary, #fff);
+      color: var(--text-on-primary);
       border: none;
       border-radius: 1vw;
       padding: 1vw 2vw;
@@ -247,7 +252,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
     }
     .pagination-button:hover {
       background: var(--blue-3);
-      box-shadow: 0 2px 8px var(--shadow-1, var(--blue-1));
+      box-shadow: 0 2px 8px var(--shadow-1);
     }
   `]
 })

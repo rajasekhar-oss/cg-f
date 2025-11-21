@@ -5,7 +5,7 @@
   left: 0;
   width: 100vw;
   z-index: 100;
-  background: #fff;
+  background: var(--bg-1);
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
@@ -19,7 +19,7 @@
 .nav-brand {
   font-size: 28px;
   font-weight: bold;
-  color: #2563eb;
+  color: var(--blue-2);
   margin: 0;
 }
 .nav-actions {
@@ -32,14 +32,14 @@
   padding: 8px 18px;
 }
 .logout-btn {
-  background: #ef4444;
-  color: #fff;
+  background: var(--error);
+  color: var(--btn-primary-text);
   border: none;
   font-weight: 600;
   transition: background 0.2s;
 }
 .logout-btn:hover {
-  background: #dc2626;
+  background: var(--error-bg);
 }
 /* Profile Header Styles */
 .profile-header {
@@ -52,13 +52,10 @@
 .profile-picture-container {
   width: 80px;
   height: 80px;
-  border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
-  justify-content: center;
 }
-
 .profile-picture {
   width: 100%;
   height: 100%;
@@ -68,11 +65,11 @@
 .profile-initials {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, var(--blue-1), var(--blue-2));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--btn-primary-text);
   font-weight: bold;
   font-size: 28px;
 }
@@ -108,7 +105,7 @@
 }
 
 .stat-card {
-  background: #f3f4f6;
+  background: var(--bg-2);
   padding: 20px;
   border-radius: 8px;
   text-align: center;
@@ -157,13 +154,13 @@
   display: block;
   font-weight: 500;
   margin-bottom: 4px;
-  color: #374151;
+  color: var(--text-2);
 }
 
 .form-input {
   width: 100%;
   padding: 12px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-1);
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s ease;
@@ -172,8 +169,8 @@
 
 .form-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--blue-1);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--blue-1) 10%, transparent);
 }
 
 /* Messages */
@@ -185,13 +182,13 @@
 }
 
 .message-success {
-  color: #059669;
-  background: #d1fae5;
+  color: var(--success);
+  background: var(--success-bg);
 }
 
 .message-error {
-  color: #dc2626;
-  background: #fee2e2;
+  color: var(--error);
+  background: var(--error-bg);
 }
 
 /* Form Actions */
@@ -211,26 +208,26 @@
 }
 
 .btn-primary {
-  background: #3b82f6;
-  color: white;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--btn-primary-bg-hover);
 }
 
 .btn-secondary {
   padding: 12px 24px;
-  border: 1px solid #d1d5db;
-  background: white;
-  color: #374151;
+  border: 1px solid var(--border-1);
+  background: var(--bg-1);
+  color: var(--text-2);
   border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
 }
 
 .btn-secondary:hover {
-  background: #f9fafb;
+  background: var(--bg-2);
 }
 
 .btn:disabled {
@@ -253,7 +250,7 @@
   display: flex;
   justify-content: space-between;
   padding: 12px 0;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-1);
 }
 
 .info-item.no-border {
@@ -262,11 +259,11 @@
 
 .info-label {
   font-weight: 500;
-  color: #374151;
+  color: var(--text-2);
 }
 
 .info-value {
-  color: #6b7280;
+  color: var(--text-4);
 }
 
 /* Spacing Utilities */
@@ -295,4 +292,7 @@
     gap: 4px;
     text-align: left;
   }
+}
+.logout-container{
+  padding-bottom: var(--bottom-nav-height);
 }

@@ -190,28 +190,24 @@
    ========================================= */
 
 .dark {
-  --bg-1: oklch(0.13 0.02 var(--hue-blue));
+  --bg-1: oklch(0.13 0.029 var(--hue-blue));
   --bg-2: oklch(0.17 0.025 var(--hue-blue));
   --bg-3: oklch(0.22 0.03 var(--hue-blue));
   --bg-4: oklch(0.28 0.035 var(--hue-blue));
   --bg-5: oklch(0.34 0.045 var(--hue-blue));
   --bg-hover: oklch(0.30 0.038 var(--hue-blue));
   --bg-pressed: oklch(0.26 0.040 var(--hue-blue));
-
   --text-1: oklch(0.92 0.03 var(--hue-blue));
   --text-2: oklch(0.80 0.025 var(--hue-blue));
   --text-3: oklch(0.72 0.02 var(--hue-blue));
   --text-4: oklch(0.64 0.018 var(--hue-blue));
   --text-5: oklch(0.56 0.015 var(--hue-blue));
-
   --blue-1: oklch(0.72 0.18 var(--hue-blue));
   --blue-2: oklch(0.68 0.15 var(--hue-blue));
   --blue-3: oklch(0.62 0.12 var(--hue-blue));
-
   --border-1: oklch(0.32 0.01 var(--hue-blue));
   --border-2: oklch(0.42 0.015 var(--hue-blue));
   --border-3-strong: oklch(0.58 0.02 var(--hue-blue));
-
   --shadow-sm: 0 1px 2px oklch(0.05 0.04 var(--hue-blue) / .45);
   --shadow-md: 0 4px 18px oklch(0.05 0.04 var(--hue-blue) / .38);
   --shadow-lg: 0 12px 42px oklch(0.05 0.04 var(--hue-blue) / .32);

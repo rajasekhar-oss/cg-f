@@ -43,14 +43,14 @@ export class GameComponent {
         'Are you sure you want to end the game for all players?',
         'End Game',
         () => this.onEndGameFromModal(),
-        () => {} // No-op on cancel
+        () => { } // No-op on cancel
       );
     } else {
       this.requestLeaveConfirmation(
         'Are you sure you want to leave the game?',
         'Leave Game',
         () => this.onLeaveGameFromModal(),
-        () => {} // No-op on cancel
+        () => { } // No-op on cancel
       );
     }
   }
@@ -69,11 +69,11 @@ export class GameComponent {
   requestLeaveConfirmation(message: string, title: string, onConfirm: () => void, onCancel: () => void) {
     const onlyTwoPlayers = this.arrangedFullPlayers && this.arrangedFullPlayers.length === 2;
 
-  // If only two players, force "End Game" message for everyone
-  if (onlyTwoPlayers) {
-    message = 'There are only two players in the game. Leaving will end the game for both. Do you want to end the game?';
-    title = 'End Game';
-  }
+    // If only two players, force "End Game" message for everyone
+    if (onlyTwoPlayers) {
+      message = 'There are only two players in the game. Leaving will end the game for both. Do you want to end the game?';
+      title = 'End Game';
+    }
     this.confirmMessage = message;
     this.confirmTitle = title;
     this.showConfirmModal = true;
@@ -319,7 +319,7 @@ export class GameComponent {
   updateGameState(msg: any) {
     this.players = msg.players;
     this.myCards = msg.myCards;
-    if(this.myCards.length <1) {
+    if (this.myCards.length < 1) {
       this.showError("You have no cards left! You are out of the game.");
       setTimeout(() => {
         this.leaveGame();
@@ -621,11 +621,11 @@ export class GameComponent {
         return;
       }
       this.myCards = cards;
-      if(cards.length <1) {
+      if (cards.length < 1) {
         this.showError("You have no cards left! You are out of the game.");
         setTimeout(() => {
-        this.leaveGame();
-      }, 1500); 
+          this.leaveGame();
+        }, 1500);
       }
     }, err => {
       if (err?.error?.errorMessage) {

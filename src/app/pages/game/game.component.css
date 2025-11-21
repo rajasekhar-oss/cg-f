@@ -1,3 +1,101 @@
+/* === Standardized button sizing and wrapping === */
+.send-sticker-btn,
+.select-card-btn,
+.game-action-btn,
+.modal-btn,
+.next-card-btn,
+.cards-btn,
+.message-btn,
+.leave-btn,
+.delete-btn {
+  min-width: 110px;
+  max-width: 100%;
+  padding: 0.65em 1.5em;
+  font-size: 1.05rem;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* For buttons that should fill container width, use width: 100% on parent or override as needed */
+
+.send-sticker-btn {
+  width: 100%;
+  max-width: 220px;
+  align-self: flex-end;
+}
+
+.select-card-btn {
+  width: 100%;
+  max-width: 180px;
+  align-self: flex-end;
+}
+
+.modal-btn,
+.game-action-btn,
+.next-card-btn,
+.cards-btn,
+.message-btn,
+.leave-btn,
+.delete-btn {
+  width: auto;
+  max-width: 100%;
+}
+/* === Stickers panel message UI restyle === */
+
+.sticker-search,
+.sticker-message-input {
+  width: 100%;
+  padding: 0.7rem 1.1rem;
+  margin-bottom: 1.1rem;
+  font-size: 1.08rem;
+  border: 1.5px solid var(--input-border);
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+  background: var(--bg-2);
+  color: var(--text-1);
+  box-shadow: var(--shadow-sm);
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+.sticker-search:focus,
+.sticker-message-input:focus {
+  border-color: var(--input-focus-border);
+  box-shadow: var(--shadow-md);
+}
+
+.send-sticker-btn {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+  font-size: 1.08rem;
+  font-weight: 600;
+  padding: 0.7em 1.7em;
+  margin-top: 1.2rem;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  align-self: flex-end;
+}
+
+.send-sticker-btn:disabled {
+  background: var(--btn-primary-bg-disabled);
+  color: var(--btn-primary-text-disabled);
+  border: 2px solid var(--btn-outline-border-disabled);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.send-sticker-btn:hover:not(:disabled) {
+  background: var(--btn-primary-bg-hover);
+  box-shadow: var(--shadow-lg-hover);
+}
 /* Custom Confirmation Modal Styles */
 .custom-modal-overlay {
   position: fixed;
@@ -370,13 +468,12 @@
 
 .winner-card {
   border: 2.5px solid var(--warning);
-  background: linear-gradient(90deg, var(--warning-bg) 0%, var(--warning-bg) 100%);
   box-shadow: var(--shadow-md);
 }
 
 .tie-card {
   border: 2.5px dashed var(--border-2);
-  background: linear-gradient(90deg, var(--bg-3) 0%, var(--bg-2) 100%);
+  
   box-shadow: var(--shadow-sm);
 }
 
@@ -465,19 +562,15 @@
 .detailed-prev-card-stat {
   font-size: 1.04rem;
   color: var(--text-1);
-  background: var(--bg-3);
-  border-radius: 7px;
-  padding: 0.18rem 0.9rem 0.18rem 0.9rem;
-  margin-bottom: 1.1rem;
+  background: var(--card-bg);
+  border-radius: 6px;
+  padding: 0.13rem 0.7rem;
+  margin-bottom: 0.1rem;
   font-weight: 500;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-left: 5px solid var(--blue-1);
-  border: 1.5px solid var(--border-2);
-  box-shadow: var(--shadow-md);
-  transition: box-shadow 0.18s, border 0.18s;
 }
 
 .detailed-prev-card-stat .stat-label {
@@ -621,10 +714,6 @@ button:disabled {
   top: 1vh;
   background: var(--bg-2);
   z-index: 150;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   padding: 2vw;
   overflow-y: auto;
   border-radius: 2vh;
@@ -1132,6 +1221,8 @@ button:disabled {
   word-break: break-word;
   white-space: normal;
   min-width: 0;
+  box-shadow: var(--shadow-sm);
+  border: var(--border-2) 1.5px solid;
 }
 
 /* 2 players */
@@ -1551,7 +1642,7 @@ button:disabled {
 }
 
 /* === Elevated look for containers, buttons, and sections === */
-.game-table-container,
+
 .stickers-panel,
 .card-list,
 .top-card,
@@ -1576,10 +1667,10 @@ button:disabled {
 }
 
 /* For subtle/secondary buttons, keep their background from variables */
-.modal-btn.cancel,
-.message-btn {
+
+/* .message-btn {
   background: var(--btn-subtle-bg);
-}
+} */
 
 /* === Elevated look for .table container === */
 .table {

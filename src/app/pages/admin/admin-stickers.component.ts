@@ -22,12 +22,14 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
         <div *ngIf="error" style="color: #dc2626; font-weight: 500; margin-bottom: 8px;">{{error}}</div>
       </div>
     </div>
+    <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
       [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
+    </div>
   `
 })
 export class AdminStickersComponent {

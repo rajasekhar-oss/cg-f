@@ -8,7 +8,7 @@
 </app-top-nav>
 
 <!-- Main Content -->
-<div class="main-content">
+<div class="main-content" style="padding-bottom: var(--bottom-nav-height);">
   <div class="container">
     
     <!-- Loading State -->
@@ -173,4 +173,13 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="logout-container" style="display: flex; justify-content: flex-end; align-items: center; margin: 24px auto 24px auto; max-width: 800px; padding-right: 8px;">
+  <button 
+    (click)="logout()"
+    class="btn btn-primary logout-btn"
+    style="min-width: 120px;">
+    Logout
+  </button>
 </div>

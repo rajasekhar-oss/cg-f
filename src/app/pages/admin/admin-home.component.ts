@@ -19,12 +19,14 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
         </div>
       </div>
     </div>
+    <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
       [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="goTo.bind(this)">
     </app-bottom-nav>
+    </div>
   `
 })
 export class AdminHomeComponent {

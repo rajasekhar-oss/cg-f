@@ -64,18 +64,20 @@
         </div>
         <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text-1, #1f2937);">{{ mode.title }}</h3>
         <p style="font-size: 14px; color: var(--text-3, #6b7280); margin-bottom: 16px;">{{ mode.description }}</p>
-        <div style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; background: var(--green-1, #d1fae5); color: var(--green-2, #065f46);">
+        <!-- <div style="display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 500; background: var(--green-1, #d1fae5); color: var(--green-2, #065f46);">
           Available
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
 </div>
 
 <!-- Bottom Navigation Bar (Mobile) -->
+<div style="padding-bottom: var(--bottom-nav-height);">
 <app-bottom-nav
   [bottomNavItems]="bottomNavItems"
   [getIconForRoute]="getIconForRoute.bind(this)"
   [isActiveRoute]="isActiveRoute.bind(this)"
   [navigate]="navigate.bind(this)">
 </app-bottom-nav>
+</div>
