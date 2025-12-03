@@ -1,3 +1,53 @@
+/* Custom scrollbar for invite/search results */
+.invite-list {
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-2) var(--bg-2);
+}
+
+.invite-list::-webkit-scrollbar {
+  width: 8px;
+  background: var(--bg-2);
+  border-radius: 6px;
+}
+.invite-list::-webkit-scrollbar-thumb {
+  background: var(--blue-2);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm);
+}
+.invite-list::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-hover);
+}
+.invite-list::-webkit-scrollbar-track {
+  background: var(--bg-2);
+  border-radius: 6px;
+}
+/* Invite/Search modal input styles */
+.invite-search-bar {
+  width: 100%;
+  padding: 0.7em 1em;
+  font-size: 1em;
+  border-radius: 6px;
+  border: 1.5px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
+  margin-bottom: 0.7em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+
+.invite-search-bar::placeholder {
+  color: var(--input-placeholder-text);
+  opacity: 1;
+}
+
+.invite-search-bar:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-shadow);
+  background: var(--input-bg-hover);
+}
 .invite-list {
   display: flex;
   flex-direction: column;

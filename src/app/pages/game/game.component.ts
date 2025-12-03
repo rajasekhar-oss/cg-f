@@ -27,6 +27,64 @@ interface StickerAnim {
 })
 
 export class GameComponent {
+    // Winner card animation variables
+    winnerCardAnimations: { id: number; x: number; y: number; toX: number; toY: number }[] = [];
+    cardTransferImage = "https://res.cloudinary.com/dkb442je2/image/upload/v1758714792/twfuswc6gss4grr3tfhl.png"; // You can change this to any image
+    private animKey = 0;
+    // Get seat center position for animation
+    getSeatCenter(username: string): { x: number; y: number } | null {
+      const seats = document.querySelectorAll('.player-seat');
+      for (let i = 0; i < this.arrangedFullPlayers.length; i++) {
+        if (this.arrangedFullPlayers[i].username === username) {
+          const rect = (seats[i] as HTMLElement).getBoundingClientRect();
+          return {
+            x: rect.left + rect.width / 2,
+            y: rect.top + rect.height / 2
+          };
+        }
+      }
+      return null;
+    }
+
+    // Create card animation items from loser to winner
+    createCardsFromLoser(loser: string, count: number, winner: string) {
+      const from = this.getSeatCenter(loser);
+      const to = this.getSeatCenter(winner);
+      if (!from || !to) return;
+      for (let i = 0; i < count; i++) {
+        const id = ++this.animKey;
+        const delay = count > 1 ? i * 250 : 0; 
+        this.winnerCardAnimations.push({
+          id,
+          x: from.x,
+          y: from.y,
+          toX: to.x,
+          toY: to.y
+        });
+        setTimeout(() => {
+          const card = this.winnerCardAnimations.find(c => c.id === id);
+          if (card) {
+            card.x = card.toX;
+            card.y = card.toY;
+          }
+        }, 100+delay);
+        setTimeout(() => {
+          this.winnerCardAnimations = this.winnerCardAnimations.filter(c => c.id !== id);
+        }, 1000+delay);
+      }
+    }
+
+    // Animate round winner card transfer
+    animateRoundWinner() {
+      const rounds = this.getGroupedRounds();
+      if (!rounds.length) return;
+      const latest = rounds[0]; // most recent round
+      if (!latest.winner || !latest.losers) return;
+      const winnerName = latest.winner;
+      latest.losers.forEach(l => {
+        this.createCardsFromLoser(l.userName, l.count, winnerName);
+      });
+    }
   showNotification = false;
   notificationMessage = '';
   // Returns the username of the winner, or undefined if not found
@@ -251,6 +309,7 @@ export class GameComponent {
     // Restore original logic: prefer router state if present, else use route param
     const nav = this.router.getCurrentNavigation();
     this.storedroomcode = nav?.extras?.state?.['roomCode'];
+    const gameMsg = nav?.extras?.state?.['game'];
     // If coming from waiting room or other, only assign if players.length == 0 and roomCode is empty
     if (this.storedroomcode != null && this.storedroomcode !== "" && this.players.length == 0 && this.roomCode == "") {
       this.roomCode = this.storedroomcode;
@@ -259,6 +318,19 @@ export class GameComponent {
       const code = this.route.snapshot.paramMap.get('id');
       if (code && this.roomCode === "") {
         this.roomCode = code;
+        if (gameMsg) {
+          // Update all relevant details from gameMsg
+          this.players = gameMsg.players || [];
+          this.previousRoundCards = gameMsg.currentRoundCards || [];
+          this.currentStatSelector = gameMsg.currentStatSelector || '';
+          this.fullPlayers = gameMsg.playerInfo || [];
+          this.roomInfo = gameMsg.roomInfo || null;
+          this.topCard = gameMsg.topCard || null;
+          this.myCards = gameMsg.myCards || [];
+          this.currentroundplayers = gameMsg.activePlayers || [];
+          this.isAdmin = gameMsg.creatorId && this.myUserId && gameMsg.creatorId.toString() === this.myUserId;
+          // Add more assignments as needed for your game state
+        }
       }
     }
     if (this.roomCode) {
@@ -347,6 +419,8 @@ export class GameComponent {
 
     this.currentStatSelector = msg.currentStatSelector;
     this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
+    // Trigger winner card animation
+    this.animateRoundWinner();
   }
   fetchuserInfo() {
     this.api.get('/users/me').subscribe({

@@ -19,9 +19,17 @@
   <div class="cards-actions">
     <button class="cards-action-btn arrange" (click)="save()">Set Order</button>
   </div>
-  <div *ngIf="arrangeMode==='drag'" class="cards-grid" cdkDropList [cdkDropListData]="cards" (cdkDropListDropped)="drop($event)" (cdkDragMoved)="onDragMoved($event)" (cdkDragEnded)="stopScroll()" style="overflow-y:auto; max-height:60vw;">
+  <div *ngIf="arrangeMode==='drag'" class="cards-grid" cdkDropList [cdkDropListData]="cards" (cdkDropListDropped)="drop($event)" (cdkDragMoved)="onDragMoved($event)" (cdkDragEnded)="stopScroll()" style="overflow-y:auto;">
     <div *ngFor="let c of cards" class="card-tile" cdkDrag>
-      <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
+        <div class="drag-handle" cdkDragHandle>
+            <svg viewBox="0 0 24 24" class="drag-icon">
+              <circle cx="8" cy="10" r="2.2" />
+              <circle cx="16" cy="10" r="2.2" />
+              <circle cx="8" cy="16" r="2.2" />
+              <circle cx="16" cy="16" r="2.2" />
+            </svg>
+        </div>
+        <img *ngIf="c.picture || c.imageUrl" [src]="c.picture || c.imageUrl" [alt]="c.name || c.title || 'Card'" class="card-image-full" />
     </div>
   </div>
   <div *ngIf="arrangeMode==='manual'" class="manual-arrange-container">

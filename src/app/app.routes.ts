@@ -19,6 +19,7 @@ import { PlaceholderComponent } from './pages/placeholder.component';
 import { CreateRoomComponent } from './pages/gang-play/create-room.component';
 import { RankingsComponent } from './pages/leaderboard/rankings.component';
 import { adminRoutes } from './pages/admin/admin.routes';
+import { TermsAndConditonsComponent } from './terms-and-conditons/terms-and-conditons.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -31,6 +32,7 @@ export const routes: Routes = [
   { path: 'cards/arrange', component: ArrangeComponent },
   { path: 'cards/stored', component: StoredCardsComponent },
   { path: 'cards/add', component: AddCardsComponent },
+  { path: 'terms-and-conditons', component: TermsAndConditonsComponent },
   { path: 'room/:code', component: WaitingRoomComponent, canDeactivate: [LeaveRoomGuard] },
   { path: 'game/:id', component: GameComponent, canDeactivate: [LeaveGameGuard] },
   // New routes for game modes and features

@@ -293,6 +293,6 @@
     text-align: left;
   }
 }
-.logout-container{
-  padding-bottom: var(--bottom-nav-height);
+.logout-btn{
+  margin-bottom: var(--bottom-nav-height);
 }

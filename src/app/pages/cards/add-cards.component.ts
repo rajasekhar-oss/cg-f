@@ -32,12 +32,13 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       </div>
     </div>
     <div style="padding-bottom: var(--bottom-nav-height);">
-    <app-bottom-nav
-      [bottomNavItems]="bottomNavItems"
-      [getIconForRoute]="getIconForRoute.bind(this)"
-      [isActiveRoute]="isActiveRoute.bind(this)"
-      [navigate]="navigate.bind(this)">
-    </app-bottom-nav>
+      <button class="terms-btn" (click)="goToTerms()" style="margin: 2vw auto; display: block; padding: 1vw 2vw; font-size: 1.5vw; border-radius: 1vw; border: 1.5px solid var(--input-border); background: var(--bg-2); color: var(--text-1); cursor: pointer;">Terms &amp; Conditions</button>
+      <app-bottom-nav
+        [bottomNavItems]="bottomNavItems"
+        [getIconForRoute]="getIconForRoute.bind(this)"
+        [isActiveRoute]="isActiveRoute.bind(this)"
+        [navigate]="navigate.bind(this)">
+      </app-bottom-nav>
     </div>
   `,
   styles: [`
@@ -150,6 +151,10 @@ export class AddCardsComponent implements OnInit {
 
   constructor(private router: Router, private api: ApiService) {}
 
+  goToTerms() {
+    this.router.navigate(['/terms-and-conditons']);
+  }
+
   ngOnInit() {
     this.isLoading = true;
     // Fetch cards
@@ -241,8 +246,46 @@ export class AddCardsComponent implements OnInit {
 
   buyPoints() {
     if (!this.rupeesToBuy || this.rupeesToBuy < 1) return;
-    // Redirect to payment page (to be implemented)
-    this.router.navigate(['/payment'], { queryParams: { amount: this.rupeesToBuy } });
+    // Start payment flow
+    // 1. Create order from backend
+    this.api.post('/cards/create-order', { amount: this.rupeesToBuy }).subscribe({
+      next: (order: any) => {
+        if (!order || !order.id) {
+          this.showError('Failed to create payment order');
+          return;
+        }
+        const options = {
+          key: 'rzp_test_RmeSFTitE0PwjA', // Razorpay TEST Key
+          amount: order.amount,
+          currency: 'INR',
+          order_id: order.id,
+          handler: (res: any) => {
+            // 2. Verify payment
+            this.api.post('/cards/verify-payment', res).subscribe({
+              next: (msg: any) => {
+                // 3. Refresh points after payment success
+                this.api.get('/users/me').subscribe((user: any) => {
+                  if (user && user.errorMessage) {
+                    this.showError(user.errorMessage);
+                    this.totalPoints = 0;
+                    return;
+                  }
+                  this.totalPoints = user.points || 0;
+                  this.showError(msg); // Show success message
+                });
+              },
+              error: () => {
+                this.showError('Payment verification failed');
+              }
+            });
+          }
+        };
+        new (window as any).Razorpay(options).open();
+      },
+      error: () => {
+        this.showError('Failed to create payment order');
+      }
+    });
   }
 
   getIconForRoute(route: string): string {

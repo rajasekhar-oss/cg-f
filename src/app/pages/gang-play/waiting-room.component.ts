@@ -337,7 +337,7 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         if (msg.message === "game started" && this.roomCode) {
           // New format
           console.log('[WaitingRoom] Navigating to game with roomCode:', this.roomCode);
-          this.router.navigate(['/game', this.roomCode],{ state: { roomCode: this.roomCode } });
+          this.router.navigate(['/game', this.roomCode],{ state: { game:msg } });
         }
       });
 

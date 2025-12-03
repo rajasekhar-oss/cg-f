@@ -216,6 +216,33 @@
   border-radius: 1.5vw;
   background: var(--card-bg);
 }
+
+/* Drag handle styles for move icon */
+.drag-handle {
+  position: absolute;
+  right: 0.8vw;
+  top: 0.8vw;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--bg-1);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  z-index: 5;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+.drag-icon {
+  width: 2vw;
+  height: 2vw;
+  fill: var(--text-2);
+  opacity: 0.85;
+  pointer-events: none;
+  }
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

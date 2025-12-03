@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -19,7 +19,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)"
     ></app-top-nav>
-    <div class="rankings-page">
+    <div class="rankings-page" #rankingsPage>
       <input class="rankings-search" [(ngModel)]="search" placeholder="Search players by name..."
         [style.background]="'var(--bg-2)'" [style.color]="'var(--text-1)'" [style.borderColor]="'var(--border-1)'" />
       <div class="rankings-header-row">
@@ -46,7 +46,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
               </span>
             </ng-template>
             <span class="rankings-username" [style.color]="'var(--text-1)'">
-              {{ i === 0 ? 'You' : player.username }}
+              {{ localUsername === player.username ? 'You' : player.username }}
               <ng-container *ngIf="player.rank === 1">
                 <span class="rank-crown" title="Top 1" [style.color]="'var(--orange-1)'">👑</span>
               </ng-container>
@@ -64,29 +64,29 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       </div>
       <div class="rankings-pagination">
         <button class="pagination-button" *ngIf="hasPrevPage" (click)="prevPage()"
+          [ngClass]="{'with-bottom-nav': showBottomNav}"
           [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
           &#8592; Previous
         </button>
         <button class="pagination-button" *ngIf="hasNextPage" (click)="nextPage()"
+          [ngClass]="{'with-bottom-nav': showBottomNav}"
           [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
           Next &#8594;
         </button>
       </div>
     </div>
-    <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
       [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
-    </div>
   `,
   styles: [`
     .rankings-page {
       width: 100vw;
       max-width: 100vw;
-      padding: 4vw 0 12vw 0;
+      padding: 4vw 0 4vw 0;
       box-sizing: border-box;
       background: var(--bg-1);
     }
@@ -143,7 +143,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       font-size: 2.1vw;
       cursor: pointer;
       transition: box-shadow 0.2s, transform 0.2s;
-      min-height: 5vw;
+      min-height: 48px;
       border: 1px solid var(--border-1);
     }
     .rankings-row:hover {
@@ -237,7 +237,7 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin: 2vw 0;
+      margin: 2vw 1vw;
     }
     .pagination-button {
       background: var(--blue-2);
@@ -250,13 +250,18 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
       transition: background 0.3s;
       box-shadow: none;
     }
+    .pagination-button.with-bottom-nav {
+      margin-bottom: var(--bottom-nav-height);
+    }
     .pagination-button:hover {
       background: var(--blue-3);
       box-shadow: 0 2px 8px var(--shadow-1);
     }
   `]
 })
-export class RankingsComponent implements OnInit {
+export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
+    localUsername: string = '';
+  @ViewChild('rankingsPage', { static: true }) rankingsPageRef!: ElementRef<HTMLElement>;
   showNotification = false;
   notificationMessage = '';
   notificationCount = 0;
@@ -274,14 +279,136 @@ export class RankingsComponent implements OnInit {
   ];
   page = 0;
   size = 10;
+  private resizeTimeout: any = null;
+  private minRows = 3;
+  private maxRows = 100;
   hasNextPage = false;
   hasPrevPage = false;
   totalLoaded = 0;
+  showBottomNav = true; // Set this based on your logic for when bottom nav should be shown
 
   constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit() {
     this.loadPage(0);
+    this.api.get('/users/me').subscribe({
+                next: (profileData: any) => {
+                    if (profileData && profileData.errorMessage) {
+                        this.showError(profileData.errorMessage);
+                        return;
+                    }
+                    this.localUsername = profileData.username;
+                }
+            });
+  }
+
+  ngAfterViewInit() {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        this.calculateSizeAndLoad();
+      });
+    });
+    window.addEventListener('resize', this.onWindowResize);
+    window.addEventListener('orientationchange', this.onWindowResize);
+  }
+
+  ngOnDestroy() {
+    window.removeEventListener('resize', this.onWindowResize);
+    window.removeEventListener('orientationchange', this.onWindowResize);
+  }
+
+  private onWindowResize = () => {
+    if (this.resizeTimeout) clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
+      setTimeout(() => {
+        this.calculateSizeAndLoad();
+      }, 0);
+    }, 150);
+  };
+
+  private calculateSizeAndLoad() {
+    try {
+      const viewportHeight = window.innerHeight;
+      const rankingsPageEl = this.rankingsPageRef.nativeElement;
+      const searchEl = rankingsPageEl.querySelector('.rankings-search') as HTMLElement | null;
+      const headerEl = rankingsPageEl.querySelector('.rankings-header-row') as HTMLElement | null;
+      const paginationEl = rankingsPageEl.querySelector('.rankings-pagination') as HTMLElement | null;
+      const rankingsListEl = rankingsPageEl.querySelector('.rankings-list') as HTMLElement | null;
+      const topNavEl = document.querySelector('app-top-nav') as HTMLElement | null;
+
+      console.log('viewportHeight:', viewportHeight);
+      console.log('searchEl height:', searchEl?.getBoundingClientRect().height);
+      console.log('headerEl height:', headerEl?.getBoundingClientRect().height);
+      console.log('paginationEl height:', paginationEl?.getBoundingClientRect().height);
+      console.log('topNavEl height:', topNavEl?.getBoundingClientRect().height);
+
+      // Get bottom nav height from CSS variable
+      let bottomNavHeight = 0;
+      const cssBottomNavHeight = window.getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-height');
+      if (cssBottomNavHeight) {
+        bottomNavHeight = parseFloat(cssBottomNavHeight) || 0;
+      }
+      // If not set, fallback to 0
+      const heightsToRemove = [
+        topNavEl?.getBoundingClientRect().height || 0,
+        bottomNavHeight,
+        searchEl?.getBoundingClientRect().height || 0,
+        headerEl?.getBoundingClientRect().height || 0,
+        paginationEl?.getBoundingClientRect().height || 0,
+      ];
+
+      // Debug log for measured heights
+      console.log('Measured heights:', {
+        topNav: heightsToRemove[0],
+        bottomNav: heightsToRemove[1],
+        search: heightsToRemove[2],
+        header: heightsToRemove[3],
+        pagination: heightsToRemove[4]
+      });
+
+      const style = window.getComputedStyle(rankingsPageEl);
+      const paddingTop = parseFloat(style.paddingTop || '0');
+      const paddingBottom = parseFloat(style.paddingBottom || '0');
+      console.log('Padding:', { paddingTop, paddingBottom });
+
+      const usedHeight = heightsToRemove.reduce((a, b) => a + b, 0) + paddingTop + paddingBottom + 8;
+      const availableHeight = viewportHeight - usedHeight;
+      console.log('Viewport:', viewportHeight, 'Used:', usedHeight, 'Available:', availableHeight);
+
+      // Measure one row height inside rankings-list for accuracy
+      let rowHeight = 48; // fallback
+      if (rankingsListEl) {
+        const firstRealRow = rankingsListEl.querySelector('.rankings-row') as HTMLElement;
+        if (firstRealRow) {
+          const clone = firstRealRow.cloneNode(true) as HTMLElement;
+          clone.style.opacity = '0';
+          clone.style.pointerEvents = 'none';
+          clone.style.position = 'static';
+          rankingsListEl.appendChild(clone);
+          void clone.offsetHeight;
+          rowHeight = clone.getBoundingClientRect().height;
+          rankingsListEl.removeChild(clone);
+          console.log('Cloned row height:', rowHeight);
+        } else {
+          console.log('No real row found, using fallback rowHeight:', rowHeight);
+        }
+      } else {
+        console.log('rankingsListEl not found, using fallback rowHeight:', rowHeight);
+      }
+
+      let rows = Math.floor(availableHeight / rowHeight);
+      rows = Math.max(this.minRows, Math.min(this.maxRows, rows));
+      console.log('Calculated rows:', rows);
+
+      if (rows !== this.size) {
+        this.size = rows;
+        this.loadPage(0);
+      }
+    } catch (err) {
+      console.error('Error in calculateSizeAndLoad:', err);
+      this.size = this.minRows;
+      this.loadPage(0);
+    }
   }
 
   loadPage(page: number) {
@@ -293,11 +420,20 @@ export class RankingsComponent implements OnInit {
         this.hasPrevPage = page > 0;
         return;
       }
+
       this.players = data;
       this.page = page;
       this.hasPrevPage = page > 0;
       this.hasNextPage = Array.isArray(data) && data.length === this.size;
       this.totalLoaded = page * this.size;
+
+      // ⭐ REQUIRED FIX ⭐
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.calculateSizeAndLoad();
+        });
+      });
+
     }, (err) => {
       if (err?.error?.errorMessage) {
         this.showError(err.error.errorMessage);

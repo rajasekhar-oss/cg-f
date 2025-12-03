@@ -48,6 +48,19 @@
 <!-- Animated card image overlay -->
 <img *ngIf="showCardAnimation" #animatedCard class="animated-card-image" [src]="animatedCardUrl"
   [ngStyle]="animatedCardStyle" />
+<!-- Winner card transfer animation layer -->
+<div class="winner-card-anim-layer">
+  <img
+    *ngFor="let c of winnerCardAnimations"
+    class="winner-fly-card"
+    [src]="cardTransferImage"
+    [ngStyle]="{
+      left: c.x + 'px',
+      top: c.y + 'px',
+      transform: 'translate(-50%, -50%)'
+    }"
+  />
+</div>
 <div class="game-table-container">
   <!-- Sticker animation overlay -->
   <div class="sticker-anim-overlay">
@@ -100,7 +113,7 @@
     </ng-template>
     <!-- Game Table center: Winner/Tie display overlay -->
     <div class="table-center-overlay" *ngIf="winner || isTie"
-      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; background: var(--overlay-bg, rgba(0,0,0,0.08));">
+      style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; ">
       <div class="center-result"
         style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
         <ng-container *ngIf="winner && !isTie">
@@ -179,8 +192,11 @@
       <input type="text" class="sticker-message-input" [(ngModel)]="message" placeholder="Enter a message (optional)" />
       <div class="stickers-grid">
         <div *ngFor="let sticker of filteredStickers" class="sticker-item"
-          [ngClass]="{'selected-sticker': selectedStickerId === sticker.id}" (click)="selectSticker(sticker.id)">
+          [class.selected-sticker]="selectedStickerId === sticker.id" (click)="selectSticker(sticker.id)">
           <img [src]="sticker.imageUrl" [alt]="sticker.name" class="sticker-img" />
+          <span *ngIf="selectedStickerId === sticker.id" class="tick-mark">
+            <svg viewBox="0 0 20 20"><polyline points="5 11 9 15 15 7" stroke="white" stroke-width="2" fill="none"/></svg>
+          </span>
         </div>
         <button class="send-sticker-btn" (click)="sendSticker(selectedStickerId, message)"
           [disabled]="stickerRecipient.length === 0 || (!selectedStickerId && !message)">

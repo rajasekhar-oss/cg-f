@@ -1,3 +1,65 @@
+/* Winner card transfer animation layer styles */
+.winner-card-anim-layer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  z-index: 3000;
+}
+
+.winner-fly-card {
+  position: absolute;
+  width: 70px;
+  height: 100px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.8s cubic-bezier(0.4, 1, 0.6, 1);
+  opacity: 1;
+}
+/* Sticker message display (responsive, themed) */
+.sticker-anim-message {
+  margin-top: 0.5em;
+  padding: 0.4em 1em;
+  font-size: 1.08rem;
+  background: var(--bg-2);
+  color: var(--text-1);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  word-break: break-word;
+  max-width: 90vw;
+  display: inline-block;
+}
+.selected-sticker {
+  border: none;
+  box-shadow: none;
+  border-radius: 14px;
+  transition: background 0.2s;
+  position: relative;
+}
+
+.selected-sticker .tick-mark {
+  position: absolute;
+  top: 0.1em;
+  right: 0.5em;
+  width: 1.6em;
+  height: 1.6em;
+  background: var(--blue-1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  z-index: 2;
+}
+
+.selected-sticker .tick-mark svg {
+  width: 1em;
+  height: 1em;
+  fill: var(--btn-primary-text);
+}
 /* === Standardized button sizing and wrapping === */
 .send-sticker-btn,
 .select-card-btn,
@@ -193,8 +255,8 @@
   height: 120px;
   pointer-events: none;
   z-index: 2003;
-  transition: all 0.7s cubic-bezier(0.4, 1, 0.6, 1);
-  will-change: left, top;
+  /* transition: all 0.7s cubic-bezier(0.4, 1, 0.6, 1);
+  will-change: left, top; */
 }
 
 /* Sticker recipient row layout */
@@ -563,9 +625,9 @@
   font-size: 1.04rem;
   color: var(--text-1);
   background: var(--card-bg);
-  border-radius: 6px;
-  padding: 0.13rem 0.7rem;
-  margin-bottom: 0.1rem;
+   border-radius: 7px;
+  padding: 0.18rem 0.9rem 0.18rem 0.9rem;
+  margin-bottom: 1.1rem;
   font-weight: 500;
   width: 100%;
   display: flex;
@@ -623,7 +685,6 @@ button:disabled {
   height: 5vh;
   font-size: 3vh;
   margin: 0.5vh 0 0.5vh 0;
-  padding: 1vh 3vw;
   background: var(--btn-subtle-bg-disabled);
   color: var(--btn-subtle-text-disabled);
   border: none;
@@ -671,7 +732,6 @@ button:disabled {
 
 .select-card-btn {
   margin: 1vh 0 0 0;
-  padding: 1vh 3vw;
   font-size: 1.1rem;
   line-height: 3vh;
   background: var(--btn-primary-bg);
@@ -1255,6 +1315,9 @@ button:disabled {
 
   .top-card-image {
     height: 38vh;
+  }
+  .sticker-anim-overlay {
+    margin-right: 35vw;
   }
 
   .stat-card {
