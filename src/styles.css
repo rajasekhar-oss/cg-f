@@ -8,42 +8,51 @@
    GLOBAL BLUE DESIGN SYSTEM TOKENS
    ================================ */
 
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* ================================
+   GLOBAL BLUE DESIGN SYSTEM TOKENS
+   ================================ */
+
 :root {
   /* ===== Core Theme Hue ===== */
-  --hue-blue: 240;
+  --hue-blue: 230;
 
   /* =========================================
      SURFACE / BACKGROUND LAYERS (Light)
      ========================================= */
-  --bg-1: oklch(0.97 0.02 var(--hue-blue));
-  --bg-2: oklch(0.94 0.025 var(--hue-blue));
-  --bg-3: oklch(0.90 0.03 var(--hue-blue));
-  --bg-4: oklch(0.86 0.035 var(--hue-blue));
-  --bg-5: oklch(0.82 0.045 var(--hue-blue));
+  --bg-1: oklch(0.98 0.004 var(--hue-blue));
+  --bg-2: oklch(0.95 0.006 var(--hue-blue));
+  --bg-3: oklch(0.90 0.008 var(--hue-blue));
+  --bg-4: oklch(0.86 0.010 var(--hue-blue));
+  --bg-5: oklch(0.82 0.012 var(--hue-blue));
 
   /* Hover/Elevated */
-  --bg-hover: oklch(0.88 0.035 var(--hue-blue));
-  --bg-pressed: oklch(0.84 0.035 var(--hue-blue));
+  --bg-hover: oklch(0.88 0.009 var(--hue-blue));
+  --bg-pressed: oklch(0.84 0.010 var(--hue-blue));
 
   /* =========================================
      TEXT LEVELS
      ========================================= */
-  --text-1: oklch(0.18 0.03 var(--hue-blue));
-  --text-2: oklch(0.30 0.025 var(--hue-blue));
-  --text-3: oklch(0.42 0.02 var(--hue-blue));
-  --text-4: oklch(0.55 0.018 var(--hue-blue));
-  --text-5: oklch(0.66 0.015 var(--hue-blue));
+  --text-1: oklch(0.18 0.015 var(--hue-blue));
+  --text-2: oklch(0.30 0.012 var(--hue-blue));
+  --text-3: oklch(0.42 0.010 var(--hue-blue));
+  --text-4: oklch(0.55 0.008 var(--hue-blue));
+  --text-5: oklch(0.66 0.006 var(--hue-blue));
 
   /* =========================================
      BRAND BLUE (Primary Interaction)
      ========================================= */
-  --blue-1: oklch(0.63 0.18 var(--hue-blue));
-  --blue-2: oklch(0.58 0.15 var(--hue-blue));
-  --blue-3: oklch(0.52 0.12 var(--hue-blue));
+  --blue-1: oklch(0.62 0.10 var(--hue-blue));
+  --blue-2: oklch(0.57 0.085 var(--hue-blue));
+  --blue-3: oklch(0.52 0.070 var(--hue-blue));
 
-  --blue-hover: oklch(0.56 0.16 var(--hue-blue));
-  --blue-pressed: oklch(0.50 0.14 var(--hue-blue));
-  --blue-disabled: oklch(0.78 0.02 var(--hue-blue));
+  --blue-hover: oklch(0.60 0.095 var(--hue-blue));
+  --blue-pressed: oklch(0.50 0.080 var(--hue-blue));
+  --blue-disabled: oklch(0.80 0.015 var(--hue-blue));
 
   /* =========================================
      SEMANTIC COLORS
@@ -60,25 +69,25 @@
   /* =========================================
      BORDERS
      ========================================= */
-  --border-1: oklch(0.82 0.01 var(--hue-blue));
-  --border-2: oklch(0.72 0.015 var(--hue-blue));
-  --border-3-strong: oklch(0.55 0.015 var(--hue-blue));
+  --border-1: oklch(0.82 0.004 var(--hue-blue));
+  --border-2: oklch(0.72 0.006 var(--hue-blue));
+  --border-3-strong: oklch(0.55 0.008 var(--hue-blue));
 
   /* Focus rings */
-  --focus-ring: oklch(0.58 0.15 var(--hue-blue)); /* same as blue-2 */
-  --focus-shadow: 0 0 0 2px oklch(0.58 0.15 var(--hue-blue) / .55);
+  --focus-ring: var(--blue-2); /* same intent */
+  --focus-shadow: 0 0 0 2px oklch(0.57 0.085 var(--hue-blue) / .55);
 
   /* =========================================
      SHADOWS (Elevation)
      ========================================= */
-  --shadow-sm: 0 1px 2px oklch(0.55 0.03 var(--hue-blue) / .22);
-  --shadow-md: 0 4px 12px oklch(0.50 0.03 var(--hue-blue) / .18);
-  --shadow-lg: 0 12px 32px oklch(0.45 0.04 var(--hue-blue) / .16);
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / .12);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / .16);
+  --shadow-lg: 0 12px 32px oklch(0 0 0 / .20);
 
   /* Hover shadows (extra lift) */
-  --shadow-sm-hover: 0 2px 4px oklch(0.50 0.03 var(--hue-blue) / .25);
-  --shadow-md-hover: 0 6px 18px oklch(0.48 0.03 var(--hue-blue) / .20);
-  --shadow-lg-hover: 0 16px 42px oklch(0.45 0.04 var(--hue-blue) / .18);
+  --shadow-sm-hover: 0 2px 4px oklch(0 0 0 / .14);
+  --shadow-md-hover: 0 6px 18px oklch(0 0 0 / .18);
+  --shadow-lg-hover: 0 16px 42px oklch(0 0 0 / .22);
 
   /* =========================================
      COMPONENT TOKENS
@@ -172,7 +181,7 @@
   /* ===================== Links ===================== */
   --link-text: var(--blue-1);
   --link-text-hover: var(--blue-2);
-  --link-text-visited: oklch(0.48 0.12 var(--hue-blue));
+  --link-text-visited: oklch(0.48 0.08 var(--hue-blue));
   --link-text-active: var(--blue-3);
 
   /* ===================== Modals / Dropdowns ===================== */
@@ -190,28 +199,33 @@
    ========================================= */
 
 .dark {
-  --bg-1: oklch(0.13 0.029 var(--hue-blue));
-  --bg-2: oklch(0.17 0.025 var(--hue-blue));
-  --bg-3: oklch(0.22 0.03 var(--hue-blue));
-  --bg-4: oklch(0.28 0.035 var(--hue-blue));
-  --bg-5: oklch(0.34 0.045 var(--hue-blue));
-  --bg-hover: oklch(0.30 0.038 var(--hue-blue));
-  --bg-pressed: oklch(0.26 0.040 var(--hue-blue));
-  --text-1: oklch(0.92 0.03 var(--hue-blue));
-  --text-2: oklch(0.80 0.025 var(--hue-blue));
-  --text-3: oklch(0.72 0.02 var(--hue-blue));
-  --text-4: oklch(0.64 0.018 var(--hue-blue));
-  --text-5: oklch(0.56 0.015 var(--hue-blue));
-  --blue-1: oklch(0.72 0.18 var(--hue-blue));
-  --blue-2: oklch(0.68 0.15 var(--hue-blue));
-  --blue-3: oklch(0.62 0.12 var(--hue-blue));
-  --border-1: oklch(0.32 0.01 var(--hue-blue));
-  --border-2: oklch(0.42 0.015 var(--hue-blue));
-  --border-3-strong: oklch(0.58 0.02 var(--hue-blue));
-  --shadow-sm: 0 1px 2px oklch(0.05 0.04 var(--hue-blue) / .45);
-  --shadow-md: 0 4px 18px oklch(0.05 0.04 var(--hue-blue) / .38);
-  --shadow-lg: 0 12px 42px oklch(0.05 0.04 var(--hue-blue) / .32);
-    --btn-primary-text-disabled: var(--text-5);
+  --bg-1: oklch(0.14 0.006 var(--hue-blue));
+  --bg-2: oklch(0.18 0.007 var(--hue-blue));
+  --bg-3: oklch(0.22 0.008 var(--hue-blue));
+  --bg-4: oklch(0.27 0.009 var(--hue-blue));
+  --bg-5: oklch(0.32 0.011 var(--hue-blue));
+  --bg-hover: oklch(0.30 0.010 var(--hue-blue));
+  --bg-pressed: oklch(0.25 0.009 var(--hue-blue));
+
+  --text-1: oklch(0.93 0.003 var(--hue-blue));
+  --text-2: oklch(0.83 0.0025 var(--hue-blue));
+  --text-3: oklch(0.73 0.002 var(--hue-blue));
+  --text-4: oklch(0.65 0.0018 var(--hue-blue));
+  --text-5: oklch(0.57 0.0015 var(--hue-blue));
+
+  --blue-1: oklch(0.78 0.11 var(--hue-blue));
+  --blue-2: oklch(0.72 0.10 var(--hue-blue));
+  --blue-3: oklch(0.66 0.09 var(--hue-blue));
+
+  --border-1: oklch(0.32 0.005 var(--hue-blue));
+  --border-2: oklch(0.42 0.0065 var(--hue-blue));
+  --border-3-strong: oklch(0.56 0.008 var(--hue-blue));
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / .45);
+  --shadow-md: 0 4px 18px oklch(0 0 0 / .55);
+  --shadow-lg: 0 12px 42px oklch(0 0 0 / .65);
+
+  --btn-primary-text-disabled: var(--text-5);
   --btn-primary-bg-disabled: var(--bg-4);
 
   --btn-subtle-text: var(--text-2);
@@ -237,7 +251,7 @@
 
   --link-text: var(--blue-1);
   --link-text-hover: var(--blue-2);
-  --link-text-visited: oklch(0.70 0.06 var(--hue-blue));
+  --link-text-visited: oklch(0.70 0.05 var(--hue-blue));
   --link-text-active: var(--blue-3);
 
   --modal-bg: var(--bg-2);

@@ -1,5 +1,5 @@
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8081',      // optional (backend must run HTTPS)
-  wsUrl: 'ws://localhost:8081/ws'       // OPTIONAL
+  production: true,
+  apiUrl: 'https://api.tcards.app',
+  wsUrl: 'wss://api.tcards.app/ws'
 };

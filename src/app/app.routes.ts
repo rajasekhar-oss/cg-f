@@ -11,6 +11,7 @@ import { CardsComponent } from './pages/cards/cards.component';
 import { ArrangeComponent } from './pages/arrange/arrange.component';
 import { StoredCardsComponent } from './pages/cards/stored-cards.component';
 import { AddCardsComponent } from './pages/cards/add-cards.component';
+import { ContactSupportComponent } from './pages/cards/contact-support.component';
 import { WaitingRoomComponent } from './pages/gang-play/waiting-room.component';
 import { LeaveRoomGuard } from './guards/leave-room.guard';
 import { GameComponent } from './pages/game/game.component';
@@ -19,7 +20,9 @@ import { PlaceholderComponent } from './pages/placeholder.component';
 import { CreateRoomComponent } from './pages/gang-play/create-room.component';
 import { RankingsComponent } from './pages/leaderboard/rankings.component';
 import { adminRoutes } from './pages/admin/admin.routes';
-import { TermsAndConditonsComponent } from './terms-and-conditons/terms-and-conditons.component';
+import { RefundPolicyComponent } from './pages/refund-policy/refund-policy.component';
+import { TermsAndConditionsComponent } from './pages/terms-and-conditions/terms-and-conditions.component';
+import { PrivacyPolicyComponent } from './pages/privacy-policy/privacy-policy.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -32,7 +35,7 @@ export const routes: Routes = [
   { path: 'cards/arrange', component: ArrangeComponent },
   { path: 'cards/stored', component: StoredCardsComponent },
   { path: 'cards/add', component: AddCardsComponent },
-  { path: 'terms-and-conditons', component: TermsAndConditonsComponent },
+  { path: 'contact-support', component: ContactSupportComponent },
   { path: 'room/:code', component: WaitingRoomComponent, canDeactivate: [LeaveRoomGuard] },
   { path: 'game/:id', component: GameComponent, canDeactivate: [LeaveGameGuard] },
   // New routes for game modes and features
@@ -46,6 +49,9 @@ export const routes: Routes = [
   { path: 'play-code', component: PlaceholderComponent },
   { path: 'leaderboard', component: RankingsComponent },
   { path: 'friends', component: PlaceholderComponent },
+  { path: 'refund-policy', component: RefundPolicyComponent },
+  { path: 'terms-and-conditions', component: TermsAndConditionsComponent },
+  { path: 'privacy-policy', component: PrivacyPolicyComponent },
   ...adminRoutes,
   { path: '**', redirectTo: '' }
 ];

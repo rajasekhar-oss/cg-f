@@ -59,8 +59,12 @@ export class AdminCardDetailComponent implements OnInit {
     this.msg = '';
     const payload = new FormData();
     if (this.dto.name) payload.append('name', String(this.dto.name));
-    if (this.selectedFile) payload.append('pictureFile', this.selectedFile);
-    if (this.dto.imageUrl) payload.append('picture', String(this.dto.imageUrl));
+    if (this.selectedFile) {
+      payload.append('pictureFile', this.selectedFile);
+      // Do NOT send the old image URL if a new file is selected
+    } else if (this.dto.picture) {
+      payload.append('picture', String(this.dto.picture));
+    }
     if (this.dto.totalFilms) payload.append('totalFilms', String(this.dto.totalFilms));
     if (this.dto.yearsActive) payload.append('yearsActive', String(this.dto.yearsActive));
     if (this.dto.highestGrossing) payload.append('highestGrossing', String(this.dto.highestGrossing));
