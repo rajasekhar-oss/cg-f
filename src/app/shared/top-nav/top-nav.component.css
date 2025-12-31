@@ -47,7 +47,7 @@
   transition: background 0.2s, color 0.2s;
 }
 .top-nav button.active {
-  color: var(--blue-1);
+  color: var(--primary-1);
   background: var(--bg-4);
 }
 .top-nav-notification-btn {

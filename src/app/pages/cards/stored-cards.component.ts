@@ -72,13 +72,23 @@ export class StoredCardsComponent {
         this.showError(r.errorMessage);
         return;
       }
-      this.reload();
+      // Update local state without reload to prevent scroll jump
+      if (isStored) {
+        // Remove from stored
+        this.storedCardIds.delete(card.id);
+        this.storedCards = this.storedCards.filter((c: any) => c.id !== card.id);
+      } else {
+        // Add to stored
+        this.storedCardIds.add(card.id);
+        this.storedCards = [...this.storedCards, card];
+      }
     }, (err) => {
       if (err?.error?.errorMessage) {
         this.showError(err.error.errorMessage);
       }
     });
   }
+
   showError(msg: string) {
     this.notificationMessage = msg;
     this.showNotification = true;
@@ -100,20 +110,9 @@ export class StoredCardsComponent {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
-  }
   isActiveRoute(route: string): boolean {
     return this.router.url === route;
   }

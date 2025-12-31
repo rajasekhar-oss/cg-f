@@ -3,18 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { BottomNavComponent } from '../../shared/bottom-nav.component';
 import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent],
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
 export class RegisterComponent {
   username = '';
+  mobile = '';
   password = '';
   email = '';
   showNotification = false;
@@ -23,7 +23,6 @@ export class RegisterComponent {
   constructor(private auth: AuthService, private router: Router) {
     // Get email from navigation state
     this.email = history.state?.email || '';
-    console.log('Register component - Email:', this.email);
   }
 
   register() {
@@ -35,12 +34,17 @@ export class RegisterComponent {
       this.showError('Username is required');
       return;
     }
+    if (!this.mobile.trim()) {
+      this.showError('Mobile number is required');
+      return;
+    }
     if (!this.password.trim()) {
       this.showError('Password is required');
       return;
     }
     this.auth.register({
       username: this.username,
+      mobileNumber: this.mobile,
       email: this.email,
       password: this.password
     }).subscribe({
@@ -78,20 +82,9 @@ export class RegisterComponent {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
-  }
   isActiveRoute(route: string): boolean {
     return this.router.url === route;
   }

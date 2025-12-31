@@ -3,12 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
-import { BottomNavComponent } from '../../shared/bottom-nav.component';
 import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, BottomNavComponent, ErrorNotificationComponent],
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent],
   selector: 'app-signin',
   templateUrl: './signin.component.html',
   styleUrls: ['./signin.component.css']
@@ -66,20 +65,9 @@ export class SignInComponent {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
-  }
   isActiveRoute(route: string): boolean {
     return this.router.url === route;
   }

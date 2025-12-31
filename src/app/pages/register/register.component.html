@@ -2,16 +2,9 @@
   <h3 class="register-title">Register</h3>
   <p class="register-info" *ngIf="email">Email: {{email}}</p>
   <input class="register-input" [(ngModel)]="username" placeholder="Username" />
+  <input class="register-input" [(ngModel)]="mobile" placeholder="Mobile Number" type="tel" maxlength="15" />
   <input class="register-input" [(ngModel)]="password" placeholder="Password" type="password"/>
   <button class="register-btn" (click)="register()">Register</button>
   <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 </div>
 
-<div style="padding-bottom: var(--bottom-nav-height);">
-<app-bottom-nav
-  [bottomNavItems]="bottomNavItems"
-  [getIconForRoute]="getIconForRoute.bind(this)"
-  [isActiveRoute]="isActiveRoute.bind(this)"
-  [navigate]="navigate.bind(this)">
-</app-bottom-nav>
-</div>

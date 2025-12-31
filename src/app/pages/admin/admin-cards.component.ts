@@ -51,7 +51,6 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
     <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
-      [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
@@ -74,8 +73,7 @@ export class AdminCardsComponent {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
 
@@ -88,17 +86,6 @@ createCard() {
   this.msg = '';
   this.error = '';
   const payload = new FormData();
-  console.log(payload);
-  console.log('name:', this.dto.name);
-  console.log('image:', this.dto.image); // Should now log the selected image
-  // console.log('imageUrl:', this.dto.imageUrl);
-  console.log('totalFilms:', this.dto.totalFilms);
-  console.log('yearsActive:', this.dto.yearsActive);
-  console.log('highestGrossing:', this.dto.highestGrossing);
-  console.log('awardsWon:', this.dto.awardsWon);
-  console.log('followers:', this.dto.followers);
-  console.log('languagesStr:', this.dto.languagesStr);
-  console.log('professionsStr:', this.dto.professionsStr);
 
   if (this.dto.name) payload.append('name', String(this.dto.name));
   if (this.dto.image) {
@@ -112,11 +99,6 @@ createCard() {
   if (this.dto.followers) payload.append('followers', String(this.dto.followers));
   if (this.dto.languagesStr) payload.append('languages', String(this.dto.languagesStr));
   if (this.dto.professionsStr) payload.append('professions', String(this.dto.professionsStr));
- // Instead of directly logging the payload, use FormData.entries() to view the contents
-for (let [key, value] of payload.entries()) {
-  console.log(key, value);
-}
-
 
   this.admin.create(payload).subscribe({
     next: (c) => {
@@ -145,17 +127,6 @@ for (let [key, value] of payload.entries()) {
 
   navigate(route: string) {
     window.location.href = route;
-  }
-
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
   }
 
   isActiveRoute(route: string): boolean {

@@ -22,7 +22,6 @@ import { BottomNavComponent } from '../../shared/bottom-nav.component';
     <div style="padding-bottom: var(--bottom-nav-height);">
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
-      [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="goTo.bind(this)">
     </app-bottom-nav>
@@ -33,8 +32,7 @@ export class AdminHomeComponent {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
 
@@ -42,17 +40,6 @@ export class AdminHomeComponent {
 
   goTo(route: string) {
     this.router.navigate([route]);
-  }
-
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
   }
 
   isActiveRoute(route: string): boolean {

@@ -45,17 +45,14 @@ export class WebsocketService implements OnDestroy {
     if (!this.stompClient) {
       const token = this.auth.getAccessToken();
       if (!token) {
-        console.warn('[WebsocketService] No access token found. Attempting to refresh token...');
         this.auth.refreshToken().subscribe({
           next: (freshToken: string) => {
             if (!freshToken) {
-              console.error('[WebsocketService] Could not refresh token');
               return;
             }
             this._connectWithTokenAndSubscribeQueued(freshToken);
           },
           error: (err) => {
-            console.error('[WebsocketService] Token refresh failed (no token):', err);
           }
         });
         return;
@@ -64,7 +61,6 @@ export class WebsocketService implements OnDestroy {
       try {
         payload = JSON.parse(atob(token.split('.')[1]));
       } catch (e) {
-        console.error('[WebsocketService] Failed to decode token:', e);
         return;
       }
       const now = Math.floor(Date.now() / 1000);
@@ -72,13 +68,11 @@ export class WebsocketService implements OnDestroy {
         this.auth.refreshToken().subscribe({
           next: (freshToken: string) => {
             if (!freshToken) {
-              console.error('[WebsocketService] Could not refresh token');
               return;
             }
             this._connectWithTokenAndSubscribeQueued(freshToken);
           },
           error: (err) => {
-            console.error('[WebsocketService] Refresh before WS failed:', err);
           }
         });
       } else {
@@ -96,10 +90,9 @@ export class WebsocketService implements OnDestroy {
     this.stompClient = new Client({
       brokerURL: brokerUrl,
       reconnectDelay: 5000,
-      debug: (msg: string) => console.log('[STOMP]', msg),
+      debug: (msg: string) => {},
     });
     this.stompClient.onConnect = () => {
-      console.log('[STOMP] CONNECTED');
       this.connectionStatus$.next(true);
       // Subscribe to all queued topics
       for (const topic of this.queuedTopics) {
@@ -108,7 +101,6 @@ export class WebsocketService implements OnDestroy {
       this.queuedTopics = [];
     };
     this.stompClient.onStompError = (frame: IFrame) => {
-      console.error('[STOMP] Broker error:', frame);
       const msg = frame.headers?.['message'] ?? '';
       if (msg.includes('expired')) {
         this.auth.refreshToken().subscribe({
@@ -120,11 +112,9 @@ export class WebsocketService implements OnDestroy {
             this._connectWithTokenAndSubscribeQueued(freshToken);
           },
           error: (err) => {
-            console.error('[WebsocketService] Token refresh failed during STOMP error:', err);
           }
         });
       } else {
-        console.error('[WebsocketService] Unhandled STOMP error:', msg);
       }
     };
     this.stompClient.activate();
@@ -139,11 +129,10 @@ export class WebsocketService implements OnDestroy {
       this.stompClient = new Client({
         brokerURL: brokerUrl,
         reconnectDelay: 5000,
-        debug: (msg: string) => console.log('[STOMP]', msg),
+        debug: (msg: string) => {},
       });
 
       this.stompClient.onConnect = () => {
-        console.log('[STOMP] CONNECTED');
         // Subscribe to all topics in the map
         for (const [t, sub] of this.subscriptions.entries()) {
           if (sub) sub.unsubscribe();
@@ -154,7 +143,6 @@ export class WebsocketService implements OnDestroy {
       };
 
       this.stompClient.onStompError = (frame: IFrame) => {
-        console.error('[STOMP] Broker error:', frame);
         const msg = frame.headers?.['message'] ?? '';
         if (msg.includes('expired')) {
           this.auth.refreshToken().subscribe({
@@ -166,11 +154,9 @@ export class WebsocketService implements OnDestroy {
               this._connectWithTokenAndSubscribe(topic, freshToken);
             },
             error: (err) => {
-              console.error('[WebsocketService] Token refresh failed during STOMP error:', err);
             }
           });
         } else {
-          console.error('[WebsocketService] Unhandled STOMP error:', msg);
         }
       };
 
@@ -195,14 +181,12 @@ export class WebsocketService implements OnDestroy {
   const sub = this.stompClient.subscribe(topic, (message: IMessage) => {
     try {
       const parsed = JSON.parse(message.body);
-      console.log('[WebsocketService] Received message on', topic, ':', parsed);
             
       // Add topic information
       const messageWithTopic = { ...parsed, _wsTopic: topic };
 
       // Recognize StartGameBundle
       if (isStartGameBundleMessage(messageWithTopic)) {
-        console.log('[WebsocketService] Detected StartGameBundleMessage, pushing to messages$', messageWithTopic);
         this.messages$.next(messageWithTopic);
         return;
       }
@@ -210,7 +194,6 @@ export class WebsocketService implements OnDestroy {
       // Accept new start message format: { players, statSelectorId, roomCode, ... }
       const isNewStartMsg = Array.isArray(messageWithTopic.players) && typeof messageWithTopic.statSelectorId === 'string' && typeof messageWithTopic.roomCode === 'string';
       if (isNewStartMsg) {
-        console.log('[WebsocketService] Detected new start message format, pushing to messages$', messageWithTopic);
         this.messages$.next(messageWithTopic);
         return;
       }
@@ -235,14 +218,11 @@ export class WebsocketService implements OnDestroy {
           isValid = true; // Accept unknown message types
       }
       if (!isValid) {
-        console.log('[WebsocketService] Message validation failed for type', messageType);
-        console.warn(`[WebsocketService] Invalid ${messageType} message:`, messageWithTopic);
         return;
       }
       // Emit the message
       this.messages$.next(messageWithTopic);
         } catch (e) {
-            console.error('[WebsocketService] Failed to parse message:', message.body, e);
         }
     });
     this.subscriptions.set(topic, sub);

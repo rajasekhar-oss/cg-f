@@ -39,13 +39,14 @@
 .profile-initials {
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--blue-2), var(--blue-3));
+  background: linear-gradient(135deg, var(--primary-1), var(--secondary-1));
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-on-primary, #fff);
+  color: var(--text-on-primary);
   font-weight: bold;
   font-size: 18px;
+  box-shadow: var(--glow-primary);
 }
 
 .user-details {
@@ -86,11 +87,11 @@
 }
 
 .points-value {
-  color: var(--blue-2);
+  color: var(--accent-1);
 }
 
 .rank-value {
-  color: var(--green-2, #10b981);
+  color: var(--success);
 }
 
 .stat-label {
@@ -106,14 +107,14 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: var(--bg-1, #fff);
-  border-top: 1px solid var(--border-1, #e5e7eb);
+  background: var(--bg-2);
+  border-top: 1px solid var(--border-1);
   display: none;
   z-index: 100;
-  box-shadow: none;
+  box-shadow: var(--shadow-sm);
 }
 .bottom-nav:hover {
-  box-shadow: 0 -2px 8px var(--shadow-1, rgba(0,0,0,0.04));
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 1024px) {
@@ -191,5 +192,14 @@
   
   .stat-label {
     font-size: 10px;
+  }
+}
+
+/* Center game mode cards on large devices */
+@media (min-width: 1025px) {
+  .grid.grid-cols-4 {
+    max-width: 900px;
+    margin: 0 auto;
+    justify-content: center;
   }
 }

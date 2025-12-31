@@ -12,7 +12,7 @@ h2, h3 {
   color: var(--card-title-text);
 }
 strong {
-  color: var(--blue-1);
+  color: var(--primary-1);
 }
 ul {
   margin-left: 1rem;
@@ -48,34 +48,5 @@ ul {
   font-weight: bold;
   font-size: 1.1rem;
   flex: 1;
+}
 
-
-.top-nav {
-  display: flex;
-  align-items: center;
-  background: var(--primary-color, #1976d2);
-  color: #fff;
-  padding: 0.5rem 1rem;
-  border-radius: 8px 8px 0 0;
-  margin-bottom: 1rem;
-}
-.back-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-right: 1rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-.back-btn:hover, .back-btn:focus {
-  background: rgba(255,255,255,0.15);
-}
-.nav-title {
-  font-weight: bold;
-  font-size: 1.1rem;
-  flex: 1;
-}
-}

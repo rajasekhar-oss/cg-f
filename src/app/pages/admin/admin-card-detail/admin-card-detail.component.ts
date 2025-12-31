@@ -72,10 +72,6 @@ export class AdminCardDetailComponent implements OnInit {
     if (this.dto.followers) payload.append('followers', String(this.dto.followers));
     if (this.dto.languages) payload.append('languages', String(this.dto.languages));
     if (this.dto.professions) payload.append('professions', String(this.dto.professions));
-    // Debug log FormData
-    for (let [key, value] of payload.entries()) {
-      console.log(key, value);
-    }
     this.admin.updateCard(this.card.id, payload).subscribe({
       next: () => {
         this.msg = 'Card updated!';

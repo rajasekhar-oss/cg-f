@@ -17,11 +17,6 @@ export class AdminService {
   }
 
   // Cards
-  // create(dto: CardRequestDto | FormData): Observable<Card> {
-  //   console.log('[AdminService] Creating card:', dto);
-  //   return this.http.post<Card>(`${environment.apiUrl}/admin/cards`, dto);
-  // }
-  // Inside your Angular service
   create(payload: FormData): Observable<any> {
     // If you are using HttpClient, the code should be simple like this.
     // Do not add custom headers like 'Content-Type': 'multipart/form-data'
@@ -29,19 +24,15 @@ export class AdminService {
     return this.http.post<Card>(`${environment.apiUrl}/admin/cards`, payload);
   }
   getCards(): Observable<Card[]> {
-    console.log('[AdminService] Fetching all cards...');
     return this.http.get<Card[]>(`${environment.apiUrl}/admin/cards`);
   }
   getCard(id: number): Observable<Card> {
-    console.log('[AdminService] Fetching card with ID:', id);
     return this.http.get<Card>(`${environment.apiUrl}/admin/cards/${id}`);
   }
   updateCard(id: number, dto: CardRequestDto | FormData): Observable<Card> {
-    console.log('[AdminService] Updating card with ID:', id, 'Payload:', dto);
     return this.http.put<Card>(`${environment.apiUrl}/admin/cards/${id}`, dto);
   }
   deleteCard(id: number): Observable<ResponseDto> {
-    console.log('[AdminService] Deleting card with ID:', id);
     return this.http.delete<ResponseDto>(`${environment.apiUrl}/admin/cards/${id}`);
   }
 

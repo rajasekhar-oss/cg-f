@@ -10,7 +10,7 @@
 .container {
   background: var(--card-bg);
   border-radius: 18px;
-  box-shadow: var(--card-shadow), 0 -2px 0 0 oklch(0.97 0.02 var(--hue-blue) / 0.08) inset;
+  box-shadow: var(--card-shadow), 0 -2px 0 0 oklch(0.97 0.02 var(--hue-primary) / 0.08) inset;
   margin: 48px auto 0 auto;
   padding: 40px 32px 32px 32px;
   max-width: 400px;
@@ -44,7 +44,7 @@ input {
   color: var(--input-text);
   font-size: 1rem;
   transition: border 0.2s, box-shadow 0.2s;
-  box-shadow: 0 1.5px 0 0 oklch(0.97 0.02 var(--hue-blue) / 0.10) inset;
+  box-shadow: 0 1.5px 0 0 oklch(0.97 0.02 var(--hue-primary) / 0.10) inset;
 }
 input:focus {
   outline: none;

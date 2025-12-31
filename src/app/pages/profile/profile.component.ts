@@ -22,32 +22,30 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
 export class ProfileComponent implements OnInit {
     showNotification = false;
     notificationMessage = '';
+    
+    // Menu and Modal state
+    showMenu = false;
+    activeModal: 'image' | 'username' | 'password' | null = null;
+    
     constructor(
         private api: ApiService,
         private auth: AuthService,
         private router: Router,
         private http: HttpClient
-    ) {}
+    ) {
+        // Close menu when clicking outside
+        document.addEventListener('click', () => {
+            this.showMenu = false;
+        });
+    }
     
     // Bottom nav logic
     bottomNavItems = [
         { label: 'Home', route: '/' },
         { label: 'Cards', route: '/cards' },
-        { label: 'Star', route: '/leaderboard' },
-        { label: 'Person', route: '/friends' },
+        { label: 'Leaderboard', route: '/leaderboard' },
         { label: 'Profile', route: '/profile' }
     ];
-
-    getIconForRoute(route: string): string {
-        const icons: { [key: string]: string } = {
-            '/': '🏠',
-            '/cards': '🃏',
-            '/leaderboard': '⭐',
-            '/friends': '👥',
-            '/profile': '👤'
-        };
-        return icons[route] || '📄';
-    }
 
     isActiveRoute(route: string): boolean {
         return this.router.url === route;
@@ -56,6 +54,29 @@ export class ProfileComponent implements OnInit {
     navigate(route: string) {
         this.router.navigate([route]);
     }
+    
+    // Menu and Modal methods
+    toggleMenu(event: Event) {
+        event.stopPropagation();
+        this.showMenu = !this.showMenu;
+    }
+    
+    openModal(type: 'image' | 'username' | 'password') {
+        this.showMenu = false;
+        this.activeModal = type;
+        // Reset messages when opening modal
+        this.updateMessage = '';
+        this.usernameMessage = '';
+        this.passwordMessage = '';
+    }
+    
+    closeModal() {
+        this.activeModal = null;
+        this.updateMessage = '';
+        this.usernameMessage = '';
+        this.passwordMessage = '';
+    }
+    
     // Rank
     userRank: number | null = null;
     rankError: string = '';
@@ -91,6 +112,9 @@ export class ProfileComponent implements OnInit {
                 this.usernameSuccess = true;
                 this.isUpdatingUsername = false;
                 this.loadProfile();
+                setTimeout(() => {
+                    this.closeModal();
+                }, 1500);
             },
             error: (err: any) => {
                 if (err?.error?.errorMessage) {
@@ -125,6 +149,9 @@ export class ProfileComponent implements OnInit {
                 this.isUpdatingPassword = false;
                 this.oldPassword = '';
                 this.newPassword = '';
+                setTimeout(() => {
+                    this.closeModal();
+                }, 1500);
             },
             error: (err: any) => {
                 if (err?.error?.errorMessage) {
@@ -276,7 +303,8 @@ export class ProfileComponent implements OnInit {
                 setTimeout(() => {
                     this.loadProfile();
                     this.updateMessage = '';
-                }, 2000);
+                    this.closeModal();
+                }, 1500);
             },
             error: (error: any) => {
                 if (error?.error?.errorMessage) {

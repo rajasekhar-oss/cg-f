@@ -1,7 +1,7 @@
 .section-title {
   font-size: 2vw;
   font-weight: 700;
-  color: var(--blue-1);
+  color: var(--primary-1);
   margin: 2vw 0 1vw 2vw;
 }
 .stored-cards-page-container {
@@ -18,7 +18,7 @@
 }
 .stored-cards-header h2 {
   font-size: 3vw;
-  color: var(--blue-1);
+  color: var(--primary-1);
   margin: 0;
 }
 .stored-cards-list {
@@ -90,7 +90,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0,0,0,0.4);
+  background: var(--modal-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,7 +168,7 @@
   position: absolute;
   top: 1vw;
   right: 1vw;
-  background: var(--blue-1);
+  background: var(--primary-1);
   color: var(--btn-primary-text);
   border-radius: 1vw;
   padding: 0.5vw 1vw;
@@ -180,4 +180,88 @@
   color: var(--text-4);
   font-size: 2vw;
   margin: 4vw 0;
+}
+
+/* Large device responsive styles - reduce card sizes */
+@media (min-width: 1025px) {
+  .stored-cards-page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 80px 20px;
+  }
+  .stored-cards-header {
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 16px;
+  }
+  .stored-cards-header h2 {
+    font-size: 24px;
+  }
+  .section-title {
+    font-size: 18px;
+    margin: 16px 0 12px 0;
+  }
+  .stored-cards-list {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 16px;
+  }
+  .stored-card-item {
+    border-radius: 12px;
+  }
+  .card-image-full {
+    border-radius: 12px;
+  }
+  .info-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+    top: 8px;
+    left: 8px;
+  }
+  .stored-badge {
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 11px;
+    top: 8px;
+    right: 8px;
+  }
+  .card-details-image img {
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+  }
+  .stat-card {
+    font-size: 14px;
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+  .loading, .empty {
+    font-size: 16px;
+    margin: 24px 0;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .stored-cards-page-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px 16px 80px 16px;
+  }
+  .stored-cards-header {
+    width: 100%;
+    margin-left: 0;
+  }
+  .stored-cards-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-left: 0;
+  }
+  .section-title {
+    font-size: 16px;
+    margin: 14px 0 10px 0;
+  }
 }

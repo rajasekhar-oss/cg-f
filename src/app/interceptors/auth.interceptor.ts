@@ -1,11 +1,13 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
+import { Router } from '@angular/router';
 import { catchError, switchMap, throwError } from 'rxjs';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   console.log('[AuthInterceptor] Interceptor called');
   const auth = inject(AuthService);
+  const router = inject(Router);
   console.log('[AuthInterceptor] AuthService injected:', !!auth);
   const token = auth.getAccessToken();
   const refreshToken = auth.getRefreshToken();
@@ -57,7 +59,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     auth.logout();
   }
             console.log('[AuthInterceptor] Token refresh failed:', refreshErr);
-            // Only show session expired alert for true auth errors
             const authErrorMsg = (refreshErr?.error?.error || refreshErr?.message || '').toLowerCase();
             if (
               authErrorMsg.includes('token') ||
@@ -65,9 +66,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
               authErrorMsg.includes('unauthorized') ||
               authErrorMsg.includes('invalid')
             ) {
-              alert('Your session has expired. Please log in.');
+              router.navigate(['/']);
             } else {
-              alert('An error occurred: ' + (refreshErr?.error?.error || refreshErr?.message || refreshErr));
+              router.navigate(['/']);
             }
             return throwError(() => err);
           })

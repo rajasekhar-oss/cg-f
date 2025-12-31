@@ -2,56 +2,63 @@
   padding: 32px;
   max-width: 600px;
   margin: 0 auto;
-  background: #f9fafb;
+  background: var(--bg-2);
   border-radius: 16px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow-lg);
 }
 .admin-card-detail-container h2 {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 24px;
-  color: #1f2937;
+  color: var(--text-1);
 }
 .loading {
-  color: #6366f1;
+  color: var(--primary-1);
   font-weight: 500;
   margin-bottom: 16px;
 }
 .error {
-  color: #dc2626;
+  color: var(--error);
   font-weight: 500;
   margin-bottom: 16px;
 }
 .success {
-  color: #059669;
+  color: var(--success);
   font-weight: 500;
   margin-top: 12px;
 }
 .no-data {
-  color: #6b7280;
+  color: var(--text-4);
   margin-top: 16px;
 }
 .card-form {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 12px;
   padding: 32px 24px;
-  box-shadow: 0 2px 8px #e5e7eb;
+  box-shadow: var(--card-shadow);
 }
 .card-form label {
   text-align: left;
   font-weight: 500;
-  color: #374151;
+  color: var(--text-2);
 }
 .card-form input {
   margin-top: 4px;
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--input-border);
   font-size: 1rem;
   width: 100%;
+  background: var(--input-bg);
+  color: var(--input-text);
+}
+.card-form input:focus {
+  outline: none;
+  border-color: var(--input-focus-border);
+  box-shadow: var(--focus-shadow);
 }
 .button-row {
   display: flex;
@@ -60,31 +67,33 @@
 }
 .update-btn {
   flex: 1;
-  background: linear-gradient(90deg, #3b82f6 60%, #6366f1 100%);
-  color: white;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
   border-radius: 8px;
   padding: 12px 0;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(59,130,246,0.08);
+  transition: box-shadow 0.2s, background 0.2s;
+  box-shadow: var(--shadow-md);
+}
+.update-btn:hover {
+  background: var(--btn-primary-bg-hover);
+  box-shadow: var(--shadow-lg);
 }
 .delete-btn {
   flex: 1;
-  background: linear-gradient(90deg, #dc2626 60%, #f87171 100%);
+  background: var(--error);
   color: white;
   border: none;
   border-radius: 8px;
   padding: 12px 0;
   font-weight: 600;
   cursor: pointer;
-  transition: box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(220,38,38,0.08);
-}
-.update-btn:hover {
-  background: linear-gradient(90deg, #6366f1 60%, #3b82f6 100%);
+  transition: box-shadow 0.2s, background 0.2s;
+  box-shadow: var(--shadow-md);
 }
 .delete-btn:hover {
-  background: linear-gradient(90deg, #f87171 60%, #dc2626 100%);
+  background: var(--error-hover);
+  box-shadow: var(--shadow-lg), var(--glow-error);
 }

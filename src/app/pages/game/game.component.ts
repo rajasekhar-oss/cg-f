@@ -10,6 +10,17 @@ import { GameInfo } from '../../models/gameinfo';
 import { GameStateDto, PlayerInfo } from '../../models/game-state.model';
 import { AuthService } from '../../services/auth.service';
 
+
+// Chat message interface (move above @Component)
+interface GameMessage {
+  id: number;
+  roomCode: string;
+  message: string;
+  senderUsername: string;
+  stickerUrl?: string;
+  toUsers: string[];
+}
+
 interface StickerAnim {
   id: number;
   name: string;
@@ -27,9 +38,36 @@ interface StickerAnim {
 })
 
 export class GameComponent {
+    @ViewChild('chatEnd') chatEnd!: ElementRef;
+    ngAfterViewChecked() {
+      this.scrollChatToBottom();
+    }
+
+    scrollChatToBottom() {
+      try {
+        if (this.chatEnd) {
+          this.chatEnd.nativeElement.scrollIntoView({ behavior: 'smooth' });
+        }
+      } catch (err) {}
+    }
+  // Chat state
+  showChatPanel = false;
+  chatMessages: GameMessage[] = [];
+  chatInput: string = '';
+  showStickerPicker = false;
+  selectedChatSticker: { id: number, name: string, imageUrl: string } | null = null;
+  unreadChatCount = 0;
+      // Winner stat notification
+      showWinnerStatNotification = false;
+      winnerStatLabel: string = '';
+      winnerStatValue: any = '';
+      winnerStatProfilePic: string = '';
+      winnerStatUsername: string = '';
+      winnerStatCardImageUrl: string = '';
+      tieStatPlayers: Array<{ username: string; profilePic: string; cardImage: string }> = [];
     // Winner card animation variables
-    winnerCardAnimations: { id: number; x: number; y: number; toX: number; toY: number }[] = [];
-    cardTransferImage = "https://res.cloudinary.com/dkb442je2/image/upload/v1758714792/twfuswc6gss4grr3tfhl.png"; // You can change this to any image
+    winnerCardAnimations: { id: number; x: number; y: number; toX: number; toY: number; imageUrl: string }[] = [];
+    cardTransferImage = "https://res.cloudinary.com/dkb442je2/image/upload/v1758714792/twfuswc6gss4grr3tfhl.png"; // Default fallback image
     private animKey = 0;
     // Get seat center position for animation
     getSeatCenter(username: string): { x: number; y: number } | null {
@@ -46,20 +84,22 @@ export class GameComponent {
       return null;
     }
 
-    // Create card animation items from loser to winner
-    createCardsFromLoser(loser: string, count: number, winner: string) {
+    // Create card animation items from loser to winner, using actual card images
+    createCardsFromLoser(loser: string, count: number, winner: string, cardImages: string[]) {
       const from = this.getSeatCenter(loser);
       const to = this.getSeatCenter(winner);
       if (!from || !to) return;
       for (let i = 0; i < count; i++) {
         const id = ++this.animKey;
-        const delay = count > 1 ? i * 250 : 0; 
+        const delay = count > 1 ? i * 250 : 0;
+        const imageUrl = cardImages[i] || this.cardTransferImage;
         this.winnerCardAnimations.push({
           id,
           x: from.x,
           y: from.y,
           toX: to.x,
-          toY: to.y
+          toY: to.y,
+          imageUrl
         });
         setTimeout(() => {
           const card = this.winnerCardAnimations.find(c => c.id === id);
@@ -70,20 +110,31 @@ export class GameComponent {
         }, 100+delay);
         setTimeout(() => {
           this.winnerCardAnimations = this.winnerCardAnimations.filter(c => c.id !== id);
-        }, 1000+delay);
+        }, 3000+delay);
       }
     }
 
-    // Animate round winner card transfer
+    // Animate round winner card transfer using actual card images
     animateRoundWinner() {
       const rounds = this.getGroupedRounds();
       if (!rounds.length) return;
       const latest = rounds[0]; // most recent round
       if (!latest.winner || !latest.losers) return;
       const winnerName = latest.winner;
+      // For each loser, collect their cards for this round
       latest.losers.forEach(l => {
-        this.createCardsFromLoser(l.userName, l.count, winnerName);
+        // Find all cards for this loser in the round
+        const loserCards = latest.cards.filter((c: any) => (c.userName || c.username) === l.userName);
+        // Get their images
+        const cardImages = loserCards.map((c: any) => c.picture || c.imageUrl || this.cardTransferImage);
+        // If count > actual images, fill with fallback
+        while (cardImages.length < l.count) cardImages.push(this.cardTransferImage);
+        this.createCardsFromLoser(l.userName, l.count, winnerName, cardImages);
       });
+      // Also show winner stat notification if available in latest round summary
+      if (latest.statLabel && latest.statValue !== undefined) {
+        this.triggerWinnerStatNotification(latest.statLabel, latest.statValue);
+      }
     }
   showNotification = false;
   notificationMessage = '';
@@ -335,6 +386,7 @@ export class GameComponent {
     }
     if (this.roomCode) {
       this.fetchGameInfo(this.roomCode);
+      this.fetchChatMessages();
     }
     this.myUserId = this.auth.getUserId() || '';
     if (this.myUserId) {
@@ -366,6 +418,7 @@ export class GameComponent {
       }
       if (msg && typeof msg.id === 'number' && typeof msg.imageUrl === 'string' && typeof msg.userName === 'string') {
         this.showStickerAnimation(msg);
+        this.fetchChatMessages(); // Refresh chat messages when a new sticker/message is received
       }
       if (msg.type === 'playerinfo changed') {
         if (this.roomCode) {
@@ -387,6 +440,132 @@ export class GameComponent {
       }
     });
     this.subscriptions.push(wsSub);
+    // Fetch chat messages on init if not already loaded
+    if (this.roomCode && this.chatMessages.length === 0) {
+      this.fetchChatMessages();
+    }
+  }
+
+  // Toggle chat panel and reset unread count
+  toggleChatPanel() {
+    this.showChatPanel = !this.showChatPanel;
+    if (this.showChatPanel) {
+      this.unreadChatCount = 0;
+      setTimeout(() => this.scrollChatToBottom(), 100);
+    }
+    this.showStickerPicker = false;
+    this.selectedChatSticker = null;
+  }
+
+  // Fetch chat messages from backend
+  fetchChatMessages() {
+    if (!this.roomCode) return;
+    this.api.get(`/api/rooms/${this.roomCode}/messages`).subscribe((messages: any) => {
+      if (Array.isArray(messages)) {
+        this.chatMessages = messages as GameMessage[];
+        setTimeout(() => this.scrollChatToBottom(), 100);
+      }
+    });
+  }
+
+  // Send chat message or sticker
+  sendChatMessage() {
+    if (!this.roomCode || (!this.chatInput && !this.selectedChatSticker)) return;
+    this.api.post(`/api/rooms/${this.roomCode}/stickers/send?id=${this.selectedChatSticker?.id || ''}&recipients=${this.usernames.join(',')}&message=${this.chatInput || ''}`, null)
+      .subscribe(() => {
+        this.chatInput = '';
+        this.selectedChatSticker = null;
+        this.showStickerPicker = false;
+        this.fetchChatMessages();
+      });
+  }
+
+  // Select sticker for chat
+  selectChatSticker(sticker: { id: number, name: string, imageUrl: string }) {
+    this.selectedChatSticker = sticker;
+    this.showStickerPicker = false;
+  }
+
+  // Utility: get avatar for username
+  getUserAvatar(username: string): string {
+    const player = this.arrangedFullPlayers.find(p => p.username === username);
+    return player?.profilePicUrl || `https://ui-avatars.com/api/?name=${username}&background=random`;
+  }
+
+  // ...existing code...
+
+  // Optionally: Listen for new messages via WebSocket and update unread count
+  // (This can be improved to use a dedicated chat topic if available)
+  // For now, refetch on panel open/send
+    triggerTieStatNotification(msg: any, label: string, value: any) {
+    this.tieStatPlayers = [];
+     
+    // Use msg.tiePlayers if present, else fallback to msg.currentRoundPlays
+    const tieUsernames = Array.isArray(msg.tiePlayers) ? msg.tiePlayers : (Array.isArray(msg.currentRoundPlays) ? msg.currentRoundPlays : []);
+    let statLabel = '';
+    let statValue: any = '';
+    const cards = msg.currentRoundCards;
+
+    // Mapping from stat key to full label with emoji
+    const statKeyToLabel: { [key: string]: string } = {
+      'totalFilms': '🎬Total Films',
+      'yearsActive': '📅Years Active',
+      'highestGrossing': '💰Highest Grossing',
+      'awardsWon': '🏆Awards Won',
+      'followers': '👨‍👩‍👧‍👦Followers',
+      'languages': '🌐Languages',
+      'professions': '🎭Professions'
+    };
+
+// 1️⃣ Get round number from the last card (no drama)
+const latestRoundNumber = cards[cards.length - 1].roundnumber;
+
+// 2️⃣ Reverse iterate and stop as soon as match is found
+for (let i = cards.length - 1; i >= 0; i--) {
+  const card = cards[i];
+
+  // Skip if not same round
+  if (card.roundnumber !== latestRoundNumber) continue;
+
+  // Check if username is in tie players
+  if (card.tiePlayersWinners?.includes(card.userName)) {
+    const rawStatKey = card.selectedStat;
+    // Convert stat key to full label with emoji
+    statLabel = statKeyToLabel[rawStatKey] || rawStatKey;
+    statValue = card[rawStatKey];
+    break; // 🚨 stop immediately once found
+  }
+}
+    if (tieUsernames.length) {
+      const rounds = this.getGroupedRounds && this.getGroupedRounds();
+      let latest = rounds && rounds.length ? rounds[0] : null;
+      for (const username of tieUsernames) {
+        let player = this.arrangedFullPlayers.find(p => p.username === username);
+        let profilePic = player?.profilePicture || player?.profilePicUrl || '';
+        let cardImage = '';
+        if (latest && latest.cards) {
+const card = latest.cards
+  .slice()
+  .reverse()
+  .find((c: any) => (c.userName || c.username) === username);
+          cardImage = card?.picture || card?.imageUrl || '';
+          
+        }
+        this.tieStatPlayers.push({ username, profilePic, cardImage });
+      }
+    }
+    // Set stat label and value for tie notification
+    this.winnerStatLabel = statLabel;
+    this.winnerStatValue = statValue;
+    this.showWinnerStatNotification = true;
+    this.isTie = true;
+    setTimeout(() => {
+      this.showWinnerStatNotification = false;
+      this.isTie = false;
+      this.tieStatPlayers = [];
+      this.winnerStatLabel = '';
+      this.winnerStatValue = '';
+    }, 5000);
   }
   updateGameState(msg: any) {
     this.players = msg.players;
@@ -406,21 +585,57 @@ export class GameComponent {
     if (!msg.tie) {
       this.winner = msg.winner;
       this.isTie = false;
+      this.tieStatPlayers = [];
+      // Show winner stat notification if stat info is available
+      if (msg.selectedStatLabel && msg.selectedStatValue !== undefined) {
+        this.triggerWinnerStatNotification(msg.selectedStatLabel, msg.selectedStatValue);
+      }
       this.winnerTimeout = setTimeout(() => {
         this.winner = '';
       }, 5000);
     } else if (msg.tie) {
       this.isTie = true;
       this.winner = '';
-      this.winnerTimeout = setTimeout(() => {
-        this.isTie = false;
-      }, 5000);
+      this.triggerTieStatNotification(msg, msg.selectedStatLabel, msg.selectedStatValue);
     }
+  // Show tie stat notification for all tie players
+
 
     this.currentStatSelector = msg.currentStatSelector;
     this.topCard = this.myCards && this.myCards.length ? this.myCards[0] : null;
     // Trigger winner card animation
     this.animateRoundWinner();
+  }
+  // Show winner stat notification with label and value
+  triggerWinnerStatNotification(label: string, value: any) {
+    this.winnerStatLabel = label;
+    this.winnerStatValue = value;
+    // Find winner info for profile pic and username
+    let winnerPlayer = this.arrangedFullPlayers.find(p => p.id === this.winner || p.username === this.winner);
+    if (!winnerPlayer && this.arrangedFullPlayers.length) {
+      // fallback: try matching by username string
+      winnerPlayer = this.arrangedFullPlayers.find(p => p.username === this.winnerStatUsername);
+    }
+    this.winnerStatProfilePic = winnerPlayer?.profilePicture || winnerPlayer?.profilePicUrl || '';
+    this.winnerStatUsername = winnerPlayer?.username || '';
+
+    // Try to get the winner's card image for the stat notification
+    let winnerCardImage = '';
+    const rounds = this.getGroupedRounds && this.getGroupedRounds();
+    if (rounds && rounds.length) {
+      const latest = rounds[0];
+      if (latest.cards && winnerPlayer) {
+        // Find the card for the winner in the latest round
+        const winnerCard = latest.cards.find((c: any) => (c.userName || c.username) === winnerPlayer.username);
+        winnerCardImage = winnerCard?.picture || winnerCard?.imageUrl || '';
+      }
+    }
+    this.winnerStatCardImageUrl = winnerCardImage;
+
+    this.showWinnerStatNotification = true;
+    setTimeout(() => {
+      this.showWinnerStatNotification = false;
+    }, 5000);
   }
   fetchuserInfo() {
     this.api.get('/users/me').subscribe({
@@ -446,7 +661,6 @@ export class GameComponent {
     if (this.myUsername) {
       const stickerTopic = `/topic/game/user/${this.myUsername}/stickers`;
       this.ws.connectAndSubscribe(stickerTopic);
-      console.log("sticker subscribed", stickerTopic);
     }
   }
   showNextCard() {
@@ -458,8 +672,9 @@ export class GameComponent {
     }
   }
   isSelectedStat(card: any, stat: any): boolean {
-    if (!card.selectedStat || !stat.label) return false;
-    return stat.label.replace(/\s/g, '').toLowerCase() === card.selectedStat.replace(/\s/g, '').toLowerCase();
+    if (!card.selectedStat || !stat.key) return false;
+    // Compare using key (e.g., 'totalFilms') since labels contain emojis that may not match
+    return stat.key.replace(/\s/g, '').toLowerCase() === card.selectedStat.replace(/\s/g, '').toLowerCase();
   }
 
   showCardDetails(card: any) {
@@ -475,26 +690,26 @@ export class GameComponent {
   get statList() {
     if (!this.topCard) return [];
     return [
-      { key: 'totalFilms', label: 'Total Films', value: this.topCard.totalFilms },
-      { key: 'yearsActive', label: 'Years Active', value: this.topCard.yearsActive },
-      { key: 'highestGrossing', label: 'Highest Grossing', value: this.topCard.highestGrossing },
-      { key: 'awardsWon', label: 'Awards Won', value: this.topCard.awardsWon },
-      { key: 'followers', label: 'Followers', value: this.topCard.followers },
-      { key: 'languages', label: 'Languages', value: this.topCard.languages },
-      { key: 'professions', label: 'Professions', value: this.topCard.professions }
+      { key: 'totalFilms', label: '🎬Total Films', value: this.topCard.totalFilms },
+      { key: 'yearsActive', label: '📅Years Active', value: this.topCard.yearsActive },
+      { key: 'highestGrossing', label: '💰Highest Grossing', value: this.topCard.highestGrossing },
+      { key: 'awardsWon', label: '🏆Awards Won', value: this.topCard.awardsWon },
+      { key: 'followers', label: '👨‍👩‍👧‍👦Followers', value: this.topCard.followers },
+      { key: 'languages', label: '🌐Languages', value: this.topCard.languages },
+      { key: 'professions', label: '🎭Professions', value: this.topCard.professions }
     ];
   }
 
   getStatList(card: any) {
     if (!card) return [];
     return [
-      { key: 'totalFilms', label: 'Total Films', value: card.totalFilms },
-      { key: 'yearsActive', label: 'Years Active', value: card.yearsActive },
-      { key: 'highestGrossing', label: 'Highest Grossing', value: card.highestGrossing },
-      { key: 'awardsWon', label: 'Awards Won', value: card.awardsWon },
-      { key: 'followers', label: 'Followers', value: card.followers },
-      { key: 'languages', label: 'Languages', value: card.languages },
-      { key: 'professions', label: 'Professions', value: card.professions }
+      { key: 'totalFilms', label: '🎬Total Films', value: card.totalFilms },
+      { key: 'yearsActive', label: '📅Years Active', value: card.yearsActive },
+      { key: 'highestGrossing', label: '💰Highest Grossing', value: card.highestGrossing },
+      { key: 'awardsWon', label: '🏆Awards Won', value: card.awardsWon },
+      { key: 'followers', label: '👨‍👩‍👧‍👦Followers', value: card.followers },
+      { key: 'languages', label: '🌐Languages', value: card.languages },
+      { key: 'professions', label: '🎭Professions', value: card.professions }
     ];
   }
   selectStat(statKey: string) {
@@ -515,7 +730,6 @@ export class GameComponent {
         this.selectedStat = null;
       },
       error: err => {
-        console.error('[GameComponent] Error submitting stat selection:', err);
       }
     });
   }
@@ -545,7 +759,7 @@ export class GameComponent {
     }));
   }
   getRoundSummaryFromCards(cards: any[]) {
-    if (!cards.length) return { winner: null, winnerCount: 0, losers: [], tiePlayers: [] };
+    if (!cards.length) return { winner: null, winnerCount: 0, losers: [], tiePlayers: [], statLabel: '', statValue: '' };
     const winner = cards.find(c => c.winner)?.winner || '';
     const tiePlayersWinners = cards[cards.length - 1].tiePlayersWinners || [];
     const userCounts: { [user: string]: number } = {};
@@ -554,21 +768,37 @@ export class GameComponent {
       if (!userCounts[uname]) userCounts[uname] = 0;
       userCounts[uname]++;
     });
+
+    // Find the winner's card
+    const winnerCard = cards.find(card => (card.userName || card.username) === winner);
+    // Get the selected stat key and value from the winner's card
+    let statLabel = '';
+    let statValue: any = '';
+    if (winnerCard && winnerCard.selectedStat) {
+      const statObj = this.getPrevCardStats(winnerCard).find(s =>
+        s.key.replace(/\s/g, '').toLowerCase() === winnerCard.selectedStat.replace(/\s/g, '').toLowerCase()
+      );
+      if (statObj) {
+        statLabel = statObj.label;
+        statValue = statObj.value;
+      }
+    }
+
     if (winner) {
       const winnerCount = userCounts[winner] || 0;
       const losers = Object.keys(userCounts)
         .filter(u => u !== winner)
         .map(u => ({ userName: u, count: userCounts[u] }));
-      return { winner, winnerCount: cards.length - winnerCount, losers, tiePlayers: [] };
+      return { winner, winnerCount: cards.length - winnerCount, losers, tiePlayers: [], statLabel, statValue };
     } else if (tiePlayersWinners && tiePlayersWinners.length) {
       const tiePlayers = tiePlayersWinners.map((u: string) => ({ userName: u, count: userCounts[u] || 0 }));
       const losers = Object.keys(userCounts)
         .filter(u => !tiePlayersWinners.includes(u))
         .map(u => ({ userName: u, count: userCounts[u] }));
-      return { winner: null, winnerCount: 0, losers, tiePlayers };
+      return { winner: null, winnerCount: 0, losers, tiePlayers, statLabel: '', statValue: '' };
     } else {
       const losers = Object.keys(userCounts).map(u => ({ userName: u, count: userCounts[u] }));
-      return { winner: null, winnerCount: 0, losers, tiePlayers: [] };
+      return { winner: null, winnerCount: 0, losers, tiePlayers: [], statLabel: '', statValue: '' };
     }
   }
   fetchStickers() {
@@ -622,6 +852,7 @@ export class GameComponent {
         }
         this.message = '';
         this.selectedStickerId = 0;
+        this.fetchChatMessages(); // Refresh chat after sending
       },
       error: (err) => {
         if (err?.error?.errorMessage) {
@@ -718,6 +949,8 @@ export class GameComponent {
     this.notificationMessage = '';
   }
   displayStickers() {
+    // Always fetch new messages when opening the panel
+    this.fetchChatMessages();
     if (this.stickers) {
       this.showStickersPanel = true;
     }
@@ -789,7 +1022,6 @@ export class GameComponent {
 
   endGame() {
     if (!this.roomCode) {
-      console.error('[GameComponent] No roomCode set for endGame');
       return;
     }
     this.api.post(`/api/rooms/${this.roomCode}/end-game`, {}).subscribe({
@@ -803,8 +1035,6 @@ export class GameComponent {
         if (err && err.error && (err.error.message?.includes('not exist') || err.error.message?.includes('deleted'))) {
           this.errorModalMessage = 'This game no longer exists or has already ended.';
           this.showErrorModal = true;
-        } else {
-          console.error('[GameComponent] Failed to end game:', err);
         }
       }
     });
@@ -812,7 +1042,6 @@ export class GameComponent {
 
   leaveGame() {
     if (!this.roomCode) {
-      console.error('[GameComponent] No roomCode set for leaveGame');
       return;
     }
     this.api.post(`/api/rooms/${this.roomCode}/leave-game`, {}).subscribe({
@@ -826,8 +1055,6 @@ export class GameComponent {
         if (err && err.error && (err.error.message?.includes('not exist') || err.error.message?.includes('deleted'))) {
           this.errorModalMessage = 'This game no longer exists or has already ended.';
           this.showErrorModal = true;
-        } else {
-          console.error('[GameComponent] Failed to leave game:', err);
         }
       }
     });
@@ -838,13 +1065,13 @@ export class GameComponent {
   getPrevCardStats(card: any) {
     if (!card) return [];
     return [
-      { label: 'Total Films', value: card.totalFilms },
-      { label: 'Years Active', value: card.yearsActive },
-      { label: 'Highest Grossing', value: card.highestGrossing },
-      { label: 'Awards Won', value: card.awardsWon },
-      { label: 'Followers', value: card.followers },
-      { label: 'Languages', value: card.languages },
-      { label: 'Professions', value: card.professions }
+      { key: 'totalFilms', label: '🎬Total Films', value: card.totalFilms },
+      { key: 'yearsActive', label: '📅Years Active', value: card.yearsActive },
+      { key: 'highestGrossing', label: '💰Highest Grossing', value: card.highestGrossing },
+      { key: 'awardsWon', label: '🏆Awards Won', value: card.awardsWon },
+      { key: 'followers', label: '👨‍👩‍👧‍👦Followers', value: card.followers },
+      { key: 'languages', label: '🌐Languages', value: card.languages },
+      { key: 'professions', label: '🎭Professions', value: card.professions }
     ];
   }
 }

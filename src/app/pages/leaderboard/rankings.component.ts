@@ -66,18 +66,17 @@ import { ErrorNotificationComponent } from '../../shared/error-notification.comp
         <button class="pagination-button" *ngIf="hasPrevPage" (click)="prevPage()"
           [ngClass]="{'with-bottom-nav': showBottomNav}"
           [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
-          &#8592; Previous
+          Previous
         </button>
         <button class="pagination-button" *ngIf="hasNextPage" (click)="nextPage()"
           [ngClass]="{'with-bottom-nav': showBottomNav}"
           [style.background]="'var(--blue-2)'" [style.color]="'var(--text-on-primary)'">
-          Next &#8594;
+          Next 
         </button>
       </div>
     </div>
     <app-bottom-nav
       [bottomNavItems]="bottomNavItems"
-      [getIconForRoute]="getIconForRoute.bind(this)"
       [isActiveRoute]="isActiveRoute.bind(this)"
       [navigate]="navigate.bind(this)">
     </app-bottom-nav>
@@ -273,8 +272,7 @@ export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
   page = 0;
@@ -336,12 +334,6 @@ export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
       const rankingsListEl = rankingsPageEl.querySelector('.rankings-list') as HTMLElement | null;
       const topNavEl = document.querySelector('app-top-nav') as HTMLElement | null;
 
-      console.log('viewportHeight:', viewportHeight);
-      console.log('searchEl height:', searchEl?.getBoundingClientRect().height);
-      console.log('headerEl height:', headerEl?.getBoundingClientRect().height);
-      console.log('paginationEl height:', paginationEl?.getBoundingClientRect().height);
-      console.log('topNavEl height:', topNavEl?.getBoundingClientRect().height);
-
       // Get bottom nav height from CSS variable
       let bottomNavHeight = 0;
       const cssBottomNavHeight = window.getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-height');
@@ -357,23 +349,12 @@ export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
         paginationEl?.getBoundingClientRect().height || 0,
       ];
 
-      // Debug log for measured heights
-      console.log('Measured heights:', {
-        topNav: heightsToRemove[0],
-        bottomNav: heightsToRemove[1],
-        search: heightsToRemove[2],
-        header: heightsToRemove[3],
-        pagination: heightsToRemove[4]
-      });
-
       const style = window.getComputedStyle(rankingsPageEl);
       const paddingTop = parseFloat(style.paddingTop || '0');
       const paddingBottom = parseFloat(style.paddingBottom || '0');
-      console.log('Padding:', { paddingTop, paddingBottom });
 
       const usedHeight = heightsToRemove.reduce((a, b) => a + b, 0) + paddingTop + paddingBottom + 8;
       const availableHeight = viewportHeight - usedHeight;
-      console.log('Viewport:', viewportHeight, 'Used:', usedHeight, 'Available:', availableHeight);
 
       // Measure one row height inside rankings-list for accuracy
       let rowHeight = 48; // fallback
@@ -388,24 +369,17 @@ export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
           void clone.offsetHeight;
           rowHeight = clone.getBoundingClientRect().height;
           rankingsListEl.removeChild(clone);
-          console.log('Cloned row height:', rowHeight);
-        } else {
-          console.log('No real row found, using fallback rowHeight:', rowHeight);
         }
-      } else {
-        console.log('rankingsListEl not found, using fallback rowHeight:', rowHeight);
       }
 
       let rows = Math.floor(availableHeight / rowHeight);
       rows = Math.max(this.minRows, Math.min(this.maxRows, rows));
-      console.log('Calculated rows:', rows);
 
       if (rows !== this.size) {
         this.size = rows;
         this.loadPage(0);
       }
     } catch (err) {
-      console.error('Error in calculateSizeAndLoad:', err);
       this.size = this.minRows;
       this.loadPage(0);
     }
@@ -475,16 +449,6 @@ export class RankingsComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.page * this.size + i + 1;
   }
 
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '\ud83c\udfe0',
-      '/cards': '\ud83c\udccf',
-      '/leaderboard': '\u2b50',
-      '/friends': '\ud83d\udc65',
-      '/profile': '\ud83d\udc64'
-    };
-    return icons[route] || '\ud83d\udcc4';
-  }
   isActiveRoute(route: string): boolean {
     return this.router.url === route;
   }

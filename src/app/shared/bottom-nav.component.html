@@ -1,12 +1,11 @@
 <div #bottomNav class="bottom-nav">
-  <div style="display: grid; grid-template-columns: repeat(5, 1fr); padding: 8px 0;">
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 0;">
     <button 
       *ngFor="let item of bottomNavItems"
       (click)="navigate(item.route)"
-      style="display: flex; flex-direction: column; align-items: center; padding: 8px 4px; background: none; border: none; cursor: pointer; font-size: 12px; font-weight: 500;"
+      style="display: flex; flex-direction: column; align-items: center; padding: 12px 4px; background: none; border: none; cursor: pointer;"
       [style.color]="isActiveRoute(item.route) ? '#3b82f6' : '#6b7280'">
-      <span style="font-size: 20px; margin-bottom: 4px;">{{ getIconForRoute(item.route) }}</span>
-      {{ item.label }}
+      <span [innerHTML]="getIconForRoute(item.route, isActiveRoute(item.route))"></span>
     </button>
   </div>
 </div>

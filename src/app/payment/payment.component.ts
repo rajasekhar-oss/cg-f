@@ -29,6 +29,6 @@ export class PaymentComponent {
 
   verifyPayment(res: any) {
     this.http.post('http://localhost:8080/verify-payment', res, { responseType: 'text' })
-      .subscribe(msg => alert(msg));
+      .subscribe();
   }
 }

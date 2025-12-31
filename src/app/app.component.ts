@@ -1,7 +1,9 @@
-import { Component, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { NotificationService } from './services/notification.service';
+import { ImageApiService } from './services/image-api.service';
+import { ImagePreloadService } from './services/image-preload.service';
 
 @Component({
   standalone: true,
@@ -11,22 +13,33 @@ import { NotificationService } from './services/notification.service';
   styleUrls: ['./app.component.css'],
   encapsulation: ViewEncapsulation.None
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'app';
   notificationMessage: string | null = null;
   isDarkMode = false;
 
-  constructor(private notification: NotificationService) {
+  constructor(
+    private readonly notification: NotificationService,
+    private readonly imageApi: ImageApiService,
+    private readonly imagePreload: ImagePreloadService
+  ) {
     this.notification.message$.subscribe(msg => {
       this.notificationMessage = msg;
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // On app load, read theme from localStorage and apply
     const theme = localStorage.getItem('theme');
     this.isDarkMode = theme === 'dark';
     this.applyTheme(this.isDarkMode);
+
+    this.imageApi.getImageLinks().subscribe({
+      next: urls => this.imagePreload.preloadImages(urls),
+      error: () => {
+        console.warn('Image preload failed. World still spins.');
+      }
+    });
   }
 
   applyTheme(isDark: boolean) {

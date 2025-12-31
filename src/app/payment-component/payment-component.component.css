@@ -1,0 +1,46 @@
+.payment-container {
+  max-width: 400px;
+  margin: 60px auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+.payment-container h2 {
+  margin-bottom: 12px;
+  color: var(--card-title-text);
+}
+
+.amount {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--accent-1);
+}
+
+.pay-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-md);
+}
+
+.pay-btn:hover {
+  background: var(--btn-primary-bg-hover);
+  box-shadow: var(--shadow-lg);
+}
+
+.hint {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-4);
+}

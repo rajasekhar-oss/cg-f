@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 import { Component, OnDestroy, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
@@ -16,9 +17,11 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 @Component({
   selector: 'app-waiting-room',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent],
   styleUrls: ['./waiting-room.component.css'],
   template: `
+    <!-- Error Notification -->
+    <app-error-notification *ngIf="showErrorNotification" [message]="errorNotificationMessage" (closed)="showErrorNotification = false"></app-error-notification>
     <!-- Custom Confirmation Modal -->
     <div class="custom-modal-overlay" *ngIf="showConfirmModal">
       <div class="custom-modal">
@@ -65,34 +68,56 @@ import { isStartGameBundleMessage } from '../../models/websocket.types';
 
     <!-- Invite/Search Modal -->
     <div class="custom-modal-overlay" *ngIf="showInviteModal">
-      <div class="custom-modal">
-        <div class="custom-modal-title">Invite Players</div>
+      <div class="custom-modal" style="text-align: left;">
+        <div class="custom-modal-title" style="text-align: center;">Invite Players</div>
         <!-- Already Played With Section -->
-        <div style="margin-bottom: 1.2em;">
-          <div style="font-weight:600; color:#1976d2; margin-bottom:0.5em;">Already Played With</div>
-          <div *ngIf="isPlayedWithLoading" class="modal-loading">Loading...</div>
-          <div *ngIf="!isPlayedWithLoading && playedWithUsers.length === 0" class="modal-empty">No players found.</div>
-          <div *ngIf="!isPlayedWithLoading && playedWithUsers.length > 0" class="invite-list">
-            <div class="invite-user" *ngFor="let user of playedWithUsers">
-              <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
-              <span class="invite-user-name">{{ user.userName }}</span>
-              <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
-            </div>
+        <div style="margin-bottom: 1em;">
+          <div style="font-weight:600; color:var(--blue-1); margin-bottom:0.4em; font-size:0.9em; cursor:pointer; display:flex; align-items:center; justify-content:space-between;" (click)="togglePlayedWithSection()">
+            Already Played With
+            <span style="font-size:0.8em;">{{ showPlayedWithSection ? '▲' : '▼' }}</span>
           </div>
+          <ng-container *ngIf="showPlayedWithSection">
+            <div *ngIf="isPlayedWithLoading" class="modal-loading" style="font-size:0.9em; color:var(--text-3);">Loading...</div>
+            <div *ngIf="!isPlayedWithLoading && playedWithUsers.length === 0" class="modal-empty" style="font-size:0.85em; color:var(--text-4);">No players found.</div>
+            <div *ngIf="!isPlayedWithLoading && playedWithUsers.length > 0" class="invite-list">
+              <div class="invite-user" *ngFor="let user of playedWithUsers">
+                <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
+                <span class="invite-user-name">{{ user.userName }}</span>
+                <button class="modal-btn confirm invite-btn-text" style="padding:0.4em 0.9em; font-size:0.85em;" (click)="inviteUser(user)">Invite</button>
+                <button class="invite-btn-icon invite-btn-icon-only" (click)="inviteUser(user)" title="Invite">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                    <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
         <!-- Search New Players Section -->
-        <div style="margin-bottom: 1.2em;">
-          <div style="font-weight:600; color:#1976d2; margin-bottom:0.5em;">Search New Players</div>
-          <input type="text" [(ngModel)]="inviteSearch" (input)="filterInviteUsers()" placeholder="Search username..." class="invite-search-bar" />
-          <div *ngIf="isInviteLoading" class="modal-loading">Loading...</div>
-          <div *ngIf="!isInviteLoading && filteredInviteUsers.length === 0 && inviteSearch.trim()" class="modal-empty">No users found.</div>
-          <div *ngIf="!isInviteLoading && filteredInviteUsers.length > 0" class="invite-list">
-            <div class="invite-user" *ngFor="let user of filteredInviteUsers">
-              <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
-              <span class="invite-user-name">{{ user.userName }}</span>
-              <button class="modal-btn confirm" (click)="inviteUser(user)">Invite</button>
-            </div>
+        <div style="margin-bottom: 1em;">
+          <div style="font-weight:600; color:var(--blue-1); margin-bottom:0.4em; font-size:0.9em; cursor:pointer; display:flex; align-items:center; justify-content:space-between;" (click)="toggleSearchNewSection()">
+            Search New Players
+            <span style="font-size:0.8em;">{{ showSearchNewSection ? '▲' : '▼' }}</span>
           </div>
+          <ng-container *ngIf="showSearchNewSection">
+            <input type="text" [(ngModel)]="inviteSearch" (input)="filterInviteUsers()" placeholder="Search username..." class="invite-search-bar" />
+            <div *ngIf="isInviteLoading" class="modal-loading" style="font-size:0.9em; color:var(--text-3);">Loading...</div>
+            <div *ngIf="!isInviteLoading && filteredInviteUsers.length === 0 && inviteSearch.trim()" class="modal-empty" style="font-size:0.85em; color:var(--text-4);">No users found.</div>
+            <div *ngIf="!isInviteLoading && filteredInviteUsers.length > 0" class="invite-list">
+              <div class="invite-user" *ngFor="let user of filteredInviteUsers">
+                <img [src]="user.pictureUrl" alt="User Picture" class="invite-user-pic" />
+                <span class="invite-user-name">{{ user.userName }}</span>
+                <button class="modal-btn confirm invite-btn-text" style="padding:0.4em 0.9em; font-size:0.85em;" (click)="inviteUser(user)">Invite</button>
+                <button class="invite-btn-icon invite-btn-icon-only" (click)="inviteUser(user)" title="Invite">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/>
+                    <path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
         <div class="custom-modal-actions">
           <button class="modal-btn cancel" (click)="showInviteModal = false">Close</button>
@@ -135,6 +160,9 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   filteredInviteUsers: Array<{ userName: string; pictureUrl: string }> = [];
   isInviteLoading = false;
   inviteSearch: string = '';
+  // Section collapse states - only one open at a time
+  showPlayedWithSection = true;
+  showSearchNewSection = false;
 
   /**
    * Shows the leave/end room modal and returns a Promise that resolves to true if the user confirms, false otherwise.
@@ -196,6 +224,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   currentUserId: string | number | null = null;
   public wsSub: any = null;
   public wsConnSub: any = null;
+  showErrorNotification = false;
+  errorNotificationMessage = '';
   // Make api, ws, and router public for guard access
   // Make api, ws, and router public for guard access
 
@@ -212,22 +242,16 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     // Get current user id from JWT with safer parsing and detailed logs
     const token = this.auth.getAccessToken();
     try {
-      // Log token presence (truncate long tokens)
-      console.log('[WaitingRoom] access token:', token ? (typeof token === 'string' && token.length > 48 ? token.slice(0, 48) + '...' : token) : token);
       const payload = this.getJwtPayload(token as any);
-      console.log('[WaitingRoom] jwt payload:', payload);
       if (payload) {
         // support multiple possible claim names commonly used
         const id = payload.id || payload.userId || payload.sub || payload.user_id || payload.uid;
         if (id) {
           this.currentUserId = id;
-          console.log('[WaitingRoom] resolved currentUserId:', this.currentUserId);
-        } else {
-          console.warn('[WaitingRoom] Could not find user id claim in JWT payload. Available keys:', Object.keys(payload));
         }
       }
     } catch (e) {
-      console.error('[WaitingRoom] Error parsing token for user id:', e);
+      // Error parsing token for user id
     }
   }
 
@@ -251,7 +275,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         return JSON.parse(decoded);
       }
     } catch (e) {
-      console.error('[WaitingRoom] getJwtPayload failed:', e);
       return null;
     }
   }
@@ -259,22 +282,16 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.showErrorModal = false;
     if (this.errorModalTimeout) clearTimeout(this.errorModalTimeout);
-    console.log('[WaitingRoom] ngOnInit called');
     const nav = this.router.getCurrentNavigation();
     let stateRoomInfo: any = nav?.extras?.state?.['roomInfo'];
     this.route.paramMap.subscribe((params: any) => {
       this.roomCode = params.get('roomCode') || '';
-      console.log('[WaitingRoom] Extracted roomCode from URL:', params);
       if (stateRoomInfo && 'creatorId' in stateRoomInfo) {
-        console.log('[WaitingRoom] Initialized roomInfo from router state:', stateRoomInfo);
         this.roomInfo = stateRoomInfo as RoomInfoDto;
         this.requiredPlayers = this.roomInfo?.requiredPlayers || 0;
         this.joinedPlayersUsernames = this.roomInfo?.joinedPlayersUsernames || [];
         this.isLoading = false;
         this.isCreator = this.roomInfo.creatorId === this.currentUserId;
-        console.log('[WaitingRoom] Initialized roomInfo from router state:', this.roomInfo);
-        // Always keep latest RoomInfoDto for navigation
-        console.log('[WaitingRoom] Loaded roomInfo from router state:', this.roomInfo);
       } else if (this.roomCode) {
         // Fetch from backend if not present in state
         const apiPath = `/api/rooms/${this.roomCode}/info`;
@@ -297,7 +314,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
             this.isLoading = false;
             this.isCreator = res.creatorId === this.currentUserId;
             this.error = res.message || '';
-            console.log('[WaitingRoom] Fetched roomInfo from API:', this.roomInfo);
           },
           error: (e: any) => {
             this.error = e?.error?.error || e?.error?.message || e?.message || 'Error fetching room info';
@@ -321,55 +337,52 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       // Subscribe to /start topic for all players
       const startTopics = `/topic/rooms/${this.roomCode}/start`;
       this.ws.connectAndSubscribe(startTopics);
-      console.log('[WaitingRoom] Subscribed to WebSocket topic for game start:', startTopics);
 
       // Subscribe to room-level topic for room events (e.g., room_deleted)
       const roomTopic = `/topic/rooms/${this.roomCode}`;
       this.ws.connectAndSubscribe(roomTopic);
-      console.log('[WaitingRoom] Subscribed to WebSocket topic for room events:', roomTopic);
 
-      // DEBUG: Log all WebSocket messages to verify receipt
       this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
-        console.log('[WaitingRoom] WebSocket connection status:', connected);
       });
-      this.ws.messages$.subscribe((msg: any) => {
-        console.log('[WaitingRoom] (DEBUG) Raw WebSocket message:', msg);
-        if (msg.message === "game started" && this.roomCode) {
-          // New format
-          console.log('[WaitingRoom] Navigating to game with roomCode:', this.roomCode);
-          this.router.navigate(['/game', this.roomCode],{ state: { game:msg } });
-        }
-      });
-
-      // if (this.wsStartSub) this.wsStartSub.unsubscribe && this.wsStartSub.unsubscribe();
-      // this.wsStartSub = this.ws.filterMessagesByTopic(startTopics).subscribe((msg: any) => {
-      //   console.log('[WaitingRoom] StartGameBundleDto or new start message:', msg);
-      //   // Route to game for all players with the received message (old or new format)
-      //   if (msg.message === "game started") {
-      //     // New format
-      //     console.log('[WaitingRoom] Navigating to game with roomCode:', this.roomCode);
-      //     this.router.navigate(['/game', this.roomCode]);
-      //   }
-      //    else if (msg && msg.gameState && msg.roomInfo && msg.startGame) {
-      //     // Old StartGameBundleDto format
-      //     this.router.navigate(['/game', this.roomCode], {
-      //       state: {
-      //         startGameBundle: msg
-      //       }
-      //     });
-      //   }
-      // });
+        this.ws.messages$.subscribe((msg: any) => {
+          if (msg.message === "game started" && this.roomCode) {
+            // Retry fetching game info up to 5 times, 400ms apart
+            const maxAttempts = 5;
+            let attempts = 0;
+            const tryFetchGame = () => {
+              this.api.get(`/api/rooms/${this.roomCode}/state`).subscribe({
+                next: (gameInfo: any) => {
+                  if (gameInfo && !gameInfo.errorMessage) {
+                    this.router.navigate(['/game', this.roomCode], { state: { game: gameInfo } });
+                  } else if (++attempts < maxAttempts) {
+                    setTimeout(tryFetchGame, 400);
+                  } else {
+                    this.errorNotificationMessage = 'Game not found. Please try again.';
+                    this.showErrorNotification = true;
+                  }
+                },
+                error: (err: any) => {
+                  if (++attempts < maxAttempts) {
+                    setTimeout(tryFetchGame, 400);
+                  } else {
+                    this.errorNotificationMessage = 'Error fetching game info. Please try again.';
+                    this.showErrorNotification = true;
+                  }
+                }
+              });
+            };
+            tryFetchGame();
+          }
+        });
 
       // Subscribe to WebSocket connection status
       if (this.wsConnSub) this.wsConnSub.unsubscribe && this.wsConnSub.unsubscribe();
       this.wsConnSub = this.ws.getConnectionStatus().subscribe((connected: boolean) => {
-        console.log('[WaitingRoom] WebSocket connection status:', connected);
       });
 
       // Subscribe to all WebSocket messages for debugging
       if (this.wsSub) this.wsSub.unsubscribe && this.wsSub.unsubscribe();
       this.wsSub = this.ws.messages$.subscribe((msg: any) => {
-        console.log('[WaitingRoom] WebSocket message received:', msg);
         this.ngZone.run(() => {
           if ((msg.Type === 'room_deleted' || msg.type === 'room_deleted' || msg.message === 'deleted')) {
             this.roomEnded = true;
@@ -385,8 +398,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
             this.requiredPlayers = msg.requiredPlayers || this.requiredPlayers;
             this.joinedPlayersUsernames = msg.joinedPlayersUsernames || [];
             this.isCreator = msg.creatorId === this.currentUserId;
-            console.log('userId:', this.currentUserId, 'creatorId:', msg.creatorId);
-            console.log('[WaitingRoom] Updated roomInfo from WebSocket:', this.roomInfo);
           }
           this.cd.detectChanges();
         });
@@ -399,10 +410,8 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
   }
 
   fetchRoomInfo(roomCode: string) {
-    console.log('[WaitingRoom] Fetching room info for:', roomCode);
   fetch(`${environment.apiUrl}/api/rooms/${roomCode}/info`)
       .then(res => {
-        console.log('[WaitingRoom] API response status:', res.status);
         if (!res.ok) throw new Error('Failed to fetch room info');
         return res.json();
       })
@@ -413,14 +422,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           this.requiredPlayers = roomInfo.requiredPlayers || 0;
           this.joinedPlayersUsernames = roomInfo.joinedPlayersUsernames || [];
           this.isCreator = roomInfo.creatorId === this.currentUserId;
-          console.log('[WaitingRoom] Initial state set:', {
-            requiredPlayers: this.requiredPlayers,
-            joinedPlayersUsernames: this.joinedPlayersUsernames,
-            creatorId: roomInfo.creatorId,
-            active: roomInfo.active
-          });
-        } else {
-          console.warn('[WaitingRoom] API response missing creatorId, ignoring:', roomInfo);
         }
         // Connect to WebSocket for live updates
         this.ws.connectToRoom(roomCode);
@@ -430,7 +431,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
       })
       .catch(err => {
         this.error = 'Failed to fetch room info. Please try again.';
-        console.error('[WaitingRoom] Failed to fetch room info:', err);
       });
   }
 
@@ -439,14 +439,13 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     this.api.post(`/api/rooms/${this.roomCode}/start`, {}).subscribe((roomResponse: any) => {
       if (roomResponse && roomResponse.errorMessage) {
         this.notification.show(roomResponse.errorMessage);
+        
         return;
       }
-      console.log('[WaitingRoom] RoomResponse:', roomResponse);
     }, (err: any) => {
       const msg = err?.error?.error || err?.message || 'Failed to start game';
       this.notification.show(msg);
       this.error = msg;
-      console.error('[WaitingRoom] Failed to start game:', err);
     });
   }
 
@@ -454,11 +453,29 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
     this.router.navigate(['/cards/arrange'], { state: { fromWaitingRoom: true, roomCode: this.roomCode } });
   }
 
+  // Toggle section visibility - only one open at a time
+  togglePlayedWithSection() {
+    this.showPlayedWithSection = !this.showPlayedWithSection;
+    if (this.showPlayedWithSection) {
+      this.showSearchNewSection = false;
+    }
+  }
+
+  toggleSearchNewSection() {
+    this.showSearchNewSection = !this.showSearchNewSection;
+    if (this.showSearchNewSection) {
+      this.showPlayedWithSection = false;
+    }
+  }
+
   openInvite() {
     this.showInviteModal = true;
     this.isPlayedWithLoading = true;
     this.isInviteLoading = false;
     this.inviteSearch = '';
+    // Reset section visibility - show played with by default
+    this.showPlayedWithSection = true;
+    this.showSearchNewSection = false;
     // Fetch played-with users first
     const userId = this.currentUserId?.toString().trim();
     this.api.get(`/request/played-with?userId=${userId}`).subscribe({
@@ -472,12 +489,10 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           this.isPlayedWithLoading = false;
           return;
         }
-        console.log('[WaitingRoom] Fetched played-with users:', users);
         this.playedWithUsers = users || [];
         this.isPlayedWithLoading = false;
       },
       error: (err:any) => {
-        console.log('[WaitingRoom] Failed to fetch played-with users:', err, "k",userId);
         this.playedWithUsers = [];
         this.isPlayedWithLoading = false;
       }
@@ -569,7 +584,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           this.showErrorModal = true;
           return;
         }
-        console.log('[WaitingRoom] leaveRoom response:', res);
         this.isLoading = false;
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }
         this.roomEnded = true;
@@ -577,7 +591,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         if (cb) cb();
       },
       error: (err: any) => {
-        console.error('[WaitingRoom] leaveRoom error:', err);
         this.error = err?.error?.error || err?.message || 'Failed to leave room';
         this.isLoading = false;
         if (cb) cb();
@@ -605,7 +618,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
           this.showErrorModal = true;
           return;
         }
-        console.log('[WaitingRoom] deleteRoom response:', res);
         this.isLoading = false;
         try { this.ws.disconnect(); } catch (e) { /* ignore */ }
         this.roomEnded = true;
@@ -613,7 +625,6 @@ export class WaitingRoomComponent implements OnInit, OnDestroy {
         if (cb) cb();
       },
       error: (err: any) => {
-        console.error('[WaitingRoom] deleteRoom error:', err);
         this.error = err?.error?.error || err?.message || 'Failed to delete room';
         this.isLoading = false;
         if (cb) cb();

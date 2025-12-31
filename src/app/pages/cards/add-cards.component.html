@@ -1,0 +1,59 @@
+<app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
+<div class="add-cards-page">
+    <div class="add-cards-header">
+      <div class="add-cards-total">Total Cards: {{ totalCards }}</div>
+      <div class="add-cards-points">Total Points: {{ totalPoints }}</div>
+    </div>
+    <div class="add-cards-section">
+      <div class="add-cards-label">Add Cards with Points</div>
+      <input type="number" min="1" [(ngModel)]="pointsToSpend" class="add-cards-input" placeholder="Enter points to spend" />
+      <div *ngIf="pointsToSpend > totalPoints" class="add-cards-error">You don't have enough points to add cards.</div>
+      <button class="add-cards-btn" [disabled]="!canAdd()" (click)="addCards()">Add</button>
+      <div *ngIf="addMsg" class="add-cards-success">{{ addMsg }}</div>
+    </div>
+    <div class="buy-points-section">
+      <div class="buy-points-label">Buy Points</div>
+      <button class="buy-points-btn" [disabled]="loading" (click)="openPaymentConfirm(5, 20)">Pay ₹5 for 20 points</button>
+      <button class="buy-points-btn" [disabled]="loading" (click)="openPaymentConfirm(10, 50)">Pay ₹10 for 50 points</button>
+    <!-- Payment Confirmation Popup -->
+    <div *ngIf="showPaymentConfirm" class="payment-confirm-modal">
+        <div class="payment-confirm-backdrop" (click)="cancelPayment()"></div>
+        <div class="payment-confirm-content">
+          <div class="payment-confirm-header">
+            
+            <h2>Confirm Payment</h2>
+          </div>
+          <div class="payment-confirm-details">
+            <div class="payment-amount-display">
+              <span class="currency">₹</span>
+              <span class="amount">{{ paymentAmount }}</span>
+            </div>
+            <p class="payment-points-info">You will receive <strong>{{ paymentPoints }} points</strong></p>
+          </div>
+          <div class="payment-policy-links">
+            <span class="policy-link" (click)="navigate('/refund-policy')">Refund Policy</span>
+            <span class="policy-separator">•</span>
+            <span class="policy-link" (click)="navigate('/privacy-policy')">Privacy Policy</span>
+          </div>
+          <div class="payment-confirm-actions">
+            <button class="cancel-btn" (click)="cancelPayment()">Cancel</button>
+            <button class="confirm-btn" (click)="confirmPayment()">Pay Now</button>
+          </div>
+        </div>
+    </div>
+    </div>
+    <!-- Contact Support Button below payment section -->
+    <button class="contact-support-btn" (click)="navigateToContactSupport()">Contact Support</button>
+</div>
+<div style="padding-bottom: var(--bottom-nav-height);">
+  <div class="policy-buttons-row">
+    <button class="policy-btn" (click)="navigate('/terms-and-conditions')">Terms & Conditions</button>
+    <button class="policy-btn" (click)="navigate('/refund-policy')">Refund Policy</button>
+    <button class="policy-btn" (click)="navigate('/privacy-policy')">Privacy Policy</button>
+  </div>
+  <app-bottom-nav
+    [bottomNavItems]="bottomNavItems"
+    [isActiveRoute]="isActiveRoute.bind(this)"
+    [navigate]="navigate.bind(this)"></app-bottom-nav>
+</div>
+<!-- Payment Confirmation Popup removed for direct payment -->

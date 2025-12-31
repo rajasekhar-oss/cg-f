@@ -24,7 +24,6 @@ export class AuthService {
       const newToken = await firstValueFrom(this.refreshToken());
       return newToken || '';
     } catch (err) {
-      console.error('[AuthService] Token refresh failed:', err);
       return '';
     }
   }
@@ -42,8 +41,6 @@ export class AuthService {
     const token = this.getAccessToken();
     if (!token) return null;
     const payload = decodeJwt(token);
-    console.log('Decoded JWT payload:', payload);
-    console.log(payload)
     if (payload && payload.roles && Array.isArray(payload.roles)) {
       // Return 'ADMIN' if present in roles array
       return payload.roles.includes('ADMIN') ? 'ADMIN' : null;
@@ -70,9 +67,9 @@ export class AuthService {
     return this.api.post('/auth/verify-otp', { email, otp });
   }
 
-  register(payload: {username: string, email: string, password: string, role?: string}) {
-    return this.api.post('/auth/register', payload);
-  }
+  register(payload: {username: string, email: string, password: string, mobileNumber: string, role?: string}) {
+      return this.api.post('/auth/register', payload);
+    }
 
   login(creds: {usernameOrEmail: string, password: string}) {
     return this.api.post('/auth/login', creds).pipe(
@@ -111,7 +108,6 @@ export class AuthService {
   refreshToken() {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      console.error('No refresh token found in localStorage.');
       return throwError(() => new Error('No refresh token'));
     }
     return this.api.post('/auth/refresh', { refreshToken }).pipe(

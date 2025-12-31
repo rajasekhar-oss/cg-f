@@ -1,3 +1,318 @@
+.sticky-close-btn {
+  position: sticky !important;
+  top: 0;
+  float: right;
+  margin-left: auto;
+  margin-right: 0;
+  background: var(--card-bg);
+  box-shadow: var(--shadow-sm);
+  display: block;
+  align-self: flex-end;
+}
+.card-list-close {
+  /* Change from fixed to sticky */
+  position: sticky !important; 
+  top: 0;
+  
+  /* Ensure it sits on the right side */
+  margin-left: auto;
+  display: block;
+  
+  /* Reset fixed positioning coordinates */
+  right: auto;
+  
+  /* Visual tweaks */
+  z-index: 9000;
+  margin-bottom: 10px; /* Add some space between button and cards */
+  background: var(--card-bg); /* Ensure content doesn't show through the button */
+}
+
+
+
+.chat-message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+.chat-message-row.own-message {
+  flex-direction: row-reverse;
+}
+.chat-message-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-1);
+  background: var(--card-bg);
+}
+.chat-message-content {
+  background: var(--bg-3);
+  color: var(--text-1);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 60px;
+  max-width: 200px;
+  box-shadow: var(--shadow-sm);
+  word-break: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--border-1);
+}
+.chat-message-row.own-message .chat-message-content {
+  background: var(--blue-1);
+  color: var(--btn-primary-text);
+  border-color: var(--blue-2);
+}
+.chat-message-meta {
+  font-size: 0.75em;
+  color: var(--text-4);
+  margin-bottom: 2px;
+}
+.chat-message-row.own-message .chat-message-meta {
+  color: rgba(255,255,255,0.7);
+}
+.chat-message-sticker img {
+  width: auto;
+  height: 48px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-2);
+  border-top: 1px solid var(--divider-color);
+}
+.chat-input {
+  flex: 1 1 auto;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--input-border);
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 0.95em;
+  outline: none;
+  transition: border 0.2s;
+}
+.chat-input:focus {
+  border: 1.5px solid var(--input-focus-border);
+}
+.chat-sticker-btn {
+  background: var(--btn-subtle-bg);
+  color: var(--btn-subtle-text);
+  border: none;
+  border-radius: 50%;
+  font-size: 1.2em;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-sticker-btn:hover {
+  background: var(--btn-subtle-bg-hover);
+  color: var(--btn-subtle-text-hover);
+}
+.chat-send-btn {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  border-radius: 50%;
+  font-size: 1em;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-send-btn:disabled {
+  background: var(--btn-primary-bg-disabled);
+  color: var(--btn-primary-text-disabled);
+  cursor: not-allowed;
+}
+.chat-sticker-picker {
+  background: var(--bg-2);
+  border-top: 1px solid var(--divider-color);
+  padding: 12px 16px;
+  max-height: 120px;
+  overflow-x: auto;
+}
+.sticker-list {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.sticker-list .sticker-item {
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 4px;
+  background: var(--card-bg);
+  transition: background 0.2s, transform 0.2s;
+}
+.sticker-list .sticker-item:hover {
+  background: var(--card-hover-bg);
+  transform: scale(1.05);
+}
+.sticker-list .sticker-item img {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+@media (max-width: 600px) {
+  .chat-panel {
+    width: 98vw;
+    margin: 0 1vw 1vw 0;
+    max-height: 80vh;
+  }
+  .floating-chat-btn {
+    right: 12px;
+    bottom: 70px;
+  }
+}
+/* Tie Stat Notification Row (for tie players in notification) */
+.tie-stat-row {
+  background: transparent !important;
+  color: var(--warning) !important;
+  display: flex;
+  align-items: center;
+}
+.tie-stat-profile-pic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.4em;
+  border: 1.5px solid var(--warning);
+  background: var(--card-bg);
+  flex-shrink: 0;
+}
+.tie-stat-username, .tie-stat-label, .tie-stat-value {
+  color: var(--warning) !important;
+}
+/* Winner Stat Notification */
+/* Winner Stat Notification - compact, rounded, with profile */
+/* Winner Stat Notification - responsive, wraps name if needed */
+/* Winner Stat Notification - fully responsive, no forced wrapping unless needed */
+.winner-stat-notification {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  /* Each notification will be offset by its index (set inline or via ngStyle) */
+  transform: translateX(-50%) translateY(-120%);
+  background: var(--success-bg);
+  color: var(--text-1);
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg), var(--glow-success);
+  padding: 0.3em 0.9em;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 4000;
+  min-width: 140px;
+  max-width: 94vw;
+  width: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 2px solid var(--success);
+  animation: winnerStatSlideDown 0.45s cubic-bezier(0.4,1,0.6,1) forwards, winnerStatFadeOut 0.4s 4s forwards;
+  gap: 0.4em;
+  flex-wrap: nowrap;
+  word-break: normal;
+  overflow-x: auto;
+  pointer-events: none;
+}
+
+/* Stacked notification support: each .winner-stat-notification that follows is offset further down */
+/* .winner-stat-notification + .winner-stat-notification {
+  margin-top: 2.8em;
+} */
+
+/* If you want to stack using nth-child for more than 2, you can add more rules or use ngStyle for dynamic translateY */
+.winner-stat-notification[data-index="1"] {
+  transform: translateX(-50%) translateY(2.8em);
+}
+.winner-stat-notification[data-index="2"] {
+  transform: translateX(-50%) translateY(5.6em);
+}
+.winner-stat-notification[data-index="3"] {
+  transform: translateX(-50%) translateY(8.4em);
+}
+/* Add more as needed, or use inline style for dynamic stacking */
+.winner-stat-profile-pic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 0.4em;
+  border: 1.5px solid var(--success);
+  background: var(--card-bg);
+  flex-shrink: 0;
+}
+.winner-stat-username {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--success);
+  margin-right: 0.3em;
+  white-space: nowrap;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+@media (max-width: 480px) {
+  .winner-stat-notification {
+    font-size: 0.78rem;
+    min-width: 100px;
+    max-width: 96vw;
+    padding: 0.2em 0.4em;
+    flex-wrap: nowrap;
+    gap: 0.3em;
+  }
+  .winner-stat-username {
+    max-width: 70px;
+    font-size: 0.8em;
+  }
+  .winner-stat-label,
+  .winner-stat-value {
+    font-size: 0.8em;
+  }
+  .winner-stat-profile-pic {
+    width: 24px;
+    height: 24px;
+  }
+}
+.winner-stat-label {
+  color: var(--warning);
+  margin-right: 0.7em;
+}
+.winner-stat-value {
+  color: var(--text-3);
+}
+@keyframes winnerStatSlideDown {
+  from {
+    transform: translateX(-50%) translateY(-120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(20px);
+    opacity: 1;
+  }
+}
+@keyframes winnerStatFadeOut {
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-120%);
+  }
+}
 /* Winner card transfer animation layer styles */
 .winner-card-anim-layer {
   position: fixed;
@@ -14,9 +329,9 @@
   width: 70px;
   height: 100px;
   border-radius: 8px;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-  transition: all 0.8s cubic-bezier(0.4, 1, 0.6, 1);
+  background: var(--game-card-bg);
+  box-shadow: var(--card-shadow-drag);
+  transition: all 2s cubic-bezier(0.4, 1, 0.6, 1);
   opacity: 1;
 }
 /* Sticker message display (responsive, themed) */
@@ -46,7 +361,7 @@
   right: 0.5em;
   width: 1.6em;
   height: 1.6em;
-  background: var(--blue-1);
+  background: var(--primary-1);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -61,7 +376,6 @@
   fill: var(--btn-primary-text);
 }
 /* === Standardized button sizing and wrapping === */
-.send-sticker-btn,
 .select-card-btn,
 .game-action-btn,
 .modal-btn,
@@ -82,11 +396,6 @@
 
 /* For buttons that should fill container width, use width: 100% on parent or override as needed */
 
-.send-sticker-btn {
-  width: 100%;
-  max-width: 220px;
-  align-self: flex-end;
-}
 
 .select-card-btn {
   width: 100%;
@@ -108,55 +417,143 @@
 
 .sticker-search,
 .sticker-message-input {
-  width: 100%;
-  padding: 0.7rem 1.1rem;
-  margin-bottom: 1.1rem;
-  font-size: 1.08rem;
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 0.95rem;
   border: 1.5px solid var(--input-border);
-  border-radius: 8px;
+  border-radius: 20px;
   outline: none;
   box-sizing: border-box;
-  background: var(--bg-2);
+  background: var(--input-bg);
   color: var(--text-1);
-  box-shadow: var(--shadow-sm);
   transition: border 0.2s, box-shadow 0.2s;
 }
 
 .sticker-search:focus,
 .sticker-message-input:focus {
   border-color: var(--input-focus-border);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--focus-shadow);
 }
 
 .send-sticker-btn {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);
-  border: 2px solid var(--card-border);
-  border-radius: 8px;
-  font-size: 1.08rem;
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
   font-weight: 600;
-  padding: 0.7em 1.7em;
-  margin-top: 1.2rem;
-  box-shadow: var(--card-shadow);
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
-  display: block;
-  width: 100%;
-  max-width: 220px;
-  align-self: flex-end;
+  transition: background 0.18s, transform 0.18s;
 }
 
 .send-sticker-btn:disabled {
   background: var(--btn-primary-bg-disabled);
   color: var(--btn-primary-text-disabled);
-  border: 2px solid var(--btn-outline-border-disabled);
   cursor: not-allowed;
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .send-sticker-btn:hover:not(:disabled) {
   background: var(--btn-primary-bg-hover);
-  box-shadow: var(--shadow-lg-hover);
+  transform: scale(1.05);
+}
+
+.open-sticker-picker-btn {
+  background: var(--btn-subtle-bg);
+  color: var(--btn-subtle-text);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.open-sticker-picker-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.open-sticker-picker-btn:hover {
+  background: var(--btn-subtle-bg-hover);
+}
+
+/* Sticker recipients checkboxes */
+.selected-checkbox,
+.unselected-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  font-weight: 500;
+}
+
+.selected-checkbox {
+  background: var(--blue-1);
+  color: var(--btn-primary-text);
+  border-color: var(--blue-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.unselected-checkbox {
+  background: var(--bg-2);
+  color: var(--text-2);
+  border-color: var(--border-1);
+}
+
+.unselected-checkbox:hover {
+  background: var(--bg-3);
+  border-color: var(--blue-1);
+}
+
+.selected-checkbox::before,
+.unselected-checkbox::before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 2px solid currentColor;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.selected-checkbox::before {
+  background: var(--btn-primary-text);
+  border-color: var(--btn-primary-text);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%233b82f6' d='M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.selected-checkbox input,
+.unselected-checkbox input {
+  display: none;
+}
+
+.sticker-panel-top-row {
+  padding: 12px 8px !important;
+  border-top: 1px solid var(--divider-color);
+}
+
+.sticker-panel-bottom-row {
+  padding: 12px 8px !important;
 }
 /* Custom Confirmation Modal Styles */
 .custom-modal-overlay {
@@ -165,8 +562,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: oklch(0 0 0 / .35);
-  /* --modal-overlay-bg */
+  background: var(--modal-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -258,16 +654,86 @@
   /* transition: all 0.7s cubic-bezier(0.4, 1, 0.6, 1);
   will-change: left, top; */
 }
-
-/* Sticker recipient row layout */
-.sticker-recipients-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 1rem;
+.open-sticker-picker-btn{
+  background-color: var(--btn-primary-bg);
+  padding: 0.8em 1em;
+  border: 2px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  border-radius: 8px;
+  color: var(--btn-primary-text);
+}
+/* Overlay */
+.sticker-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--modal-overlay-bg);
+  z-index: 999;
 }
 
+/* Popup */
+.sticker-picker-popup {
+  max-height: 40vh;
+  border-radius: 12px;
+  padding: 12px;
+  animation: popIn 0.2s ease-out;
+  overflow-y: auto;
+  background: var(--bg-2);
+  margin-bottom: 8px;
+}
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  color: var(--text-4);
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  color: var(--text-1);
+}
+
+/* Optional animation */
+@keyframes popIn {
+  from {
+    transform: translate(-50%, -60%) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+
+.sticker-recipients-row {
+  display: flex;
+ flex-direction: row;
+ justify-content: center;
+  align-items: center;
+  margin-bottom: auto;
+}
+.selected-checkbox,
+.unselected-checkbox {
+  display: inline-flex;
+  align-items: center;   /* ✅ vertical centering */
+  gap: 0.4em;            /* space between checkbox & name */
+}
+.selected-checkbox,
+.unselected-checkbox {
+  line-height: 1;
+}
+
+.sticker-panel-bottom-row{
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+}
 /* Checkbox base style */
 .recipient-checkbox {
   accent-color: var(--btn-primary-bg);
@@ -275,6 +741,7 @@
   width: 1.1em;
   height: 1.1em;
   vertical-align: middle;
+  border-radius: 50%;
 }
 
 /* Selected checkbox label */
@@ -322,51 +789,174 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: oklch(0 0 0 / .25);
-  /* --modal-overlay-bg */
+  background: var(--modal-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 .stickers-panel {
   background: var(--modal-bg);
-  border-radius: 1.2rem;
+  border-radius: 16px;
   box-shadow: var(--modal-shadow);
-  padding: 2rem 2.5rem 2.5rem 2.5rem;
-  min-width: 320px;
-  max-width: 90vw;
+  padding: 16px;
+  min-width: 300px;
+  max-width: min(420px, 90vw);
   max-height: 80vh;
   overflow-y: auto;
   position: relative;
   z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Chat history inside sticker panel */
+.chat-history-in-sticker-panel {
+  flex: 1;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 12px 8px;
+  background: var(--bg-2);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-1) var(--bg-3);
+}
+
+.chat-history-in-sticker-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-history-in-sticker-panel::-webkit-scrollbar-track {
+  background: var(--bg-3);
+  border-radius: 6px;
+}
+
+.chat-history-in-sticker-panel::-webkit-scrollbar-thumb {
+  background: var(--blue-1);
+  border-radius: 6px;
+}
+
+.chat-history-in-sticker-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-2);
+}
+
+.chat-empty {
+  text-align: center;
+  color: var(--text-4);
+  padding: 24px;
+  font-size: 0.9em;
+}
+
+.chat-message-username {
+  font-size: 0.7em;
+  color: var(--text-3);
+  margin-top: 4px;
+  text-align: center;
+  max-width: 40px;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+.chat-message-text {
+  font-size: 0.9em;
+  line-height: 1.4;
 }
 
 .stickers-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 1.2rem;
-  margin-top: 1.2rem;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--blue-1) var(--bg-3);
+}
+
+.stickers-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stickers-grid::-webkit-scrollbar-track {
+  background: var(--bg-3);
+  border-radius: 6px;
+}
+
+.stickers-grid::-webkit-scrollbar-thumb {
+  background: var(--blue-1);
+  border-radius: 6px;
+}
+
+.stickers-grid::-webkit-scrollbar-thumb:hover {
+  background: var(--blue-2);
 }
 
 .sticker-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: none;
-  border-radius: 0;
-  padding: 0;
+  background: transparent;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  position: relative;
+  gap: 4px;
+}
+
+.sticker-item:hover {
+  background: var(--bg-3);
+  transform: scale(1.05);
+}
+
+.sticker-item.selected-sticker {
+  background: transparent;
   box-shadow: none;
 }
 
+.sticker-item.selected-sticker:hover {
+  background: var(--bg-3);
+}
+
+.sticker-name {
+  font-size: 0.7em;
+  color: var(--text-3);
+  text-align: center;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .sticker-img {
-  max-width: 64px;
-  max-height: 64px;
+  max-width: 48px;
+  max-height: 48px;
   object-fit: contain;
-  border-radius: 12px;
-  background: none;
-  padding: 0;
+  border-radius: 8px;
+}
+
+.tick-mark {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  background: var(--success);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tick-mark svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Round summary bar styles */
@@ -381,7 +971,7 @@
   margin-bottom: 0.12rem;
   font-size: 0.84rem;
   font-weight: 500;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-sm);
   width: 100%;
   flex-wrap: wrap;
   row-gap: 0.18rem;
@@ -410,14 +1000,15 @@
 
 .selected-stat-row {
   background: var(--card-bg) !important;
-  color: var(--blue-1) !important;
+  color: var(--primary-1) !important;
   border-radius: 6px;
   font-weight: 700;
-  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--blue-1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35), var(--shadow-sm);
 }
 
 .round-label {
-  color: var(--blue-1);
+  color: var(--primary-1);
   font-weight: 700;
   margin-right: 0.3rem;
   font-size: 0.92em;
@@ -471,7 +1062,7 @@
 }
 
 .round-label {
-  color: var(--blue-1);
+  color: var(--primary-1);
   font-weight: 700;
   margin-right: 0.7rem;
 }
@@ -513,13 +1104,13 @@
 
 .selected-stat-label {
   margin-left: auto;
-  color: var(--blue-1);
+  color: var(--primary-1);
   font-weight: 600;
 }
 
 .selected-stat-value {
   background: var(--card-bg);
-  color: var(--blue-1);
+  color: var(--primary-1);
   border-radius: 4px;
   padding: 0.1rem 0.5rem;
   margin-left: 0.3rem;
@@ -541,9 +1132,12 @@
 
 .selected-stat-row {
   background: var(--card-bg) !important;
-  color: var(--blue-1) !important;
+  color: var(--primary-1) !important;
   font-weight: bold;
   border-left: 4px solid var(--blue-1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35), var(--shadow-sm);
+  position: relative;
+
 }
 
 .detailed-prev-cards-list {
@@ -579,7 +1173,7 @@
   left: 1.2rem;
   font-size: 1.08rem;
   font-weight: 700;
-  color: var(--blue-1);
+  color: var(--primary-1);
   background: var(--card-bg);
   border-radius: 6px;
   padding: 0.18rem 0.7rem;
@@ -608,7 +1202,7 @@
   height: auto;
   object-fit: cover;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
+  box-shadow: var(--shadow-md);
 }
 
 .detailed-prev-card-stats {
@@ -636,7 +1230,7 @@
 }
 
 .detailed-prev-card-stat .stat-label {
-  color: var(--blue-1);
+  color: var(--primary-1);
   font-weight: 600;
   margin-right: 0.5rem;
 }
@@ -653,7 +1247,7 @@
 
 .stat-card.selectable:hover {
   background: var(--card-hover-bg);
-  color: var(--blue-2);
+  color: var(--primary-2);
 }
 
 .stat-card.selected-stat {
@@ -664,8 +1258,7 @@
 
 .stat-selector-avatar {
   border: 3px solid var(--warning) !important;
-  /* orange/yellow highlight */
-  box-shadow: 0 0 8px var(--warning);
+  box-shadow: var(--glow-accent);
 }
 
 button:disabled {
@@ -778,7 +1371,6 @@ button:disabled {
   overflow-y: auto;
   border-radius: 2vh;
   margin-top: 2.5rem;
-  padding-top: 3.5rem;
   margin-top: 0;
 }
 
@@ -796,14 +1388,13 @@ button:disabled {
   position: fixed;
   right: 1.2rem;
   bottom: 5.6rem;
-  /* sits above bottom bar */
   z-index: 1;
   background: var(--blue-1);
   color: var(--btn-primary-text);
   border: none;
   padding: 0.6rem 0.9rem;
   border-radius: 999px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-lg), var(--glow-primary);
   cursor: pointer;
 }
 
@@ -812,15 +1403,13 @@ button:disabled {
   position: fixed;
   right: 1rem;
   bottom: 0;
-  /* anchored at bottom */
   width: 320px;
   max-width: calc(100vw - 2rem);
   height: 60vh;
   background: var(--card-bg);
   border-radius: 12px 12px 8px 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-xl);
   transform: translateY(100%);
-  /* fully hidden below viewport */
   transition: transform 0.28s ease;
   z-index: 450;
   overflow: hidden;
@@ -896,7 +1485,7 @@ button:disabled {
 
 /* Zoom image and increase box shadow on hover */
 .card-item:hover .card-image-thumb {
-  box-shadow: 0 1vw 3vw rgba(37, 99, 235, 0.18);
+  box-shadow: var(--card-shadow-hover);
   transform: scale(1.08);
   transition: box-shadow 0.18s, transform 0.18s;
 }
@@ -946,7 +1535,7 @@ button:disabled {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--modal-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -956,7 +1545,7 @@ button:disabled {
 .top-card {
   background: var(--card-bg);
   border-radius: 1.2rem;
-  box-shadow: 0 2px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-xl);
   padding: 1vh 2vh;
   min-width: 340px;
   min-height: 340px;
@@ -973,11 +1562,27 @@ button:disabled {
 /* Close button for modal at bottom right */
 .close-btn {
   position: absolute;
-  background: none;
-  border: none;
+  top: 16px;
+  right: 16px;
+  z-index: 6000;
+
+  background: var(--card-bg);
+  color: var(--text-1);
+  border: 2px solid var(--card-border);
+  border-radius: 8px;
+
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
-  color: var(--text-4);
+  box-shadow: var(--card-shadow);
 }
+
 
 /* Top card placeholder removed (empty ruleset) */
 /* Bottom bar fixed at bottom */
@@ -1138,14 +1743,10 @@ button:disabled {
 .sticker-anim-username {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--blue-1);
-  /* background: var(--blue-1-bg); */
+  color: var(--primary-1);
   border-radius: 0.7vh;
   margin: 0 0 0 0;
-  /* padding: 0.2vh 1.2vw;
-  margin-bottom: 0.2vh; */
   width: 10vw;
-  /* box-shadow: 0 1px 4px rgba(37,99,235,0.08); */
 }
 
 @keyframes sticker-float-up {

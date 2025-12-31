@@ -1,7 +1,7 @@
 <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
-          <!-- Remove duplicate file upload input -->
+
 <!-- Navigation Bar -->
- <app-top-nav
+<app-top-nav
   [topNavItems]="bottomNavItems"
   [isActiveRoute]="isActiveRoute.bind(this)"
   [navigate]="navigate.bind(this)">
@@ -12,7 +12,6 @@
   <div class="container">
     
     <!-- Loading State -->
-
     <div *ngIf="isLoading" class="text-center" style="padding: 48px 0;">
       <div style="font-size: 18px; color: var(--text-4);">Loading profile...</div>
     </div>
@@ -24,162 +23,194 @@
     </div>
 
     <!-- Profile Content -->
-    <div *ngIf="profile && !isLoading" style="max-width: 800px; margin: 0 auto;">
+    <div *ngIf="profile && !isLoading" style="max-width: 500px; margin: 0 auto;">
       
-      <!-- Profile Header -->
-      <div class="card mb-8">
-        <div class="profile-header">
-          <div class="profile-picture-container">
+      <!-- Profile Card with Menu -->
+      <div class="profile-card">
+        <!-- 3-dot Menu Button -->
+        <button class="menu-btn" (click)="toggleMenu($event)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+          </svg>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div class="dropdown-menu" *ngIf="showMenu" (click)="$event.stopPropagation()">
+          <button class="dropdown-item" (click)="openModal('image')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+              <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1z"/>
+            </svg>
+            Change Profile Picture
+          </button>
+          <button class="dropdown-item" (click)="openModal('username')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+            </svg>
+            Change Username
+          </button>
+          <button class="dropdown-item" (click)="openModal('password')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2m3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2"/>
+            </svg>
+            Change Password
+          </button>
+        </div>
+
+        <!-- Profile Info -->
+        <div class="profile-avatar-section">
+          <div class="profile-avatar">
             <img 
               *ngIf="profile.imageUrl" 
               [src]="profile.imageUrl" 
-              [alt]="getDisplayName() + ' profile picture'"
-              class="profile-picture"
+              [alt]="getDisplayName()"
               (error)="onImageError($event)">
-            <div 
-              *ngIf="!profile.imageUrl" 
-              class="profile-initials">
+            <div *ngIf="!profile.imageUrl" class="avatar-initials">
               {{ getUserInitials() }}
             </div>
           </div>
-          <div class="profile-info">
-            <h2 class="profile-name" style="color: var(--card-title-text);">{{ getDisplayName() }}</h2>
-            <p class="profile-email" style="color: var(--text-4);">{{ profile.email }}</p>
-            <p class="profile-member-since" style="color: var(--text-4);">Member since {{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</p>
-          </div>
         </div>
 
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-          <div class="stat-card" style="background: var(--bg-2);">
-            <div class="stat-value points" style="color: var(--blue-1);">
-              {{ profile.points || 0 }}
-            </div>
-            <div class="stat-label" style="color: var(--text-4);">TOTAL POINTS</div>
+        <div class="profile-details">
+          <h2 class="profile-name">{{ getDisplayName() }}</h2>
+          <p class="profile-email">{{ profile.email }}</p>
+          <p class="profile-joined">Member since {{ profile.createdAt ? formatDate(profile.createdAt) : 'Recently' }}</p>
+        </div>
+
+        <!-- Stats -->
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-value points">{{ profile.points || 0 }}</span>
+            <span class="stat-label">Points</span>
           </div>
-          <div class="stat-card" style="background: var(--bg-2);">
-            <div class="stat-value rank" style="color: var(--success);">
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value rank">
               <ng-container *ngIf="userRank !== null; else rankLoading">
                 #{{ userRank }}
               </ng-container>
               <ng-template #rankLoading>
-                <span *ngIf="rankError; else loading" style="color: var(--text-4);">N/A</span>
-                <ng-template #loading><span style="color: var(--text-4);">Loading...</span></ng-template>
+                <span *ngIf="rankError; else loading">N/A</span>
+                <ng-template #loading>...</ng-template>
               </ng-template>
-            </div>
-            <div class="stat-label" style="color: var(--text-4);">GLOBAL RANK</div>
+            </span>
+            <span class="stat-label">Rank</span>
           </div>
         </div>
-      </div>
-      <!-- Bottom Navigation Bar (Mobile) -->
-      <app-bottom-nav
-        [bottomNavItems]="bottomNavItems"
-        [getIconForRoute]="getIconForRoute.bind(this)"
-        [isActiveRoute]="isActiveRoute.bind(this)"
-        [navigate]="navigate.bind(this)">
-      </app-bottom-nav>
 
-      <!-- Edit Profile Section -->
-      <div class="card" style="background: var(--card-bg);">
-        <h3 class="section-title" style="color: var(--card-title-text);">Edit Profile Image</h3>
-        <form (ngSubmit)="updateProfile()" class="profile-form">
-          <div class="form-group">
-            <label class="form-label" style="color: var(--text-2);">Upload Profile Image</label>
-            <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
-          </div>
-          <div *ngIf="updateMessage" 
-               class="message"
-               [class.message-success]="updateSuccess"
-               [class.message-error]="!updateSuccess"
-               [ngStyle]="updateSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
-            {{ updateMessage }}
-          </div>
-          <div class="form-actions">
-            <button 
-              type="button"
-              (click)="resetForm()"
-              class="btn btn-secondary"
-              style="background: var(--bg-1); color: var(--text-2); border: 1px solid var(--border-1);">
-              Reset
-            </button>
-            <button 
-              type="submit"
-              [disabled]="isUpdating"
-              class="btn btn-primary"
-              style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
-              {{ isUpdating ? 'Updating...' : 'Update Image' }}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Username Update Section -->
-      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
-        <h3 class="section-title" style="color: var(--card-title-text);">Change Username</h3>
-        <form (ngSubmit)="updateUsername()" #usernameForm="ngForm" class="profile-form">
-          <div class="form-group">
-            <label class="form-label" style="color: var(--text-2);">New Username</label>
-            <input type="text" name="newUsername" [(ngModel)]="newUsername" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
-          </div>
-          <div *ngIf="usernameMessage" 
-               class="message"
-               [class.message-success]="usernameSuccess"
-               [class.message-error]="!usernameSuccess"
-               [ngStyle]="usernameSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
-            {{ usernameMessage }}
-          </div>
-          <div class="form-actions">
-            <button type="submit" [disabled]="isUpdatingUsername" class="btn btn-primary" style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
-              {{ isUpdatingUsername ? 'Updating...' : 'Update Username' }}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Password Update Section -->
-      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
-        <h3 class="section-title" style="color: var(--card-title-text);">Change Password</h3>
-        <form (ngSubmit)="updatePassword()" #passwordForm="ngForm" class="profile-form">
-          <div class="form-group">
-            <label class="form-label" style="color: var(--text-2);">Current Password</label>
-            <input type="password" name="oldPassword" [(ngModel)]="oldPassword" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="color: var(--text-2);">New Password</label>
-            <input type="password" name="newPassword" [(ngModel)]="newPassword" required class="form-input" style="background: var(--input-bg); color: var(--input-text); border: 1px solid var(--border-1);" />
-          </div>
-          <div *ngIf="passwordMessage" 
-               class="message"
-               [class.message-success]="passwordSuccess"
-               [class.message-error]="!passwordSuccess"
-               [ngStyle]="passwordSuccess ? {'color': 'var(--success)', 'background': 'var(--success-bg)'} : {'color': 'var(--error)', 'background': 'var(--error-bg)'}">
-            {{ passwordMessage }}
-          </div>
-          <div class="form-actions">
-            <button type="submit" [disabled]="isUpdatingPassword" class="btn btn-primary" style="background: var(--btn-primary-bg); color: var(--btn-primary-text);">
-              {{ isUpdatingPassword ? 'Updating...' : 'Update Password' }}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <!-- Dark Mode Toggle -->
-      <div class="card" style="margin-top: 24px; background: var(--card-bg);">
-        <h3 class="section-title" style="color: var(--card-title-text);">Theme</h3>
-        <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
-          <label for="darkModeToggle" style="color: var(--text-2); font-weight: 500;">Dark Mode</label>
-          <input id="darkModeToggle" type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode($event)" />
+        <!-- Theme Toggle -->
+        <div class="theme-toggle-row">
+          <span class="theme-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278"/>
+            </svg>
+            Dark Mode
+          </span>
+          <label class="toggle-switch">
+            <input type="checkbox" [checked]="isDarkMode" (change)="toggleDarkMode($event)">
+            <span class="toggle-slider"></span>
+          </label>
         </div>
+
+        <!-- Logout Button -->
+        <button class="logout-btn" (click)="logout()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+          </svg>
+          Logout
+        </button>
       </div>
+
     </div>
   </div>
 </div>
 
-<div class="logout-container" style="display: flex; justify-content: flex-end; align-items: center; margin: 24px auto 24px auto; max-width: 800px; padding-right: 8px;">
-  <button 
-    (click)="logout()"
-    class="btn btn-primary logout-btn"
-    style="min-width: 120px;">
-    Logout
-  </button>
+<!-- Bottom Navigation Bar (Mobile) -->
+<app-bottom-nav
+  [bottomNavItems]="bottomNavItems"
+  [isActiveRoute]="isActiveRoute.bind(this)"
+  [navigate]="navigate.bind(this)">
+</app-bottom-nav>
+
+<!-- Modal Backdrop -->
+<div class="modal-backdrop" *ngIf="activeModal" (click)="closeModal()"></div>
+
+<!-- Change Profile Picture Modal -->
+<div class="modal" *ngIf="activeModal === 'image'">
+  <div class="modal-header">
+    <h3>Change Profile Picture</h3>
+    <button class="modal-close" (click)="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="updateProfile()">
+      <div class="form-group">
+        <label class="form-label">Upload New Image</label>
+        <input type="file" accept="image/*" (change)="onFileSelected($event)" class="form-input file-input" />
+      </div>
+      <div *ngIf="updateMessage" class="message" [class.success]="updateSuccess" [class.error]="!updateSuccess">
+        {{ updateMessage }}
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save" [disabled]="isUpdating">
+          {{ isUpdating ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Username Modal -->
+<div class="modal" *ngIf="activeModal === 'username'">
+  <div class="modal-header">
+    <h3>Change Username</h3>
+    <button class="modal-close" (click)="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="updateUsername()">
+      <div class="form-group">
+        <label class="form-label">New Username</label>
+        <input type="text" [(ngModel)]="newUsername" name="newUsername" class="form-input" placeholder="Enter new username" />
+      </div>
+      <div *ngIf="usernameMessage" class="message" [class.success]="usernameSuccess" [class.error]="!usernameSuccess">
+        {{ usernameMessage }}
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save" [disabled]="isUpdatingUsername">
+          {{ isUpdatingUsername ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal" *ngIf="activeModal === 'password'">
+  <div class="modal-header">
+    <h3>Change Password</h3>
+    <button class="modal-close" (click)="closeModal()">×</button>
+  </div>
+  <div class="modal-body">
+    <form (ngSubmit)="updatePassword()">
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <input type="password" [(ngModel)]="oldPassword" name="oldPassword" class="form-input" placeholder="Enter current password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" [(ngModel)]="newPassword" name="newPassword" class="form-input" placeholder="Enter new password" />
+      </div>
+      <div *ngIf="passwordMessage" class="message" [class.success]="passwordSuccess" [class.error]="!passwordSuccess">
+        {{ passwordMessage }}
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-save" [disabled]="isUpdatingPassword">
+          {{ isUpdatingPassword ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

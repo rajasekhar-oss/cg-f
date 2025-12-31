@@ -1,5 +1,20 @@
 button {
-  background:#1976d2;
-  color:#fff;padding:10px 20px;border-radius:6px;
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
 }
-input {padding:8px;margin-right:10px;}
+button:hover {
+  background: var(--btn-primary-bg-hover);
+}
+input {
+  padding: 8px;
+  margin-right: 10px;
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--input-text);
+}

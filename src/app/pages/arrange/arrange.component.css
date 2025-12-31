@@ -22,9 +22,9 @@
   transition: background 0.2s, color 0.2s;
 }
 .arrange-mode-toggle button.active {
-  background: var(--blue-1);
+  background: var(--primary-1);
   color: var(--btn-primary-text);
-  border-color: var(--blue-1);
+  border-color: var(--primary-1);
 }
 .manual-arrange-container {
   width: 96vw;
@@ -47,13 +47,13 @@
   pointer-events: none;
 }
 .manual-card-index.original {
-  background: var(--blue-1-bg);
-  color: var(--blue-1);
+  background: var(--primary-bg);
+  color: var(--primary-1);
   left: 0.5vw;
   top: 0.5vw;
 }
 .manual-card-index.selected {
-  background: var(--blue-1);
+  background: var(--primary-1);
   color: var(--btn-primary-text);
   left: 0.5vw;
   top: 3vw;
@@ -72,7 +72,7 @@
 }
 .manual-selectable.selected {
   opacity: 0.7;
-  border: 2px solid var(--blue-1);
+  border: 2px solid var(--primary-1);
 }
 /* Cards Page Layout */
 .cards-page-container {
@@ -307,4 +307,128 @@
   object-fit: cover;
   border-radius: 1.5vw;
   background: var(--card-bg);
+}
+
+/* Large device responsive styles - reduce card sizes */
+@media (min-width: 1025px) {
+  .cards-page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 80px 20px;
+  }
+  .cards-header {
+    width: 100%;
+    margin-left: 0;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 16px;
+    min-height: auto;
+  }
+  .card-tile {
+    border-radius: 12px;
+  }
+  .card-tile.cdk-drag-preview {
+    width: 180px !important;
+    height: 180px !important;
+    border-radius: 12px;
+  }
+  .manual-select-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .manual-arrange-container {
+    width: 100%;
+    margin-left: 0;
+    margin-bottom: 16px;
+  }
+  .arrange-mode-toggle button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .manual-card-index {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+    top: 4px;
+    left: 4px;
+  }
+  .manual-card-index.selected {
+    top: 32px;
+    left: 4px;
+  }
+  .drag-handle {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    right: 6px;
+    top: 6px;
+  }
+  .drag-icon {
+    width: 16px;
+    height: 16px;
+  }
+  .card-image-full {
+    border-radius: 12px;
+  }
+  .cards-total, .cards-points {
+    border-radius: 12px;
+    padding: 16px 24px;
+    min-width: 120px;
+  }
+  .cards-total-label, .cards-points-label {
+    font-size: 14px;
+  }
+  .cards-total-value, .cards-points-value {
+    font-size: 24px;
+  }
+  .cards-actions {
+    width: 400px;
+  }
+  .cards-action-btn {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    min-width: 100px;
+    min-height: 40px;
+  }
+  .manual-select-actions {
+    gap: 16px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+  .cards-empty {
+    font-size: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .cards-page-container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 20px 16px 80px 16px;
+  }
+  .cards-header {
+    width: 100%;
+    margin-left: 0;
+  }
+  .cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-left: 0;
+  }
+  .manual-select-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .manual-arrange-container {
+    width: 100%;
+    margin-left: 0;
+  }
 }

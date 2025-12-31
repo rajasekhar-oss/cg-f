@@ -25,9 +25,15 @@ import { Router } from '@angular/router';
     .join-room-container:hover { box-shadow: 0 4px 24px var(--shadow-1, rgba(0,0,0,0.08)); }
     .input-section { margin-bottom: 18px; }
     label { font-weight: 600; color: var(--text-2, #374151); margin-bottom: 8px; display: block; }
-    input[type=text] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-1, #d1d5db); font-size: 1.1rem; width: 100%; margin-top: 4px; background: var(--bg-2, #fff); color: var(--text-1, #111827); }
+    input[type=text] { padding: 10px; border-radius: 8px; border: 1px solid var(--border-1, #d1d5db); font-size: 1.1rem; width: 100%; margin-top: 4px; background: var(--bg-2, #fff); color: var(--text-1, #111827); box-sizing: border-box; }
     .join-btn { margin-top: 12px; padding: 12px 0; font-size: 1.1rem; border-radius: 10px; background: linear-gradient(90deg, var(--blue-3, #8b5cf6) 60%, var(--blue-2, #3b82f6) 100%); color: var(--text-on-primary, #fff); border: none; cursor: pointer; font-weight: 600; letter-spacing: 0.5px; width: 100%; box-shadow: none; transition: box-shadow 0.2s; }
     .join-btn:hover:not(:disabled) { box-shadow: 0 2px 8px var(--shadow-1, rgba(0,0,0,0.08)); }
+    @media (max-width: 768px) {
+      .join-room-container { margin: 24px 16px; max-width: calc(100% - 32px); padding: 24px 20px; }
+    }
+    @media (max-width: 480px) {
+      .join-room-container { margin: 16px 12px; max-width: calc(100% - 24px); padding: 20px 16px; }
+    }
     .join-btn:disabled { background: var(--bg-3, #ccc); color: var(--text-3, #666); cursor: not-allowed; opacity: 0.6; box-shadow: none; }
     .room-info { margin-top: 24px; background: var(--bg-3, #f3f4f6); border-radius: 8px; padding: 16px; }
     .info-item { font-size: 1.1rem; color: var(--text-1, #1f2937); margin-bottom: 8px; }

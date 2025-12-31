@@ -66,8 +66,7 @@ export class HomePageLoggedInComponent implements OnInit {
   bottomNavItems = [
     { label: 'Home', route: '/' },
     { label: 'Cards', route: '/cards' },
-    { label: 'Star', route: '/leaderboard' },
-    { label: 'Person', route: '/friends' },
+    { label: 'Leaderboard', route: '/leaderboard' },
     { label: 'Profile', route: '/profile' }
   ];
 
@@ -98,14 +97,14 @@ export class HomePageLoggedInComponent implements OnInit {
           this.showError(res.error);
           this.gameRequestService.fetchRequests();
           // Optionally show error in UI
-          // alert(res.error);
+          
           return;
         }
         // Navigate to waiting room on success
         this.router.navigate(['/gang-play/waiting', request.roomCode], { state: { roomInfo: res } });
       },
       error: (e: any) => {
-        alert("Joining game failed: " + (e?.error?.errorMessage || 'Error joining game'));
+      
       }
     });
   }
@@ -128,7 +127,6 @@ export class HomePageLoggedInComponent implements OnInit {
         this.username=userData.username;
         if(this.username){
           this.getReq();
-          console.log('Subscribed to game requests for user:', this.username);  
         }
       },
       error: (error) => {
@@ -136,31 +134,16 @@ export class HomePageLoggedInComponent implements OnInit {
           this.showError(error.error.errorMessage);
         }
         // Fall back to basic user info from auth service
-        // this.auth.user$.subscribe(user => {
-        //   if (user) {
-        //     console.log('Using auth service user data as fallback:', user);
-        //     this.username = user.username || 'Player';
-        //     if(this.username){
-        //       this.getReq();
-        //       console.log('Subscribed to game requests for user:', this.username);
-        //     }
-        //     this.userInitials = this.getInitials(this.username);
-        //     const role = this.auth.getUserRole();
-        //     this.isAdmin = role === 'ADMIN';
-        //   }
-        // });
         this.isLoading = false;
       }
     });
   }
       getReq() {
         if (this.username) {
-          console.log('Setting up game request subscription for user:', this.username);
           const topic = `/topic/Game/Request/${this.username.trim()}`;
           this.ws.connectAndSubscribe(topic);
           this.ws.messages$.subscribe((msg: any) => {
             if (msg && msg._wsTopic === topic) {
-              console.log('Received game request update for user:', this.username);
               this.gameRequestService.fetchRequests();
             }
           });
@@ -180,9 +163,6 @@ export class HomePageLoggedInComponent implements OnInit {
 
   private updateUserInfo() {
     if (this.profile) {
-      console.log('Profile data in home component:', this.profile);
-  console.log('Profile picture URL:', this.profile.imageUrl);
-      
       // Update username with priority: name > firstName+lastName > username
       if (this.profile.name) {
         this.username = this.profile.name;
@@ -202,9 +182,6 @@ export class HomePageLoggedInComponent implements OnInit {
         points: this.profile.points || 0,
         rank: this.profile.rank || 0
       };
-      
-      console.log('Updated username:', this.username);
-      console.log('Updated stats:', this.userStats);
     }
   }
 
@@ -271,14 +248,4 @@ export class HomePageLoggedInComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  getIconForRoute(route: string): string {
-    const icons: { [key: string]: string } = {
-      '/': '🏠',
-      '/cards': '🃏',
-      '/leaderboard': '⭐',
-      '/friends': '👥',
-      '/profile': '👤'
-    };
-    return icons[route] || '📄';
   }
-}
