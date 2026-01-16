@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { HttpParams } from '@angular/common/http';
 import { Achievement, AchievementDto } from '../models/achievement.model';
 import { Card, CardRequestDto } from '../models/card.model';
 import { Sticker, StickerDto } from '../models/sticker.model';
@@ -23,8 +24,23 @@ export class AdminService {
     // The browser will handle it for FormData
     return this.http.post<Card>(`${environment.apiUrl}/admin/cards`, payload);
   }
+  createCricketBat(payload: FormData): Observable<Card> {
+    return this.http.post<Card>(`${environment.apiUrl}/admin/cards/bat`, payload);
+  }
+  createCricketBowl(payload: FormData): Observable<Card> {
+    return this.http.post<Card>(`${environment.apiUrl}/admin/cards/bowl`, payload);
+  }
+  createCricketAll(payload: FormData): Observable<Card> {
+    return this.http.post<Card>(`${environment.apiUrl}/admin/cards/all`, payload);
+  }
   getCards(): Observable<Card[]> {
     return this.http.get<Card[]>(`${environment.apiUrl}/admin/cards`);
+  }
+  getCardsByCategory(category?: string, cricketType?: string): Observable<Card[]> {
+    let params = new HttpParams();
+    if (category) params = params.set('category', category);
+    if (cricketType) params = params.set('cricketType', cricketType);
+    return this.http.get<Card[]>(`${environment.apiUrl}/admin/cards`, { params });
   }
   getCard(id: number): Observable<Card> {
     return this.http.get<Card>(`${environment.apiUrl}/admin/cards/${id}`);

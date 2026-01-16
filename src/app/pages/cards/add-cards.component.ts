@@ -25,8 +25,15 @@ export class AddCardsComponent implements OnInit {
   totalCards = 0;
   totalPoints = 0;
   pointsToSpend = 0;
+  // Additional points inputs for cricket types
+  pointsToSpendBat = 0;
+  pointsToSpendBowl = 0;
+  pointsToSpendAll = 0;
   // rupeesToBuy removed, not needed for fixed buttons
   addMsg = '';
+  addMsgBat = '';
+  addMsgBowl = '';
+  addMsgAll = '';
   isLoading = true;
 
   showPaymentConfirm = false;
@@ -97,17 +104,33 @@ export class AddCardsComponent implements OnInit {
   canAdd() {
     return this.pointsToSpend > 0 && this.pointsToSpend <= this.totalPoints;
   }
+  canAddPoints(points: number) {
+    return points > 0 && points <= this.totalPoints;
+  }
 
-  addCards() {
-    if (!this.canAdd()) return;
-    const payload = { pointsToSpend: Number(this.pointsToSpend) };
+  addCards(points?: number, category: string = 'FILM', cricketType?: string) {
+    const pointsToUse = typeof points === 'number' ? Number(points) : Number(this.pointsToSpend);
+    if (!this.canAddPoints(pointsToUse)) return;
+    const payload: any = { pointsToSpend: pointsToUse, category };
+    if (category === 'CRICKET' && cricketType) {
+      payload.cricketType = cricketType;
+    }
     this.api.post('/cards/add', payload).subscribe({
       next: (res: any) => {
         if (res && res.errorMessage) {
           this.showError(res.errorMessage);
           return;
         }
-        this.addMsg = 'Cards Added';
+        const successText = 'Cards Added';
+        // set specific message based on category/cricketType
+        if (category === 'CRICKET') {
+          if (cricketType === 'BAT') this.addMsgBat = successText;
+          else if (cricketType === 'BOWL') this.addMsgBowl = successText;
+          else if (cricketType === 'ALL') this.addMsgAll = successText;
+        } else {
+          this.addMsg = successText;
+        }
+
         // Refresh points and cards count
         this.api.get('/users/me').subscribe((user: any) => {
           if (user && user.errorMessage) {
@@ -125,8 +148,21 @@ export class AddCardsComponent implements OnInit {
           }
           this.totalCards = Array.isArray(cards) ? cards.length : 0;
         });
-        this.pointsToSpend = 0;
-        setTimeout(() => this.addMsg = '', 2000);
+
+        // clear the specific input + message after short delay
+        if (category === 'CRICKET') {
+          if (cricketType === 'BAT') this.pointsToSpendBat = 0;
+          else if (cricketType === 'BOWL') this.pointsToSpendBowl = 0;
+          else if (cricketType === 'ALL') this.pointsToSpendAll = 0;
+          setTimeout(() => {
+            if (cricketType === 'BAT') this.addMsgBat = '';
+            else if (cricketType === 'BOWL') this.addMsgBowl = '';
+            else if (cricketType === 'ALL') this.addMsgAll = '';
+          }, 2000);
+        } else {
+          this.pointsToSpend = 0;
+          setTimeout(() => this.addMsg = '', 2000);
+        }
       },
       error: (err) => {
         if (err?.error?.errorMessage) {
@@ -134,7 +170,13 @@ export class AddCardsComponent implements OnInit {
         } else {
           this.showError('Failed to add cards');
         }
-        setTimeout(() => this.addMsg = '', 2000);
+        // clear messages
+        setTimeout(() => {
+          this.addMsg = '';
+          this.addMsgBat = '';
+          this.addMsgBowl = '';
+          this.addMsgAll = '';
+        }, 2000);
       }
     });
   }

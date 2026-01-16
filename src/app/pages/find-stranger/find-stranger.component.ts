@@ -1,5 +1,6 @@
 import { Component, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ErrorNotificationComponent } from '../../shared/error-notification.component';
 import { ApiService } from '../../services/api.service';
 import { WebsocketService } from '../../services/websocket.service';
@@ -10,7 +11,7 @@ import { Router } from '@angular/router';
   selector: 'app-find-stranger',
   templateUrl: './find-stranger.component.html',
   styleUrls: ['./find-stranger.component.css'],
-  imports: [CommonModule, ErrorNotificationComponent]
+  imports: [CommonModule, FormsModule, ErrorNotificationComponent]
 })
 export class FindStrangerComponent implements OnDestroy {
   showNotification = false;
@@ -19,6 +20,10 @@ export class FindStrangerComponent implements OnDestroy {
   message = '';
   private wsSub: any = null;
   private userId: string = '';
+
+  // Category selection
+  category: 'FILM' | 'CRICKET' = 'FILM';
+  cricketType: 'BAT' | 'BOWL' | 'ALL' = 'BAT';
 
   constructor(
     private api: ApiService,
@@ -38,13 +43,21 @@ export class FindStrangerComponent implements OnDestroy {
     console.log('[FindStranger] Access token before matchmaking:', token);
     this.status = 'searching';
     this.message = 'Searching for a stranger to play with...';
-    this.api.post('/api/matchmaking/find', null).subscribe({
+    let url = `/api/matchmaking/find?category=${this.category}`;
+    if (this.category === 'CRICKET') {
+      url += `&cricketType=${this.cricketType}`;
+    }
+    this.api.post(url, null).subscribe({
       next: (res: any) => {
         if (res && res.errorMessage) {
           this.showError(res.errorMessage);
           this.status = 'idle';
-          this.message = '';
+          this.message = res.message;
           return;
+        }
+        if(res && res.message!=='searching'){
+          this.message=res.message;
+          this.status = 'timeout';
         }
       },
       error: (err) => {

@@ -22,6 +22,43 @@
     <button class="cards-action-btn add" (click)="add()">Add</button>
     <button class="cards-action-btn stored" (click)="stored()">Stored</button>
   </div>
+  <div class="cards-filters">
+    <!-- Category Custom Dropdown -->
+    <div class="custom-select-container">
+      <label class="custom-select-label">Category</label>
+      <div class="custom-select" (click)="toggleCategoryDropdown($event)">
+        <span class="custom-select-value">{{ selectedCategory }}</span>
+        <span class="custom-select-arrow" [class.open]="categoryDropdownOpen"></span>
+      </div>
+      <div class="custom-select-options" *ngIf="categoryDropdownOpen">
+        <div 
+          *ngFor="let c of cardCategories" 
+          class="custom-select-option" 
+          [class.selected]="selectedCategory === c"
+          (click)="selectCategory(c)">
+          {{ c }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Cricket Type Custom Dropdown -->
+    <div class="custom-select-container" *ngIf="selectedCategory === 'CRICKET'">
+      <label class="custom-select-label">Cricket Type</label>
+      <div class="custom-select" (click)="toggleCricketTypeDropdown($event)">
+        <span class="custom-select-value">{{ selectedCricketType }}</span>
+        <span class="custom-select-arrow" [class.open]="cricketTypeDropdownOpen"></span>
+      </div>
+      <div class="custom-select-options" *ngIf="cricketTypeDropdownOpen">
+        <div 
+          *ngFor="let t of cricketTypes" 
+          class="custom-select-option" 
+          [class.selected]="selectedCricketType === t"
+          (click)="selectCricketType(t)">
+          {{ t }}
+        </div>
+      </div>
+    </div>
+  </div>
   <div *ngIf="cards?.length === 0" class="cards-empty">No cards</div>
   <div class="cards-grid">
     <div *ngFor="let c of cards" class="card-tile" (click)="showCardDetails(c)">
@@ -37,34 +74,130 @@
         <img *ngIf="selectedCard.picture || selectedCard.imageUrl" [src]="selectedCard.picture || selectedCard.imageUrl" [alt]="selectedCard.name || selectedCard.title || 'Card'" />
       </div>
       <div class="card-details-info">
-        <div *ngIf="selectedCard.totalFilms" class="stat-card">
-          <span class="stat-label">Total Films</span>
-          <span class="stat-value">{{ selectedCard.totalFilms }}</span>
-        </div>
-        <div *ngIf="selectedCard.yearsActive" class="stat-card">
-          <span class="stat-label">Years Active</span>
-          <span class="stat-value">{{ selectedCard.yearsActive }}</span>
-        </div>
-        <div *ngIf="selectedCard.highestGrossing" class="stat-card">
-          <span class="stat-label">Highest Grossing</span>
-          <span class="stat-value">{{ selectedCard.highestGrossing }}</span>
-        </div>
-        <div *ngIf="selectedCard.awardsWon" class="stat-card">
-          <span class="stat-label">Awards Won</span>
-          <span class="stat-value">{{ selectedCard.awardsWon }}</span>
-        </div>
-        <div *ngIf="selectedCard.followers" class="stat-card">
-          <span class="stat-label">Followers</span>
-          <span class="stat-value">{{ selectedCard.followers }}</span>
-        </div>
-        <div *ngIf="selectedCard.languages" class="stat-card">
-          <span class="stat-label">Languages</span>
-          <span class="stat-value">{{ selectedCard.languages }}</span>
-        </div>
-        <div *ngIf="selectedCard.professions" class="stat-card">
-          <span class="stat-label">Professions</span>
-          <span class="stat-value">{{ selectedCard.professions }}</span>
-        </div>
+        <!-- FILM DETAILS -->
+        <ng-container *ngIf="selectedCard.category?.toUpperCase() === 'FILM'">
+          <div *ngIf="selectedCard.totalFilms" class="stat-card">
+            <span class="stat-label">Total Films</span>
+            <span class="stat-value">{{ selectedCard.totalFilms }}</span>
+          </div>
+          <div *ngIf="selectedCard.yearsActive" class="stat-card">
+            <span class="stat-label">Years Active</span>
+            <span class="stat-value">{{ selectedCard.yearsActive }}</span>
+          </div>
+          <div *ngIf="selectedCard.highestGrossing" class="stat-card">
+            <span class="stat-label">Highest Grossing</span>
+            <span class="stat-value">{{ selectedCard.highestGrossing }}</span>
+          </div>
+          <div *ngIf="selectedCard.awardsWon" class="stat-card">
+            <span class="stat-label">Awards Won</span>
+            <span class="stat-value">{{ selectedCard.awardsWon }}</span>
+          </div>
+          <div *ngIf="selectedCard.followers" class="stat-card">
+            <span class="stat-label">Followers</span>
+            <span class="stat-value">{{ selectedCard.followers }}</span>
+          </div>
+          <div *ngIf="selectedCard.languages" class="stat-card">
+            <span class="stat-label">Languages</span>
+            <span class="stat-value">{{ selectedCard.languages }}</span>
+          </div>
+          <div *ngIf="selectedCard.professions" class="stat-card">
+            <span class="stat-label">Professions</span>
+            <span class="stat-value">{{ selectedCard.professions }}</span>
+          </div>
+        </ng-container>
+
+        <!-- CRICKET DETAILS -->
+        <ng-container *ngIf="selectedCard.category?.toUpperCase() === 'CRICKET'">
+          
+          <div *ngIf="selectedCard.matchesPlayed != null" class="stat-card">
+            <span class="stat-label">Matches Played</span>
+            <span class="stat-value">{{ selectedCard.matchesPlayed }}</span>
+          </div>
+
+          <!-- BAT -->
+          <ng-container *ngIf="selectedCard.cricketType?.toUpperCase() === 'BAT'">
+            <div *ngIf="selectedCard.totalRuns != null" class="stat-card">
+              <span class="stat-label">Total Runs</span>
+              <span class="stat-value">{{ selectedCard.totalRuns }}</span>
+            </div>
+            <div *ngIf="selectedCard.highestScore != null" class="stat-card">
+              <span class="stat-label">Highest Score</span>
+              <span class="stat-value">{{ selectedCard.highestScore }}</span>
+            </div>
+            <div *ngIf="selectedCard.foursHit != null" class="stat-card">
+              <span class="stat-label">Fours</span>
+              <span class="stat-value">{{ selectedCard.foursHit }}</span>
+            </div>
+            <div *ngIf="selectedCard.sixesHit != null" class="stat-card">
+              <span class="stat-label">Sixes</span>
+              <span class="stat-value">{{ selectedCard.sixesHit }}</span>
+            </div>
+            <div *ngIf="selectedCard.battingAverageBetter != null" class="stat-card">
+              <span class="stat-label">Batting Avg</span>
+              <span class="stat-value">{{ selectedCard.battingAverageBetter }}</span>
+            </div>
+            <div *ngIf="selectedCard.strikeRateBetter != null" class="stat-card">
+              <span class="stat-label">Strike Rate</span>
+              <span class="stat-value">{{ selectedCard.strikeRateBetter }}</span>
+            </div>
+          </ng-container>
+
+          <!-- BOWL -->
+          <ng-container *ngIf="selectedCard.cricketType?.toUpperCase() === 'BOWL'">
+            <div *ngIf="selectedCard.wicketsTaken != null" class="stat-card">
+              <span class="stat-label">Wickets</span>
+              <span class="stat-value">{{ selectedCard.wicketsTaken }}</span>
+            </div>
+            <div *ngIf="selectedCard.ballsBowled != null" class="stat-card">
+              <span class="stat-label">Balls Bowled</span>
+              <span class="stat-value">{{ selectedCard.ballsBowled }}</span>
+            </div>
+            <div *ngIf="selectedCard.runsConceded != null" class="stat-card">
+              <span class="stat-label">Runs Conceded</span>
+              <span class="stat-value">{{ selectedCard.runsConceded }}</span>
+            </div>
+            <div *ngIf="selectedCard.bestBowlingMatch != null" class="stat-card">
+              <span class="stat-label">Best Bowling</span>
+              <span class="stat-value">{{ selectedCard.bestBowlingMatch }}</span>
+            </div>
+            <div *ngIf="selectedCard.economyRateBetter != null" class="stat-card">
+              <span class="stat-label">Economy</span>
+              <span class="stat-value">{{ selectedCard.economyRateBetter }}</span>
+            </div>
+            <div *ngIf="selectedCard.bowlingAverage != null" class="stat-card">
+              <span class="stat-label">Bowling Avg</span>
+              <span class="stat-value">{{ selectedCard.bowlingAverage }}</span>
+            </div>
+          </ng-container>
+
+          <!-- ALL ROUNDER -->
+          <ng-container *ngIf="selectedCard.cricketType === 'ALL'">
+            <div *ngIf="selectedCard.totalRuns != null" class="stat-card">
+              <span class="stat-label">Runs</span>
+              <span class="stat-value">{{ selectedCard.totalRuns }}</span>
+            </div>
+            <div *ngIf="selectedCard.wicketsTaken != null" class="stat-card">
+              <span class="stat-label">Wickets</span>
+              <span class="stat-value">{{ selectedCard.wicketsTaken }}</span>
+            </div>
+            <div *ngIf="selectedCard.highestScore != null" class="stat-card">
+              <span class="stat-label">Highest Score</span>
+              <span class="stat-value">{{ selectedCard.highestScore }}</span>
+            </div>
+            <div *ngIf="selectedCard.battingAverageBetter != null" class="stat-card">
+              <span class="stat-label">Batting Avg</span>
+              <span class="stat-value">{{ selectedCard.battingAverageBetter }}</span>
+            </div>
+            <div *ngIf="selectedCard.strikeRateBetter != null" class="stat-card">
+              <span class="stat-label">Strike Rate</span>
+              <span class="stat-value">{{ selectedCard.strikeRateBetter }}</span>
+            </div>
+            <div *ngIf="selectedCard.economyRateBetter != null" class="stat-card">
+              <span class="stat-label">Economy</span>
+              <span class="stat-value">{{ selectedCard.economyRateBetter }}</span>
+            </div>
+          </ng-container>
+        </ng-container>
       </div>
     </div>
   </div>

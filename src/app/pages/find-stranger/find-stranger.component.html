@@ -1,6 +1,41 @@
 <app-error-notification *ngIf="showNotification" [message]="notificationMessage" (closed)="onNotificationClosed()"></app-error-notification>
 <div class="find-stranger-container">
   <h2>Play with a Stranger</h2>
+  
+  <!-- Category Selection -->
+  <div class="category-selection">
+    <label>Select Category:</label>
+    <div class="radio-group">
+      <label class="radio-option">
+        <input type="radio" name="category" value="FILM" [(ngModel)]="category">
+        <span>🎬 Film</span>
+      </label>
+      <label class="radio-option">
+        <input type="radio" name="category" value="CRICKET" [(ngModel)]="category">
+        <span>🏏 Cricket</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Cricket Type Selection (only shown when CRICKET is selected) -->
+  <div class="cricket-type-selection" *ngIf="category === 'CRICKET'">
+    <label>Select Cricket Type:</label>
+    <div class="radio-group">
+      <label class="radio-option">
+        <input type="radio" name="cricketType" value="BAT" [(ngModel)]="cricketType">
+        <span>🏏 Batsman</span>
+      </label>
+      <label class="radio-option">
+        <input type="radio" name="cricketType" value="BOWL" [(ngModel)]="cricketType">
+        <span>🎯 Bowler</span>
+      </label>
+      <label class="radio-option">
+        <input type="radio" name="cricketType" value="ALL" [(ngModel)]="cricketType">
+        <span>⭐ All-Rounder</span>
+      </label>
+    </div>
+  </div>
+
   <button (click)="findMatch()" [disabled]="status === 'searching'">Play Now</button>
   <div class="status-message">
     <span *ngIf="status === 'searching'">

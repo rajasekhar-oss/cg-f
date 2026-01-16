@@ -350,6 +350,8 @@ export class GameComponent {
   private playerInfo: PlayerInfo | null = null;
   currentroundplayers: string[] = [];
   winner: string = "";
+  category: string = '';
+  cricketType: string = '';
   constructor(
     private api: ApiService,
     private ws: WebsocketService,
@@ -391,7 +393,6 @@ export class GameComponent {
     this.myUserId = this.auth.getUserId() || '';
     if (this.myUserId) {
       this.fetchuserInfo();
-      this.fetchMyCards();
       this.fetchStickers();
     }
     this.showCardList = false;
@@ -506,15 +507,31 @@ export class GameComponent {
     let statValue: any = '';
     const cards = msg.currentRoundCards;
 
-    // Mapping from stat key to full label with emoji
+    // Mapping from stat key to full label with emoji (all categories)
     const statKeyToLabel: { [key: string]: string } = {
+      // FILM stats
       'totalFilms': '🎬Total Films',
       'yearsActive': '📅Years Active',
       'highestGrossing': '💰Highest Grossing',
       'awardsWon': '🏆Awards Won',
       'followers': '👨‍👩‍👧‍👦Followers',
       'languages': '🌐Languages',
-      'professions': '🎭Professions'
+      'professions': '🎭Professions',
+      // CRICKET BAT stats
+      'matchesPlayed': '🏏Matches Played',
+      'totalRuns': '🏃Total Runs',
+      'highestScore': '🔝Highest Score',
+      'foursHit': '4️⃣Fours Hit',
+      'sixesHit': '6️⃣Sixes Hit',
+      'battingAverageBetter': '📊Batting Average',
+      'strikeRateBetter': '⚡Strike Rate',
+      // CRICKET BOWL stats
+      'wicketsTaken': '🎯Wickets Taken',
+      'ballsBowled': '⚾Balls Bowled',
+      'runsConceded': '🏃Runs Conceded',
+      'economyRateBetter': '💹Economy Rate',
+      'bestBowlingMatch': '🏆Best Bowling',
+      'bowlingAverage': '📊Bowling Average'
     };
 
 // 1️⃣ Get round number from the last card (no drama)
@@ -570,6 +587,8 @@ const card = latest.cards
   updateGameState(msg: any) {
     this.players = msg.players;
     this.myCards = msg.myCards;
+    this.category = msg.category;
+    this.cricketType = msg.cricketType;
     if (this.myCards.length < 1) {
       this.showError("You have no cards left! You are out of the game.");
       setTimeout(() => {
@@ -689,19 +708,45 @@ const card = latest.cards
   }
   get statList() {
     if (!this.topCard) return [];
-    return [
-      { key: 'totalFilms', label: '🎬Total Films', value: this.topCard.totalFilms },
-      { key: 'yearsActive', label: '📅Years Active', value: this.topCard.yearsActive },
-      { key: 'highestGrossing', label: '💰Highest Grossing', value: this.topCard.highestGrossing },
-      { key: 'awardsWon', label: '🏆Awards Won', value: this.topCard.awardsWon },
-      { key: 'followers', label: '👨‍👩‍👧‍👦Followers', value: this.topCard.followers },
-      { key: 'languages', label: '🌐Languages', value: this.topCard.languages },
-      { key: 'professions', label: '🎭Professions', value: this.topCard.professions }
-    ];
+    return this.getStatsForCard(this.topCard);
   }
 
-  getStatList(card: any) {
+  getStatsForCard(card: any) {
     if (!card) return [];
+    if (this.category === 'CRICKET') {
+      if (this.cricketType === 'BAT') {
+        return [
+          { key: 'matchesPlayed', label: '🏏Matches Played', value: card.matchesPlayed },
+          { key: 'totalRuns', label: '🏃Total Runs', value: card.totalRuns },
+          { key: 'highestScore', label: '🔝Highest Score', value: card.highestScore },
+          { key: 'foursHit', label: '4️⃣Fours Hit', value: card.foursHit },
+          { key: 'sixesHit', label: '6️⃣Sixes Hit', value: card.sixesHit },
+          { key: 'battingAverageBetter', label: '📊Batting Average', value: card.battingAverageBetter },
+          { key: 'strikeRateBetter', label: '⚡Strike Rate', value: card.strikeRateBetter }
+        ];
+      } else if (this.cricketType === 'BOWL') {
+        return [
+          { key: 'matchesPlayed', label: '🏏Matches Played', value: card.matchesPlayed },
+          { key: 'wicketsTaken', label: '🎯Wickets Taken', value: card.wicketsTaken },
+          { key: 'ballsBowled', label: '⚾Balls Bowled', value: card.ballsBowled },
+          { key: 'runsConceded', label: '🏃Runs Conceded', value: card.runsConceded },
+          { key: 'economyRateBetter', label: '💹Economy Rate', value: card.economyRateBetter },
+          { key: 'bestBowlingMatch', label: '🏆Best Bowling', value: card.bestBowlingMatch },
+          { key: 'bowlingAverage', label: '📊Bowling Average', value: card.bowlingAverage }
+        ];
+      } else if (this.cricketType === 'ALL') {
+        return [
+          { key: 'matchesPlayed', label: '🏏Matches Played', value: card.matchesPlayed },
+          { key: 'wicketsTaken', label: '🎯Wickets Taken', value: card.wicketsTaken },
+          { key: 'economyRateBetter', label: '💹Economy Rate', value: card.economyRateBetter },
+          { key: 'totalRuns', label: '🏃Total Runs', value: card.totalRuns },
+          { key: 'highestScore', label: '🔝Highest Score', value: card.highestScore },
+          { key: 'battingAverageBetter', label: '📊Batting Average', value: card.battingAverageBetter },
+          { key: 'strikeRateBetter', label: '⚡Strike Rate', value: card.strikeRateBetter }
+        ];
+      }
+    }
+    // Default: FILM category
     return [
       { key: 'totalFilms', label: '🎬Total Films', value: card.totalFilms },
       { key: 'yearsActive', label: '📅Years Active', value: card.yearsActive },
@@ -711,6 +756,10 @@ const card = latest.cards
       { key: 'languages', label: '🌐Languages', value: card.languages },
       { key: 'professions', label: '🎭Professions', value: card.professions }
     ];
+  }
+
+  getStatList(card: any) {
+    return this.getStatsForCard(card);
   }
   selectStat(statKey: string) {
     this.selectedStat = statKey;
@@ -896,6 +945,13 @@ const card = latest.cards
       this.currentStatSelector = info.currentStatSelector || '';
       this.players = info.players;
       this.currentroundplayers = info.activePlayers;
+      // Get category and cricketType from game state
+      this.category = info.category || '';
+      this.cricketType = info.cricketType || '';
+      // Fetch cards after we have category info
+      if (this.myUserId) {
+        this.fetchMyCards();
+      }
       if (info.playerInfo != this.playerInfo) {
         this.playerInfo = info.playerInfo
         const allPlayers = info.playerInfo;
@@ -918,7 +974,10 @@ const card = latest.cards
   }
 
   fetchMyCards() {
-    const path = '/cards/my';
+    let path = `/cards/my?category=${this.category || 'FILM'}`;
+    if (this.category === 'CRICKET' && this.cricketType) {
+      path += `&cricketType=${this.cricketType}`;
+    }
     this.api.get(path).subscribe((cards: any) => {
       if (cards && cards.errorMessage) {
         this.showError(cards.errorMessage);
@@ -1063,15 +1122,6 @@ const card = latest.cards
     this.showPreviousRoundCards = !this.showPreviousRoundCards;
   }
   getPrevCardStats(card: any) {
-    if (!card) return [];
-    return [
-      { key: 'totalFilms', label: '🎬Total Films', value: card.totalFilms },
-      { key: 'yearsActive', label: '📅Years Active', value: card.yearsActive },
-      { key: 'highestGrossing', label: '💰Highest Grossing', value: card.highestGrossing },
-      { key: 'awardsWon', label: '🏆Awards Won', value: card.awardsWon },
-      { key: 'followers', label: '👨‍👩‍👧‍👦Followers', value: card.followers },
-      { key: 'languages', label: '🌐Languages', value: card.languages },
-      { key: 'professions', label: '🎭Professions', value: card.professions }
-    ];
+    return this.getStatsForCard(card);
   }
 }

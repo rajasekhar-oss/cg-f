@@ -22,14 +22,44 @@ export class StoredCardsComponent {
   isLoading: boolean = true;
   selectedCard: any = null;
 
+  // Category selection
+  selectedCategory: 'FILM' | 'CRICKET' = 'FILM';
+  selectedCricketType: 'BAT' | 'BOWL' | 'ALL' | null = null;
+  categories = ['FILM', 'CRICKET'] as const;
+  cricketTypes = ['BAT', 'BOWL', 'ALL'] as const;
+
   constructor(private api: ApiService, private router: Router) {
     this.reload();
   }
 
+  onCategoryChange(category: 'FILM' | 'CRICKET') {
+    this.selectedCategory = category;
+    if (category === 'CRICKET' && !this.selectedCricketType) {
+      this.selectedCricketType = 'BAT';
+    } else if (category === 'FILM') {
+      this.selectedCricketType = null;
+    }
+    this.reload();
+  }
+
+  onCricketTypeChange(type: 'BAT' | 'BOWL' | 'ALL') {
+    this.selectedCricketType = type;
+    this.reload();
+  }
+
+  private getCategoryParams(): string {
+    let params = `category=${this.selectedCategory}`;
+    if (this.selectedCategory === 'CRICKET' && this.selectedCricketType) {
+      params += `&cricketType=${this.selectedCricketType}`;
+    }
+    return params;
+  }
+
   reload() {
     this.isLoading = true;
+    const categoryParams = this.getCategoryParams();
     // Fetch all cards
-    this.api.get('/cards/my').subscribe((r: any) => {
+    this.api.get(`/cards/my?${categoryParams}`).subscribe((r: any) => {
       if (r && r.errorMessage) {
         this.showError(r.errorMessage);
         this.allCards = [];
@@ -46,7 +76,7 @@ export class StoredCardsComponent {
       this.isLoading = false;
     });
     // Fetch only stored cards
-    this.api.get('/cards/stored').subscribe((r: any) => {
+    this.api.get(`/cards/stored?${categoryParams}`).subscribe((r: any) => {
       if (r && r.errorMessage) {
         this.showError(r.errorMessage);
         this.storedCards = [];
@@ -67,7 +97,13 @@ export class StoredCardsComponent {
   toggleStored(card: any) {
     const isStored = this.storedCardIds.has(card.id);
     const url = isStored ? `/cards/unstore/${card.id}` : `/cards/store/${card.id}`;
-    this.api.post(url, {}).subscribe((r: any) => {
+    const body: any = {
+      category: this.selectedCategory
+    };
+    if (this.selectedCategory === 'CRICKET' && this.selectedCricketType) {
+      body.cricketType = this.selectedCricketType;
+    }
+    this.api.post(url, body).subscribe((r: any) => {
       if (r && r.errorMessage) {
         this.showError(r.errorMessage);
         return;

@@ -11,6 +11,13 @@ import { Card } from '../../models/card.model';
   template: `
     <div style="padding: 32px; max-width: 600px; margin: 0 auto;">
       <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 24px;">All Cards</h2>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button (click)="fetchCards()" style="padding:8px 12px; border-radius:8px;">All</button>
+        <button (click)="fetchCards('FILM')" style="padding:8px 12px; border-radius:8px;">Films</button>
+        <button (click)="fetchCards('CRICKET','BAT')" style="padding:8px 12px; border-radius:8px;">Cricket — Bat</button>
+        <button (click)="fetchCards('CRICKET','BOWL')" style="padding:8px 12px; border-radius:8px;">Cricket — Bowl</button>
+        <button (click)="fetchCards('CRICKET','ALL')" style="padding:8px 12px; border-radius:8px;">Cricket — All</button>
+      </div>
       <div *ngIf="loading">Loading cards...</div>
       <div *ngIf="error" style="color: #dc2626;">{{error}}</div>
       <div *ngIf="!loading && cards.length === 0">No cards found.</div>
@@ -30,20 +37,26 @@ export class AdminCardsListComponent implements OnInit {
   constructor(private admin: AdminService, private router: Router) {}
 
   ngOnInit() {
-    this.loading = true;
-    this.admin.getCards().subscribe({
-      next: (cards) => {
-        this.cards = cards;
-        this.loading = false;
-      },
-      error: (e) => {
-        this.error = e?.error?.error || e?.message || 'Error loading cards';
-        this.loading = false;
-      }
-    });
+    this.fetchCards();
   }
 
   openCard(id: number) {
     this.router.navigate([`/admin/cards-detail/${id}`]);
+  }
+
+  fetchCards(category?: string, cricketType?: string) {
+    this.loading = true;
+    this.error = '';
+    if (!category) {
+      this.admin.getCards().subscribe({
+        next: (cards) => { this.cards = cards; this.loading = false; },
+        error: (e) => { this.error = e?.error?.error || e?.message || 'Error loading cards'; this.loading = false; }
+      });
+      return;
+    }
+    this.admin.getCardsByCategory(category, cricketType).subscribe({
+      next: (cards) => { this.cards = cards; this.loading = false; },
+      error: (e) => { this.error = e?.error?.error || e?.message || 'Error loading filtered cards'; this.loading = false; }
+    });
   }
 }

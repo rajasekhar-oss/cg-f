@@ -8,6 +8,29 @@
   <div class="stored-cards-header">
     <h2>Stored Cards</h2>
   </div>
+  
+  <!-- Category Selection -->
+  <div class="category-selector">
+    <div class="category-tabs">
+      <button 
+        *ngFor="let cat of categories" 
+        class="category-tab" 
+        [class.active]="selectedCategory === cat"
+        (click)="onCategoryChange(cat)">
+        {{ cat }}
+      </button>
+    </div>
+    <div *ngIf="selectedCategory === 'CRICKET'" class="subcategory-tabs">
+      <button 
+        *ngFor="let type of cricketTypes" 
+        class="subcategory-tab" 
+        [class.active]="selectedCricketType === type"
+        (click)="onCricketTypeChange(type)">
+        {{ type }}
+      </button>
+    </div>
+  </div>
+
   <div *ngIf="isLoading" class="loading">Loading...</div>
   <div *ngIf="!isLoading && storedCards.length === 0" class="empty">No stored cards.</div>
   <div *ngIf="!isLoading && storedCards.length > 0">

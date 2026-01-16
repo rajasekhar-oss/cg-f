@@ -11,6 +11,30 @@
       <button class="add-cards-btn" [disabled]="!canAdd()" (click)="addCards()">Add</button>
       <div *ngIf="addMsg" class="add-cards-success">{{ addMsg }}</div>
     </div>
+    <!-- Cricket card sections -->
+    <div class="add-cards-section">
+      <div class="add-cards-label">Add Cricket Cards - BAT</div>
+      <input type="number" min="1" [(ngModel)]="pointsToSpendBat" class="add-cards-input" placeholder="Enter points to spend for BAT" />
+      <div *ngIf="pointsToSpendBat > totalPoints" class="add-cards-error">You don't have enough points to add BAT cards.</div>
+      <button class="add-cards-btn" [disabled]="!canAddPoints(pointsToSpendBat)" (click)="addCards(pointsToSpendBat, 'CRICKET', 'BAT')">Add BAT</button>
+      <div *ngIf="addMsgBat" class="add-cards-success">{{ addMsgBat }}</div>
+    </div>
+
+    <div class="add-cards-section">
+      <div class="add-cards-label">Add Cricket Cards - BOWL</div>
+      <input type="number" min="1" [(ngModel)]="pointsToSpendBowl" class="add-cards-input" placeholder="Enter points to spend for BOWL" />
+      <div *ngIf="pointsToSpendBowl > totalPoints" class="add-cards-error">You don't have enough points to add BOWL cards.</div>
+      <button class="add-cards-btn" [disabled]="!canAddPoints(pointsToSpendBowl)" (click)="addCards(pointsToSpendBowl, 'CRICKET', 'BOWL')">Add BOWL</button>
+      <div *ngIf="addMsgBowl" class="add-cards-success">{{ addMsgBowl }}</div>
+    </div>
+
+    <div class="add-cards-section">
+      <div class="add-cards-label">Add Cricket Cards - ALL</div>
+      <input type="number" min="1" [(ngModel)]="pointsToSpendAll" class="add-cards-input" placeholder="Enter points to spend for ALL types" />
+      <div *ngIf="pointsToSpendAll > totalPoints" class="add-cards-error">You don't have enough points to add ALL-type cards.</div>
+      <button class="add-cards-btn" [disabled]="!canAddPoints(pointsToSpendAll)" (click)="addCards(pointsToSpendAll, 'CRICKET', 'ALL')">Add ALL</button>
+      <div *ngIf="addMsgAll" class="add-cards-success">{{ addMsgAll }}</div>
+    </div>
     <div class="buy-points-section">
       <div class="buy-points-label">Buy Points</div>
       <button class="buy-points-btn" [disabled]="loading" (click)="openPaymentConfirm(5, 20)">Pay ₹5 for 20 points</button>
